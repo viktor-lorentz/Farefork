@@ -1,4 +1,4 @@
-import type { LatLng } from '@repo/shared';
+import type { Cuisine, LatLng } from '@repo/shared';
 import type { StyleProp, ViewStyle } from 'react-native';
 
 export type { LatLng };
@@ -16,17 +16,28 @@ export type MapTrip = {
   path: readonly LatLng[];
 };
 
+export type MapPlace = {
+  id: string;
+  name: string;
+  cuisine: Cuisine;
+  latitude: number;
+  longitude: number;
+};
+
 export type MapCanvasProps = {
   center: LatLng;
   zoom?: number;
   insets?: Partial<MapInsets>;
   showsUserLocation?: boolean;
   trip?: MapTrip | null;
+  places?: readonly MapPlace[];
+  onPlacePress?: (id: string) => void;
   style?: StyleProp<ViewStyle>;
 };
 
 export const defaultCenter: LatLng = { latitude: 37.7793, longitude: -122.4193 };
 export const defaultZoom = 13.2;
+export const placesZoom = 14.8;
 export const fitPadding = 56;
 
 export function resolveInsets(insets: Partial<MapInsets> | undefined): MapInsets {

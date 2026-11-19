@@ -1,11 +1,22 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
+import { cuisineLabels } from '@repo/shared';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import Svg, { Path } from 'react-native-svg';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useTheme } from '@/design/theme';
+import { CUISINE_ICON_VIEWBOX, cuisineIconPaths } from './cuisineIcons';
 import { googleMapStyle } from './googleMapStyle';
 import { mapPalettes } from './palette';
-import { defaultZoom, fitPadding, type MapCanvasProps, resolveInsets } from './types';
+import {
+  defaultZoom,
+  fitPadding,
+  type MapCanvasProps,
+  type MapPlace,
+  resolveInsets,
+} from './types';
+
+const MAX_NATIVE_PLACES = 60;
 
 function zoomToDelta(zoom: number): number {
   return 360 / 2 ** zoom;
@@ -25,14 +36,37 @@ function DropoffMarker({ fill, border }: { fill: string; border: string }) {
   return <View style={[styles.dropoff, { backgroundColor: fill, borderColor: border }]} />;
 }
 
+function PlaceMarker({
+  place,
+  fill,
+  ring,
+  icon,
+}: {
+  place: MapPlace;
+  fill: string;
+  ring: string;
+  icon: string;
+}) {
+  return (
+    <View style={[styles.place, { backgroundColor: fill, borderColor: ring }]}>
+      <Svg width={16} height={16} viewBox={`0 0 ${CUISINE_ICON_VIEWBOX} ${CUISINE_ICON_VIEWBOX}`}>
+        <Path d={cuisineIconPaths[place.cuisine]} fill={icon} />
+      </Svg>
+    </View>
+  );
+}
+
 export function MapCanvas({
   center,
   zoom = defaultZoom,
   insets,
   showsUserLocation = false,
   trip,
+  places,
+  onPlacePress,
   style,
 }: MapCanvasProps) {
+  const shownPlaces = trip ? [] : (places ?? []).slice(0, MAX_NATIVE_PLACES);
   const { scheme, colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const mapRef = useRef<MapView>(null);
@@ -134,11 +168,38 @@ export function MapCanvas({
           </Marker>
         </>
       ) : null}
+      {shownPlaces.map((place) => (
+        <Marker
+          key={`${place.id}-${scheme}`}
+          coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+          anchor={{ x: 0.5, y: 0.5 }}
+          tracksViewChanges={false}
+          accessibilityLabel={`${place.name}, ${cuisineLabels[place.cuisine]}`}
+          onPress={() => {
+            onPlacePress?.(place.id);
+          }}
+        >
+          <PlaceMarker
+            place={place}
+            fill={colors.surface}
+            ring={colors.primary}
+            icon={colors.textPrimary}
+          />
+        </Marker>
+      ))}
     </MapView>
   );
 }
 
 const styles = StyleSheet.create({
+  place: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   pickup: {
     width: 18,
     height: 18,

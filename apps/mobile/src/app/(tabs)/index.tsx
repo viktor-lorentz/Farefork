@@ -1,4 +1,5 @@
 import { decodePolyline, type LatLng } from '@repo/shared';
+import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +10,10 @@ import { useTheme } from '@/design/theme';
 import { layout, space } from '@/design/tokens';
 import { HomePanel } from '@/features/home/HomePanel';
 import { MapCanvas } from '@/features/map/MapCanvas';
-import { defaultCenter, type MapTrip } from '@/features/map/types';
+import { defaultCenter, defaultZoom, type MapTrip, placesZoom } from '@/features/map/types';
+import { useRestaurants } from '@/features/food/queries';
+import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
+import { useVertical } from '@/features/home/useVertical';
 import { locateDevice } from '@/features/rides/location';
 import { RideBookingBar, RideResults } from '@/features/rides/RideResults';
 import { useRideQuotes } from '@/features/rides/useRideQuotes';
@@ -43,9 +47,25 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const trip = useMapTrip();
+  const router = useRouter();
   const [center, setCenter] = useState<LatLng>(
     () => useDeviceLocation.getState().lastKnown ?? defaultCenter,
   );
+  const vertical = useVertical((state) => state.vertical);
+  const deliveryAddress = useDeliveryAddress();
+  const foodMode = trip === null && vertical === 'food';
+  const foodCenter = deliveryAddress ?? center;
+  const nearbyRestaurants = useRestaurants(foodMode ? foodCenter : null, '', null);
+  const places = useMemo(
+    () => (foodMode ? (nearbyRestaurants.data?.restaurants ?? []) : []),
+    [foodMode, nearbyRestaurants.data],
+  );
+  const mapCenter = foodMode ? foodCenter : center;
+  const mapZoom = foodMode ? placesZoom : defaultZoom;
+  const openPlace = (id: string) => {
+    haptics.light();
+    router.push({ pathname: '/food/[id]', params: { id } });
+  };
 
   useEffect(() => {
     void locateDevice({ prompt: false }).then((result) => {
@@ -92,7 +112,14 @@ export default function HomeScreen() {
     return (
       <View style={[styles.desktop, { backgroundColor: colors.background }]}>
         <View style={styles.desktopMap}>
-          <MapCanvas center={center} trip={trip} showsUserLocation />
+          <MapCanvas
+            center={mapCenter}
+            zoom={mapZoom}
+            trip={trip}
+            places={places}
+            onPlacePress={openPlace}
+            showsUserLocation
+          />
           {trip ? null : (
             <View style={[styles.mapControls, { top: space.md }]}>{locateButton}</View>
           )}
@@ -113,8 +140,11 @@ export default function HomeScreen() {
   return (
     <View style={[styles.mobile, { backgroundColor: colors.background }]}>
       <MapCanvas
-        center={center}
+        center={mapCenter}
+        zoom={mapZoom}
         trip={trip}
+        places={places}
+        onPlacePress={openPlace}
         insets={{ top: insets.top, bottom: (hasTrip ? resultsHeight : SHEET_PEEK) - 40 }}
         showsUserLocation
       />
