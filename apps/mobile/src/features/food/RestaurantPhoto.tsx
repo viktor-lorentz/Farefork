@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Image, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Text } from '@/design/components';
 import { useTheme } from '@/design/theme';
+import { apiBaseUrl } from '@/lib/api';
 
 export function RestaurantPhoto({
   restaurant,
@@ -14,15 +15,16 @@ export function RestaurantPhoto({
   const { colors } = useTheme();
   const [failed, setFailed] = useState(false);
   const photo = restaurant.photo;
+  const uri = photo ? (photo.path !== null ? `${apiBaseUrl}${photo.path}` : photo.url) : null;
   return (
     <View
       style={[styles.frame, { backgroundColor: colors.fill }, style]}
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
     >
-      {photo && !failed ? (
+      {uri !== null && !failed ? (
         <Image
-          source={{ uri: photo.url }}
+          source={{ uri }}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
           onError={() => {

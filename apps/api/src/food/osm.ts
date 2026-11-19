@@ -1,4 +1,13 @@
-import type { Cuisine, LatLng, RestaurantDetail, RestaurantSummary } from '@repo/shared';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
+import {
+  type Cuisine,
+  cuisineIds,
+  haversineMeters,
+  type LatLng,
+  type RestaurantDetail,
+  type RestaurantSummary,
+} from '@repo/shared';
 import { z } from 'zod';
 import { UpstreamError } from '../geo/geocoder';
 import { cached, TtlCache } from '../lib/ttlCache';
@@ -19,6 +28,20 @@ const LOOKUP_BATCH = 50;
 const LOOKUP_SPACING_MS = 1100;
 const LOOKUP_BUDGET_MS = 1500;
 const CELL_TTL_MS = 24 * 60 * 60 * 1000;
+const TEXT_TTL_MS = 60 * 60 * 1000;
+export const OSM_TEXT_RADIUS_METERS = 15_000;
+const TEXT_LIMIT = 30;
+const PHOTON_CONCURRENCY = 3;
+const PHOTON_REST_MS = 5 * 60 * 1000;
+const NOMINATIM_NEARBY_BOX = 0.02;
+const NOMINATIM_TEXT_BOX = 0.13;
+const PROBE_OFFSETS: readonly [number, number][] = [
+  [0, 0],
+  [0.014, 0],
+  [-0.014, 0],
+  [0, 0.017],
+  [0, -0.017],
+];
 const amenityKinds = ['restaurant', 'fast_food', 'cafe'] as const;
 
 type AmenityKind = (typeof amenityKinds)[number];
@@ -30,7 +53,67 @@ export type OsmConfig = {
   timeoutMs: number;
   fetch?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
+  cacheFile?: string;
 };
+
+const persistedSchema = z.object({
+  version: z.literal(1),
+  cells: z.record(
+    z.string(),
+    z.object({
+      savedAt: z.number(),
+      restaurants: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          cuisine: z.enum(cuisineIds),
+          latitude: z.number(),
+          longitude: z.number(),
+          address: z.string().nullable(),
+        }),
+      ),
+    }),
+  ),
+});
+
+type PersistedCells = z.infer<typeof persistedSchema>['cells'];
+
+function readPersisted(file: string | undefined): PersistedCells {
+  if (file === undefined) {
+    return {};
+  }
+  try {
+    const parsed = persistedSchema.safeParse(JSON.parse(readFileSync(file, 'utf8')));
+    return parsed.success ? parsed.data.cells : {};
+  } catch {
+    return {};
+  }
+}
+
+async function inPool<T>(
+  tasks: readonly (() => Promise<T>)[],
+  size: number,
+): Promise<PromiseSettledResult<T>[]> {
+  const results: PromiseSettledResult<T>[] = new Array<PromiseSettledResult<T>>(tasks.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < tasks.length) {
+      const index = next;
+      next += 1;
+      const task = tasks[index];
+      if (!task) {
+        continue;
+      }
+      try {
+        results[index] = { status: 'fulfilled', value: await task() };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(size, tasks.length) }, () => worker()));
+  return results;
+}
 
 const photonFeatureSchema = z.object({
   geometry: z.object({ coordinates: z.tuple([z.number(), z.number()]) }),
@@ -52,6 +135,7 @@ const nominatimPlaceSchema = z.object({
   osm_id: z.number().int(),
   lat: z.string(),
   lon: z.string(),
+  category: z.string().optional(),
   type: z.string().optional(),
   name: z.string().optional(),
   extratags: z.record(z.string(), z.string()).nullable().optional(),
@@ -145,6 +229,9 @@ export function cuisineFromTag(tag: string | undefined): Cuisine | null {
 
 export function guessCuisine(name: string, kind: string | undefined): Cuisine {
   for (const [cuisine, pattern] of nameHints) {
+    if (cuisine === 'cafe' && kind !== 'cafe') {
+      continue;
+    }
     if (pattern.test(name)) {
       return cuisine;
     }
@@ -210,6 +297,39 @@ export function nearbyFromPhoton(raw: unknown): NearbyPlace | null {
   };
 }
 
+type NominatimPlace = z.infer<typeof nominatimPlaceSchema>;
+
+function nominatimType(type: NominatimPlace['osm_type']): 'N' | 'W' | 'R' {
+  return type === 'node' ? 'N' : type === 'way' ? 'W' : 'R';
+}
+
+function nominatimAddress(address: Record<string, string> | undefined): string | null {
+  const street = address?.road;
+  if (street === undefined) {
+    return null;
+  }
+  const line = address?.house_number !== undefined ? `${address.house_number} ${street}` : street;
+  const city = address?.city ?? address?.town ?? address?.village;
+  return city !== undefined ? `${line}, ${city}` : line;
+}
+
+export function nearbyFromNominatim(place: NominatimPlace): NearbyPlace | null {
+  const name = place.name?.trim();
+  if (!name) {
+    return null;
+  }
+  const type = nominatimType(place.osm_type);
+  return {
+    id: osmRestaurantId(type, place.osm_id),
+    lookupKey: `${type}${place.osm_id}`,
+    name: name.slice(0, 120),
+    kind: place.type,
+    latitude: Number(place.lat),
+    longitude: Number(place.lon),
+    address: nominatimAddress(place.address),
+  };
+}
+
 function toRestaurant(place: NearbyPlace, cuisineTag: string | undefined): StoredRestaurant {
   return buildRestaurant({
     id: place.id,
@@ -254,7 +374,62 @@ export function createOsmRestaurantSource(
   const sleep = config.sleep ?? defaultSleep;
   const cells = new TtlCache<StoredRestaurant[]>(CELL_TTL_MS, 400);
   const byId = new TtlCache<StoredRestaurant>(CELL_TTL_MS, 20_000);
+  const texts = new TtlCache<StoredRestaurant[]>(TEXT_TTL_MS, 2000);
+  const persisted: PersistedCells = {};
+  let writeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  for (const [key, cell] of Object.entries(readPersisted(config.cacheFile))) {
+    if (Date.now() - cell.savedAt < CELL_TTL_MS) {
+      persisted[key] = cell;
+      const restaurants = cell.restaurants.map((base) => {
+        const restaurant = buildRestaurant({ ...base, source: 'openstreetmap' });
+        byId.set(restaurant.id, restaurant);
+        return restaurant;
+      });
+      cells.set(key, restaurants);
+    }
+  }
+
+  function persist(key: string, restaurants: readonly StoredRestaurant[]): void {
+    const file = config.cacheFile;
+    if (file === undefined) {
+      return;
+    }
+    persisted[key] = {
+      savedAt: Date.now(),
+      restaurants: restaurants.map(({ id, name, cuisine, latitude, longitude, address }) => ({
+        id,
+        name,
+        cuisine,
+        latitude,
+        longitude,
+        address,
+      })),
+    };
+    if (writeTimer !== null) {
+      return;
+    }
+    writeTimer = setTimeout(() => {
+      writeTimer = null;
+      try {
+        mkdirSync(dirname(file), { recursive: true });
+        writeFileSync(file, JSON.stringify({ version: 1, cells: persisted }));
+      } catch {
+        return;
+      }
+    }, 2000);
+    writeTimer.unref();
+  }
   let lookupQueue: Promise<unknown> = Promise.resolve();
+  let photonDownUntil = 0;
+
+  function photonAvailable(): boolean {
+    return Date.now() >= photonDownUntil;
+  }
+
+  function markPhotonDown(): void {
+    photonDownUntil = Date.now() + PHOTON_REST_MS;
+  }
 
   async function getJson(url: URL): Promise<unknown> {
     const response = await doFetch(url, {
@@ -267,13 +442,15 @@ export function createOsmRestaurantSource(
     return response.json();
   }
 
-  async function nearby(center: LatLng, kind: AmenityKind): Promise<NearbyPlace[]> {
+  async function nearby(center: LatLng, kind: AmenityKind | 'all'): Promise<NearbyPlace[]> {
     const url = new URL('/reverse', config.photonUrl);
     url.searchParams.set('lat', center.latitude.toFixed(5));
     url.searchParams.set('lon', center.longitude.toFixed(5));
     url.searchParams.set('radius', String(NEARBY_RADIUS_KM));
     url.searchParams.set('limit', String(PER_KIND));
-    url.searchParams.set('osm_tag', `amenity:${kind}`);
+    for (const tag of kind === 'all' ? amenityKinds : [kind]) {
+      url.searchParams.append('osm_tag', `amenity:${tag}`);
+    }
     const parsed = photonResponseSchema.safeParse(await getJson(url));
     if (!parsed.success) {
       throw new UpstreamError('Photon returned an unexpected response');
@@ -287,7 +464,7 @@ export function createOsmRestaurantSource(
     keys: readonly string[],
     options: { details?: boolean; sink?: z.infer<typeof nominatimPlaceSchema>[] } = {},
   ): Promise<z.infer<typeof nominatimPlaceSchema>[]> {
-    const run = lookupQueue.then(async () => {
+    return queued(async () => {
       const results = options.sink ?? [];
       for (let start = 0; start < keys.length; start += LOOKUP_BATCH) {
         if (start > 0) {
@@ -310,11 +487,75 @@ export function createOsmRestaurantSource(
       }
       return results;
     });
+  }
+
+  function queued<T>(task: () => Promise<T>): Promise<T> {
+    const run = lookupQueue.then(task);
     lookupQueue = run.then(
       () => sleep(LOOKUP_SPACING_MS),
       () => sleep(LOOKUP_SPACING_MS),
     );
     return run;
+  }
+
+  function nominatimSearch(params: Record<string, string>, box: number): Promise<NominatimPlace[]> {
+    return queued(async () => {
+      const center = { latitude: Number(params.lat), longitude: Number(params.lon) };
+      const url = new URL('/search', config.nominatimUrl);
+      for (const [key, value] of Object.entries(params)) {
+        if (key !== 'lat' && key !== 'lon') {
+          url.searchParams.set(key, value);
+        }
+      }
+      const lngBox = box / Math.max(0.2, Math.cos((center.latitude * Math.PI) / 180));
+      url.searchParams.set(
+        'viewbox',
+        [
+          center.longitude - lngBox,
+          center.latitude + box,
+          center.longitude + lngBox,
+          center.latitude - box,
+        ]
+          .map((value) => value.toFixed(5))
+          .join(','),
+      );
+      url.searchParams.set('bounded', '1');
+      url.searchParams.set('format', 'jsonv2');
+      url.searchParams.set('extratags', '1');
+      url.searchParams.set('addressdetails', '1');
+      const body = await getJson(url);
+      if (!Array.isArray(body)) {
+        throw new UpstreamError('Nominatim returned an unexpected response');
+      }
+      return body.flatMap((entry) => {
+        const place = nominatimPlaceSchema.safeParse(entry);
+        return place.success ? [place.data] : [];
+      });
+    });
+  }
+
+  async function nominatimPlaces(
+    searches: readonly Record<string, string>[],
+    box: number,
+  ): Promise<{ places: NearbyPlace[]; tags: Map<string, string> }> {
+    const tags = new Map<string, string>();
+    const unique = new Map<string, NearbyPlace>();
+    for (const params of searches) {
+      for (const found of await nominatimSearch(params, box)) {
+        if (found.category !== 'amenity' || !amenityKinds.some((kind) => kind === found.type)) {
+          continue;
+        }
+        const place = nearbyFromNominatim(found);
+        if (place) {
+          unique.set(place.id, place);
+          const cuisine = found.extratags?.cuisine;
+          if (cuisine !== undefined) {
+            tags.set(place.id, cuisine);
+          }
+        }
+      }
+    }
+    return { places: [...unique.values()], tags };
   }
 
   async function cuisineTags(places: readonly NearbyPlace[]): Promise<Map<string, string>> {
@@ -341,17 +582,7 @@ export function createOsmRestaurantSource(
     return tags;
   }
 
-  async function loadCell(center: LatLng): Promise<StoredRestaurant[]> {
-    const lists = await Promise.all(amenityKinds.map((kind) => nearby(center, kind)));
-    const unique = new Map<string, NearbyPlace>();
-    for (const place of lists.flat()) {
-      unique.set(place.id, place);
-    }
-    const places = [...unique.values()];
-    if (places.length === 0) {
-      return [];
-    }
-    const tags = await cuisineTags(places);
+  function remember(places: readonly NearbyPlace[], tags: Map<string, string>): StoredRestaurant[] {
     return places.map((place) => {
       const existing = byId.get(place.id);
       const restaurant = existing ?? toRestaurant(place, tags.get(place.id));
@@ -360,15 +591,120 @@ export function createOsmRestaurantSource(
     });
   }
 
+  async function loadCell(center: LatLng): Promise<StoredRestaurant[]> {
+    const probes = [
+      ...amenityKinds.map((kind) => () => nearby(center, kind)),
+      ...PROBE_OFFSETS.slice(1).map(
+        ([dLat, dLng]) =>
+          () =>
+            nearby({ latitude: center.latitude + dLat, longitude: center.longitude + dLng }, 'all'),
+      ),
+    ];
+    const settled = photonAvailable() ? await inPool(probes, PHOTON_CONCURRENCY) : [];
+    const lists = settled.flatMap((result) =>
+      result.status === 'fulfilled' ? [result.value] : [],
+    );
+    if (lists.length === 0) {
+      markPhotonDown();
+      const found = await nominatimPlaces(
+        amenityKinds.map((kind) => ({
+          amenity: kind,
+          limit: '40',
+          lat: String(center.latitude),
+          lon: String(center.longitude),
+        })),
+        NOMINATIM_NEARBY_BOX,
+      );
+      return remember(found.places, found.tags);
+    }
+    const unique = new Map<string, NearbyPlace>();
+    for (const place of lists.flat()) {
+      unique.set(place.id, place);
+    }
+    const places = [...unique.values()].sort(
+      (a, b) => haversineMeters(center, a) - haversineMeters(center, b),
+    );
+    if (places.length === 0) {
+      return [];
+    }
+    return remember(places, await cuisineTags(places));
+  }
+
+  async function loadAndPersistCell(key: string, center: LatLng): Promise<StoredRestaurant[]> {
+    const restaurants = await loadCell(center);
+    if (restaurants.length > 0) {
+      persist(key, restaurants);
+    }
+    return restaurants;
+  }
+
+  async function textSearch(text: string, near: LatLng): Promise<StoredRestaurant[]> {
+    try {
+      if (!photonAvailable()) {
+        throw new UpstreamError('Photon is resting');
+      }
+      return await photonTextSearch(text, near);
+    } catch {
+      markPhotonDown();
+      const found = await nominatimPlaces(
+        [{ q: text, limit: '25', lat: String(near.latitude), lon: String(near.longitude) }],
+        NOMINATIM_TEXT_BOX,
+      );
+      return remember(
+        found.places.filter((place) => haversineMeters(near, place) <= OSM_TEXT_RADIUS_METERS),
+        found.tags,
+      );
+    }
+  }
+
+  async function photonTextSearch(text: string, near: LatLng): Promise<StoredRestaurant[]> {
+    const url = new URL('/api/', config.photonUrl);
+    url.searchParams.set('q', text);
+    url.searchParams.set('lat', near.latitude.toFixed(4));
+    url.searchParams.set('lon', near.longitude.toFixed(4));
+    url.searchParams.set('limit', String(TEXT_LIMIT));
+    url.searchParams.set('location_bias_scale', '0.5');
+    url.searchParams.set('zoom', '12');
+    for (const kind of amenityKinds) {
+      url.searchParams.append('osm_tag', `amenity:${kind}`);
+    }
+    const parsed = photonResponseSchema.safeParse(await getJson(url));
+    if (!parsed.success) {
+      throw new UpstreamError('Photon returned an unexpected response');
+    }
+    const places = parsed.data.features
+      .map(nearbyFromPhoton)
+      .filter((place): place is NearbyPlace => place !== null)
+      .filter((place) => haversineMeters(near, place) <= OSM_TEXT_RADIUS_METERS);
+    if (places.length === 0) {
+      return [];
+    }
+    const unknown = places.filter((place) => byId.get(place.id) === undefined);
+    return remember(
+      places,
+      unknown.length > 0 ? await cuisineTags(unknown) : new Map<string, string>(),
+    );
+  }
+
   return {
     async search(query: RestaurantQuery): Promise<RestaurantSummary[]> {
       const { key, center } = cellOf(query.near);
       try {
-        const restaurants = await cached(cells, key, () => loadCell(center));
+        const restaurants = await cached(cells, key, () => loadAndPersistCell(key, center));
         if (restaurants.length === 0 && fallback) {
           return await fallback.search(query);
         }
-        return rankRestaurants(restaurants, query, OSM_SEARCH_RADIUS_METERS);
+        const text = query.text?.trim().toLowerCase() ?? '';
+        if (text.length < 2) {
+          return rankRestaurants(restaurants, query, OSM_SEARCH_RADIUS_METERS);
+        }
+        const textKey = `${text}|${key}`;
+        const found = await cached(texts, textKey, () => textSearch(text, center)).catch(() => []);
+        const merged = new Map<string, StoredRestaurant>();
+        for (const restaurant of [...found, ...restaurants]) {
+          merged.set(restaurant.id, restaurant);
+        }
+        return rankRestaurants([...merged.values()], query, OSM_TEXT_RADIUS_METERS);
       } catch (error) {
         if (fallback) {
           return await fallback.search(query);
@@ -385,29 +721,12 @@ export function createOsmRestaurantSource(
       if (known) {
         return withDistance(known, from);
       }
-      const [place] = await lookup([`${parsed.type}${parsed.id}`], { details: true });
-      const name = place?.name?.trim();
-      if (!place || !name) {
+      const [found] = await lookup([`${parsed.type}${parsed.id}`], { details: true });
+      const place = found ? nearbyFromNominatim(found) : null;
+      if (!found || !place) {
         return null;
       }
-      const address = place.address;
-      const street = address?.road;
-      const restaurant = toRestaurant(
-        {
-          id,
-          lookupKey: `${parsed.type}${parsed.id}`,
-          name,
-          kind: place.type,
-          latitude: Number(place.lat),
-          longitude: Number(place.lon),
-          address:
-            street === undefined
-              ? null
-              : [address?.house_number, street].filter(Boolean).join(' ') +
-                (address?.city !== undefined ? `, ${address.city}` : ''),
-        },
-        place.extratags?.cuisine,
-      );
+      const restaurant = toRestaurant({ ...place, id }, found.extratags?.cuisine);
       byId.set(id, restaurant);
       return withDistance(restaurant, from);
     },

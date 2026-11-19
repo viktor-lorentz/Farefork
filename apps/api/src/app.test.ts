@@ -142,4 +142,13 @@ describe('POST /v1/rides/quotes', () => {
     expect(long.status).toBe(422);
     expect(await long.json()).toMatchObject({ error: 'trip_too_long' });
   });
+
+  it('serves bundled restaurant photos and rejects other paths', async () => {
+    const app = createApp(testDeps());
+    const photo = await app.request('/v1/photos/pizza-1.jpg');
+    expect(photo.status).toBe(200);
+    expect(photo.headers.get('content-type')).toBe('image/jpeg');
+    expect((await app.request('/v1/photos/..%2Fapp.ts')).status).toBe(404);
+    expect((await app.request('/v1/photos/pizza-999.jpg')).status).toBe(404);
+  });
 });

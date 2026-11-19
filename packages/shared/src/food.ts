@@ -49,6 +49,10 @@ export type RestaurantSource = z.infer<typeof restaurantSourceSchema>;
 
 export const restaurantPhotoSchema = z.object({
   url: z.url(),
+  path: z
+    .string()
+    .regex(/^\/v1\/photos\/[a-z]+-\d{1,3}\.jpg$/)
+    .nullable(),
   author: z.string().min(1),
   license: z.string().min(1),
   sourceUrl: z.url().nullable(),

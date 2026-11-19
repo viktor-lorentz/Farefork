@@ -42,9 +42,12 @@ Menu prices often differ between apps and from in-store prices. The app's "true 
 ### Restaurants, menus and photos
 
 - **Restaurants are real places from OpenStreetMap** (ODbL, attribution shown in the app). The API lists nearby restaurants, fast food and cafes through Photon, and fills in cuisine tags through Nominatim's lookup. Results are cached per area for 24 hours. If those services fail, the API falls back to invented sample restaurants.
+- **Name search** looks up restaurants by name within 15 km, so a favorite place across town still shows up.
+- **When Photon is unavailable** (for example after rate limiting), restaurant search and address search fall back to Nominatim, throttled to one request per second with the newest search winning. Nominatim's policy discourages search-as-you-type, so this fallback is for development only.
+- **Results are cached on disk** in `apps/api/.cache/` for 24 hours, so restarting the API doesn't refetch.
 - **Public Photon and Nominatim servers are for light use.** Nominatim allows at most one request per second and forbids heavy or bulk use. Before launch, self-host them or switch to a commercial provider (`PHOTON_URL`, `NOMINATIM_URL`).
 - **Menus, prices and which apps carry each restaurant are simulated**, and the app says so. Showing real restaurant names next to made-up menus and prices could mislead people or upset those restaurants. **Decide before launch** whether to keep real names, or wait for real menus from partner feeds.
-- **Photos are CC0 food photos** (Rawpixel, StockSnap and WordPress Photo Directory, found through Openverse), matched by cuisine. They aren't photos of the restaurant, and the menu page says so. Real restaurant photos need a licensed source such as Google Places Photos or Yelp Fusion, both paid and with display rules, or partner feeds.
+- **Photos are CC0 food photos** (Rawpixel, StockSnap and WordPress Photo Directory, found through Openverse), matched by cuisine. Resized copies (720 px) are bundled in `apps/api/assets/photos` and served by the API at `/v1/photos/…`, so they load fast and don't depend on hotlinking. They aren't photos of the restaurant, and the menu page says so. Real restaurant photos need a licensed source such as Google Places Photos or Yelp Fusion, both paid and with display rules, or partner feeds.
 
 ### Order links
 

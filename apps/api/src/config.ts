@@ -9,6 +9,7 @@ export type GeoConfig = {
   upstreamTimeoutMs: number;
   restaurants: 'openstreetmap' | 'sample';
   nominatimUrl: string;
+  osmCacheFile: string | undefined;
 };
 
 function trimSlash(value: string): string {
@@ -24,6 +25,10 @@ export function readGeoConfig(env: NodeJS.ProcessEnv = process.env): GeoConfig {
     userAgent: env.GEO_USER_AGENT ?? `${APP_NAME}/0.1 (development build)`,
     upstreamTimeoutMs: Number(env.UPSTREAM_TIMEOUT_MS ?? 5000),
     restaurants: env.RESTAURANTS === 'sample' ? 'sample' : 'openstreetmap',
+    osmCacheFile:
+      env.OSM_CACHE_FILE === 'off'
+        ? undefined
+        : (env.OSM_CACHE_FILE ?? '.cache/osm-restaurants.json'),
     nominatimUrl: trimSlash(env.NOMINATIM_URL ?? 'https://nominatim.openstreetmap.org'),
   };
 }

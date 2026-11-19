@@ -2,51 +2,59 @@
   "pizza": [
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/9IKVHJPX82.jpg",
-      "author": "Krzysztof Puszczyński",
+      "author": "Krzysztof Puszczy\u0144ski",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/pizza-cheese-9IKVHJPX82"
+      "sourceUrl": "https://stocksnap.io/photo/pizza-cheese-9IKVHJPX82",
+      "path": "/v1/photos/pizza-1.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/R0YJRQ45E0.jpg",
-      "author": "Krzysztof Puszczyński",
+      "author": "Krzysztof Puszczy\u0144ski",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/pizza-food-R0YJRQ45E0"
+      "sourceUrl": "https://stocksnap.io/photo/pizza-food-R0YJRQ45E0",
+      "path": "/v1/photos/pizza-2.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/13DA5BCDFE.jpg",
       "author": "JESHOOTS.com",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/pizza-cheese-13DA5BCDFE"
+      "sourceUrl": "https://stocksnap.io/photo/pizza-cheese-13DA5BCDFE",
+      "path": "/v1/photos/pizza-3.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/F7EPDH2L1A.jpg",
       "author": "Eneida Nieves",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/rustic-pizza-F7EPDH2L1A"
+      "sourceUrl": "https://stocksnap.io/photo/rustic-pizza-F7EPDH2L1A",
+      "path": "/v1/photos/pizza-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjYwNDg3LXdpa2ltZWRpYS1pbWFnZS1rb3dseGZybS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3294359/free-photo-image-bowl-cc0-creative-commons"
+      "sourceUrl": "https://www.rawpixel.com/image/3294359/free-photo-image-bowl-cc0-creative-commons",
+      "path": "/v1/photos/pizza-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvc3YxOTQxNTQtaW1hZ2Uta3d2dWhuNm8uanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5902010/photo-image-public-domain-food-pizza"
+      "sourceUrl": "https://www.rawpixel.com/image/5902010/photo-image-public-domain-food-pizza",
+      "path": "/v1/photos/pizza-6.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvcHg0MTEzOC1pbWFnZS1rd3Z2Z2ExZC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5908402/free-pizza-image-public-domain-food-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5908402/free-pizza-image-public-domain-food-cc0-photo",
+      "path": "/v1/photos/pizza-7.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMzQwNC1pbWFnZS1rd3lzZmtsMS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970091/pizza-served"
+      "sourceUrl": "https://www.rawpixel.com/image/5970091/pizza-served",
+      "path": "/v1/photos/pizza-8.jpg"
     }
   ],
   "burgers": [
@@ -54,25 +62,29 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjYxNDgwLXdpa2ltZWRpYS1pbWFnZS1rb3diNHd6bS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3283018/free-photo-image-burger-sandwich-bacon"
+      "sourceUrl": "https://www.rawpixel.com/image/3283018/free-photo-image-burger-sandwich-bacon",
+      "path": "/v1/photos/burgers-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNDUwMS1pbWFnZS1rd3lzZjRueC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970025/cheeseburger-fries-ketchup"
+      "sourceUrl": "https://www.rawpixel.com/image/5970025/cheeseburger-fries-ketchup",
+      "path": "/v1/photos/burgers-2.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/7QH4K6AESO.jpg",
       "author": "Dana Tentis",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/hamburger-dinner-7QH4K6AESO"
+      "sourceUrl": "https://stocksnap.io/photo/hamburger-dinner-7QH4K6AESO",
+      "path": "/v1/photos/burgers-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMjcyNy1pbWFnZS1rd3Z5ZXNxNi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5926905/free-burger-image-public-domain-food-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5926905/free-burger-image-public-domain-food-cc0-photo",
+      "path": "/v1/photos/burgers-4.jpg"
     }
   ],
   "mexican": [
@@ -80,37 +92,43 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMDc1MC1pbWFnZS1rd3Z3dmp3bi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5917508/free-taco-image-public-domain-food-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5917508/free-taco-image-public-domain-food-cc0-photo",
+      "path": "/v1/photos/mexican-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxMDYwNjc3LWltYWdlLWt3dnk4NnJuLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5925753/free-taco-image-public-domain-food-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5925753/free-taco-image-public-domain-food-cc0-photo",
+      "path": "/v1/photos/mexican-2.jpg"
     },
     {
       "url": "https://pd.w.org/2022/03/4426232360e47e203.76587444-2048x1536.jpg",
       "author": "mdburnette",
       "license": "CC0",
-      "sourceUrl": "https://wordpress.org/photos/photo/4426232360/"
+      "sourceUrl": "https://wordpress.org/photos/photo/4426232360/",
+      "path": "/v1/photos/mexican-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXM5NTcxLWltYWdlLWt3eXM2aWthLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5968430/mexican-tacos-meal"
+      "sourceUrl": "https://www.rawpixel.com/image/5968430/mexican-tacos-meal",
+      "path": "/v1/photos/mexican-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXM5NzM5LWltYWdlLWt3dndzNzBvLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5916854/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5916854/photo-image-public-domain-food-free",
+      "path": "/v1/photos/mexican-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMDQxOC1pbWFnZS1rd3lzaDgyaS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970517/mexican-dinner"
+      "sourceUrl": "https://www.rawpixel.com/image/5970517/mexican-dinner",
+      "path": "/v1/photos/mexican-6.jpg"
     }
   ],
   "sushi": [
@@ -118,19 +136,22 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMTI1NC1pbWFnZS1rd3lzZ2hyYy5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970394/sushi-platter"
+      "sourceUrl": "https://www.rawpixel.com/image/5970394/sushi-platter",
+      "path": "/v1/photos/sushi-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4ODg4ODk4LWltYWdlLWt3dnV4MzI0LmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5904955/photo-image-light-public-domain-food"
+      "sourceUrl": "https://www.rawpixel.com/image/5904955/photo-image-light-public-domain-food",
+      "path": "/v1/photos/sushi-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA2L3Vwd2s2MTY2MDU4Ni13aWtpbWVkaWEtaW1hZ2Uta293cmUzY28uanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3304179/free-photo-image-sushi-accessory-animal"
+      "sourceUrl": "https://www.rawpixel.com/image/3304179/free-photo-image-sushi-accessory-animal",
+      "path": "/v1/photos/sushi-3.jpg"
     }
   ],
   "thai": [
@@ -138,37 +159,43 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmYyNjEwLWltYWdlLWt3dnluaTBmLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5928354/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5928354/photo-image-public-domain-food-free",
+      "path": "/v1/photos/thai-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL25zMTY5MDQtaW1hZ2Uta3d2d243amguanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5916044/image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5916044/image-public-domain-food-free",
+      "path": "/v1/photos/thai-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4Njk4MjQyLWltYWdlLWt3dnY2YzM4LmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5906714/photo-image-public-domain-black-food"
+      "sourceUrl": "https://www.rawpixel.com/image/5906714/photo-image-public-domain-black-food",
+      "path": "/v1/photos/thai-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMDkxNC1pbWFnZS1rd3lzaGs4aC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970497/pad-thai-noodles"
+      "sourceUrl": "https://www.rawpixel.com/image/5970497/pad-thai-noodles",
+      "path": "/v1/photos/thai-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxODA2My1pbWFnZS1rd3lzOXYyZC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5969148/pad-thai-noodles"
+      "sourceUrl": "https://www.rawpixel.com/image/5969148/pad-thai-noodles",
+      "path": "/v1/photos/thai-5.jpg"
     },
     {
       "url": "https://pd.w.org/2021/12/55461c1f26f582443.06841932-2048x1536.jpg",
       "author": "gastronomicslc",
       "license": "CC0",
-      "sourceUrl": "https://wordpress.org/photos/photo/55461c1f26/"
+      "sourceUrl": "https://wordpress.org/photos/photo/55461c1f26/",
+      "path": "/v1/photos/thai-6.jpg"
     }
   ],
   "indian": [
@@ -176,37 +203,43 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMTAzOS1pbWFnZS1rd3lzaG5wOC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970798/spicy-indian-curry"
+      "sourceUrl": "https://www.rawpixel.com/image/5970798/spicy-indian-curry",
+      "path": "/v1/photos/indian-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTU2MC1pbWFnZS1rd3lzYmZjZy5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5969538/indian-curry"
+      "sourceUrl": "https://www.rawpixel.com/image/5969538/indian-curry",
+      "path": "/v1/photos/indian-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTAzL2ZsNTE2NjgwNDQ4MTEtaW1hZ2UuanBn.jpg",
       "author": "U.S. Department of Agriculture",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/8735016/curry-vegetables"
+      "sourceUrl": "https://www.rawpixel.com/image/8735016/curry-vegetables",
+      "path": "/v1/photos/indian-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJiaXNpYmVsbGFiYXRoX3NhbWJhcl9yaWNlXzY4NTY0OS1pbWFnZS1reWJlNXlobi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6040812/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/6040812/photo-image-public-domain-food-free",
+      "path": "/v1/photos/indian-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvc3YyMTEwNTctaW1hZ2Uta3d5bjZwaW4uanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5935758/free-public-domain-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5935758/free-public-domain-cc0-photo",
+      "path": "/v1/photos/indian-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMTAzNy1pbWFnZS1rd3lzaXZzeC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970564/hot-curry"
+      "sourceUrl": "https://www.rawpixel.com/image/5970564/hot-curry",
+      "path": "/v1/photos/indian-6.jpg"
     }
   ],
   "chinese": [
@@ -214,37 +247,43 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmYzMzg5LWltYWdlLWt3eXQzc3VqLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5974848/chinese-fried-dim-sum-with-chopsticks"
+      "sourceUrl": "https://www.rawpixel.com/image/5974848/chinese-fried-dim-sum-with-chopsticks",
+      "path": "/v1/photos/chinese-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmYzMzk0LWltYWdlLWt3eXQ1bmRhLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5975068/chinese-fried-dim-sum-wooden-steamers"
+      "sourceUrl": "https://www.rawpixel.com/image/5975068/chinese-fried-dim-sum-wooden-steamers",
+      "path": "/v1/photos/chinese-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmYzMzkyLWltYWdlLWt3dnlteXRpLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5928183/photo-image-public-domain-plant-wood"
+      "sourceUrl": "https://www.rawpixel.com/image/5928183/photo-image-public-domain-plant-wood",
+      "path": "/v1/photos/chinese-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMjI2Mi1pbWFnZS1rd3Z5ZXg0ZS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5926866/free-dim-sum-image-public-domain-food-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5926866/free-dim-sum-image-public-domain-food-cc0-photo",
+      "path": "/v1/photos/chinese-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmYzMzk2LWltYWdlLWt3eXQ0YWVwLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5974750/photo-image-public-domain-wood-food"
+      "sourceUrl": "https://www.rawpixel.com/image/5974750/photo-image-public-domain-wood-food",
+      "path": "/v1/photos/chinese-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJzdGVhbWVkX3N0dWZmZWRfYnVuX2ZyZXNoLWltYWdlLWt5YmNuMzUwLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6031671/asian-food-free-public-domain-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/6031671/asian-food-free-public-domain-cc0-photo",
+      "path": "/v1/photos/chinese-6.jpg"
     }
   ],
   "mediterranean": [
@@ -252,13 +291,15 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJodW1tdXNfZmFsYWZlbF9hdXRoZW50aWNfZ3JlZWtfMC1pbWFnZS1reWJkZ2Yzbi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6036468/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/6036468/photo-image-public-domain-food-free",
+      "path": "/v1/photos/mediterranean-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJodW1tdXNfZmFsYWZlbF9hdXRoZW50aWNfZ3JlZWstaW1hZ2Uta3liZGdqanEuanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6036460/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/6036460/photo-image-public-domain-food-free",
+      "path": "/v1/photos/mediterranean-2.jpg"
     }
   ],
   "salads": [
@@ -266,31 +307,36 @@
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/NI4QYAXHA0.jpg",
       "author": "Foodie Girl",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/salad-bowl-NI4QYAXHA0"
+      "sourceUrl": "https://stocksnap.io/photo/salad-bowl-NI4QYAXHA0",
+      "path": "/v1/photos/salads-1.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/PLOA1CWIRK.jpg",
       "author": "FOCA Stock",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/salad-bowl-PLOA1CWIRK"
+      "sourceUrl": "https://stocksnap.io/photo/salad-bowl-PLOA1CWIRK",
+      "path": "/v1/photos/salads-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2ZsMTgwNjU2OTYyNDEtaW1hZ2Uta3d2eDAzaWMuanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5918288/image-public-domain-wood-food"
+      "sourceUrl": "https://www.rawpixel.com/image/5918288/image-public-domain-wood-food",
+      "path": "/v1/photos/salads-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMDYyNC1pbWFnZS1rd3lzajFzZy5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970865/salad-bowl-with-feta-cheese"
+      "sourceUrl": "https://www.rawpixel.com/image/5970865/salad-bowl-with-feta-cheese",
+      "path": "/v1/photos/salads-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4Njk4NjQ1LWltYWdlLWt3dnY1eWMyLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5906454/photo-image-background-public-domain-baby-cos"
+      "sourceUrl": "https://www.rawpixel.com/image/5906454/photo-image-background-public-domain-baby-cos",
+      "path": "/v1/photos/salads-5.jpg"
     }
   ],
   "breakfast": [
@@ -298,37 +344,43 @@
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/KJGLHB2KF4.jpg",
       "author": "Gabriel Gurrola",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/food-eat-KJGLHB2KF4"
+      "sourceUrl": "https://stocksnap.io/photo/food-eat-KJGLHB2KF4",
+      "path": "/v1/photos/breakfast-1.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/VD2NUQHVJS.jpg",
       "author": "Altered Reality",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/pancakes-syrup-VD2NUQHVJS"
+      "sourceUrl": "https://stocksnap.io/photo/pancakes-syrup-VD2NUQHVJS",
+      "path": "/v1/photos/breakfast-2.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/XW4W5IRAJ1.jpg",
       "author": "Foodie Factor",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/blueberry-pancake-XW4W5IRAJ1"
+      "sourceUrl": "https://stocksnap.io/photo/blueberry-pancake-XW4W5IRAJ1",
+      "path": "/v1/photos/breakfast-3.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/XI7CBAU8AV.jpg",
       "author": "Yoori Koo",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/pancake-fruits-XI7CBAU8AV"
+      "sourceUrl": "https://stocksnap.io/photo/pancake-fruits-XI7CBAU8AV",
+      "path": "/v1/photos/breakfast-4.jpg"
     },
     {
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/F0X48BFRXZ.jpg",
       "author": "Joseph Gonzalez",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/waffle-pancake-F0X48BFRXZ"
+      "sourceUrl": "https://stocksnap.io/photo/waffle-pancake-F0X48BFRXZ",
+      "path": "/v1/photos/breakfast-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJwYW5jYWtlX2NyZXBlc19lYXRfZm9vZF8yLWltYWdlLWt5YmQwMTM3LmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6033674/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/6033674/photo-image-public-domain-food-free",
+      "path": "/v1/photos/breakfast-6.jpg"
     }
   ],
   "italian": [
@@ -336,37 +388,43 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxMTQ1MC1pbWFnZS1rd3lzZzBvbC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5970196/pasta-dish"
+      "sourceUrl": "https://www.rawpixel.com/image/5970196/pasta-dish",
+      "path": "/v1/photos/italian-1.jpg"
     },
     {
       "url": "https://pd.w.org/2022/09/7276329e1a6385ce6.48110671-2048x1536.jpg",
       "author": "ChrisEdwardsCE",
       "license": "CC0",
-      "sourceUrl": "https://wordpress.org/photos/photo/7276329e1a/"
+      "sourceUrl": "https://wordpress.org/photos/photo/7276329e1a/",
+      "path": "/v1/photos/italian-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTQ0NC1pbWFnZS1rd3lzYzJtdi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5969533/pasta-and-prawns"
+      "sourceUrl": "https://www.rawpixel.com/image/5969533/pasta-and-prawns",
+      "path": "/v1/photos/italian-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjY1Mzk0LXdpa2ltZWRpYS1pbWFnZS1rb3dsd29pay5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3294191/free-photo-image-dish-pasta-bean-sprout"
+      "sourceUrl": "https://www.rawpixel.com/image/3294191/free-photo-image-dish-pasta-bean-sprout",
+      "path": "/v1/photos/italian-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTQ1Mi1pbWFnZS1rd3lzY2NkNC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5969580/pesto-pasta"
+      "sourceUrl": "https://www.rawpixel.com/image/5969580/pesto-pasta",
+      "path": "/v1/photos/italian-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXMxNTQ1OC1pbWFnZS1rd3lzYzU4MS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5969500/pasta-dinner-table"
+      "sourceUrl": "https://www.rawpixel.com/image/5969500/pasta-dinner-table",
+      "path": "/v1/photos/italian-6.jpg"
     }
   ],
   "american": [
@@ -374,37 +432,43 @@
       "url": "https://cdn.stocksnap.io/img-thumbs/960w/VYTEWBJEXM.jpg",
       "author": "Mike Moloney",
       "license": "CC0",
-      "sourceUrl": "https://stocksnap.io/photo/fried-chicken-VYTEWBJEXM"
+      "sourceUrl": "https://stocksnap.io/photo/fried-chicken-VYTEWBJEXM",
+      "path": "/v1/photos/american-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNjU5OTgzLXdpa2ltZWRpYS1pbWFnZS1rb3dyZzA5YS5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3304350/free-photo-image-fried-chicken-fast-food-wings"
+      "sourceUrl": "https://www.rawpixel.com/image/3304350/free-photo-image-fried-chicken-fast-food-wings",
+      "path": "/v1/photos/american-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvc3YxOTQzODUtaW1hZ2Uta3d5bmQwYm8uanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5936996/free-public-domain-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5936996/free-public-domain-cc0-photo",
+      "path": "/v1/photos/american-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvc3YxOTQzODEtaW1hZ2Uta3d5bmUzNXYuanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5937247/free-public-domain-cc0-photo"
+      "sourceUrl": "https://www.rawpixel.com/image/5937247/free-public-domain-cc0-photo",
+      "path": "/v1/photos/american-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvaXM5NDAxLWltYWdlLWt3eXM1Z3BxLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5968196/cooking-chicken-wings"
+      "sourceUrl": "https://www.rawpixel.com/image/5968196/cooking-chicken-wings",
+      "path": "/v1/photos/american-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4MTQyMzE5Ny1pbWFnZS1rd3Z2dnpybi5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5910927/image-public-domain-food-water"
+      "sourceUrl": "https://www.rawpixel.com/image/5910927/image-public-domain-food-water",
+      "path": "/v1/photos/american-6.jpg"
     }
   ],
   "vietnamese": [
@@ -412,37 +476,43 @@
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4NzA5NzU5LWltYWdlLWt3dnY2eW5lLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5906642/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5906642/photo-image-public-domain-food-free",
+      "path": "/v1/photos/vietnamese-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxNTk0OTMwLWltYWdlLWt3dnhxNjNmLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5922871/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5922871/photo-image-public-domain-food-free",
+      "path": "/v1/photos/vietnamese-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4OTkwMjg2LWltYWdlLWt3dnVyMTJhLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5903750/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5903750/photo-image-public-domain-food-free",
+      "path": "/v1/photos/vietnamese-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxNTk0OTMxLWltYWdlLWt3dnhxYTgwLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5923127/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5923127/photo-image-public-domain-food-free",
+      "path": "/v1/photos/vietnamese-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmY1MDc5LWltYWdlLWt3eXQ1Mnc1LmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5975051/eating-vietnamese-pho-soup-with-fresh-lime"
+      "sourceUrl": "https://www.rawpixel.com/image/5975051/eating-vietnamese-pho-soup-with-fresh-lime",
+      "path": "/v1/photos/vietnamese-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA2L3Vwd2s2MTY2MzIyNS13aWtpbWVkaWEtaW1hZ2Uta293cmJtdDEuanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3303887/free-photo-image-alcohol-bean-sprout-beverage"
+      "sourceUrl": "https://www.rawpixel.com/image/3303887/free-photo-image-alcohol-bean-sprout-beverage",
+      "path": "/v1/photos/vietnamese-6.jpg"
     }
   ],
   "korean": [
@@ -450,13 +520,15 @@
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHg4Nzc5NTUtaW1hZ2Uta3d2eGRhaGguanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5920629/photo-image-public-domain-food-free"
+      "sourceUrl": "https://www.rawpixel.com/image/5920629/photo-image-public-domain-food-free",
+      "path": "/v1/photos/korean-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4NzAwMTM2LWltYWdlLWt3dnhqc2pnLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5921831/photo-image-public-domain-plant-green"
+      "sourceUrl": "https://www.rawpixel.com/image/5921831/photo-image-public-domain-plant-green",
+      "path": "/v1/photos/korean-2.jpg"
     }
   ],
   "cafe": [
@@ -464,37 +536,43 @@
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4NjM1MjYxLWltYWdlLWt3dnY4dXdyLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5907010/photo-image-public-domain-art-coffee"
+      "sourceUrl": "https://www.rawpixel.com/image/5907010/photo-image-public-domain-art-coffee",
+      "path": "/v1/photos/cafe-1.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNzEzMjI5LXdpa2ltZWRpYS1pbWFnZS1rb3dxengxcC5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3303533/free-photo-image-coffee-beverage-brown-background"
+      "sourceUrl": "https://www.rawpixel.com/image/3303533/free-photo-image-coffee-beverage-brown-background",
+      "path": "/v1/photos/cafe-2.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvdXB3azYxNzEzMjYxLXdpa2ltZWRpYS1pbWFnZS1rb3dyMnBjci5qcGc.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3303956/free-photo-image-coffee-beverage-brown-background"
+      "sourceUrl": "https://www.rawpixel.com/image/3303956/free-photo-image-coffee-beverage-brown-background",
+      "path": "/v1/photos/cafe-3.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTA0L3Vwd2s2MTcxMzY5My13aWtpbWVkaWEtaW1hZ2Uta293cjAydmEuanBn.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/3303530/free-photo-image-coffee-cup-beverage"
+      "sourceUrl": "https://www.rawpixel.com/image/3303530/free-photo-image-coffee-cup-beverage",
+      "path": "/v1/photos/cafe-4.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL3B4NTY4MTM4LWltYWdlLWt3dnZnaWpoLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/5908529/image-public-domain-art-coffee"
+      "sourceUrl": "https://www.rawpixel.com/image/5908529/image-public-domain-art-coffee",
+      "path": "/v1/photos/cafe-5.jpg"
     },
     {
       "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2ZyY29mZmVlX2ZsYXRfd2hpdGVfY2FmZV8xLWltYWdlLWt5YmR4cnBiLmpwZw.jpg",
       "author": "Unknown",
       "license": "CC0",
-      "sourceUrl": "https://www.rawpixel.com/image/6039151/photo-image-public-domain-coffee-free"
+      "sourceUrl": "https://www.rawpixel.com/image/6039151/photo-image-public-domain-coffee-free",
+      "path": "/v1/photos/cafe-6.jpg"
     }
   ]
 }

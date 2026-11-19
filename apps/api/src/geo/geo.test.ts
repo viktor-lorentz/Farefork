@@ -2,6 +2,7 @@ import { decodePolyline } from '@repo/shared';
 import { describe, expect, it, vi } from 'vitest';
 import { TtlCache } from '../lib/ttlCache';
 import { createPhotonGeocoder, placeFromPhoton, UpstreamError } from './geocoder';
+import { createNominatimGeocoder, withGeocoderFallback } from './nominatim';
 import {
   createEstimateRouter,
   createOsrmRouter,
@@ -193,5 +194,67 @@ describe('TtlCache', () => {
     expect(cache.get('a')).toBe(1);
     now = 150;
     expect(cache.get('a')).toBeUndefined();
+  });
+});
+
+describe('Nominatim fallback geocoder', () => {
+  it('maps results and only runs the newest queued search', async () => {
+    const seen: string[] = [];
+    const geocoder = createNominatimGeocoder({
+      baseUrl: 'https://nominatim.test',
+      userAgent: 'test',
+      timeoutMs: 1000,
+      sleep: () => Promise.resolve(),
+      fetch: (input) => {
+        const url = new URL(input instanceof Request ? input.url : String(input));
+        seen.push(url.searchParams.get('q') ?? '');
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              {
+                osm_type: 'node',
+                osm_id: 7,
+                lat: '37.76',
+                lon: '-122.42',
+                name: 'Dolores Park',
+                display_name: 'Dolores Park, San Francisco',
+                address: { road: 'Dolores Street', city: 'San Francisco', state: 'California' },
+              },
+            ]),
+          ),
+        );
+      },
+    });
+    expect(await geocoder.search({ text: 'do', limit: 5 })).toEqual([]);
+    const [first, second] = await Promise.all([
+      geocoder.search({ text: 'dolo', limit: 5 }),
+      geocoder.search({ text: 'dolores', limit: 5 }),
+    ]);
+    expect(first).toEqual([]);
+    expect(second[0]).toMatchObject({
+      id: 'osm:N7',
+      name: 'Dolores Park',
+      address: 'Dolores Street, San Francisco, California',
+    });
+    expect(seen).toEqual(['dolores']);
+  });
+
+  it('switches to the fallback when the primary fails', async () => {
+    let primaryCalls = 0;
+    const geocoder = withGeocoderFallback(
+      {
+        search: () => {
+          primaryCalls += 1;
+          return Promise.reject(new Error('down'));
+        },
+      },
+      {
+        search: () =>
+          Promise.resolve([{ id: 'a', name: 'A', address: '', latitude: 37.7, longitude: -122.4 }]),
+      },
+    );
+    expect(await geocoder.search({ text: 'x', limit: 1 })).toHaveLength(1);
+    expect(await geocoder.search({ text: 'y', limit: 1 })).toHaveLength(1);
+    expect(primaryCalls).toBe(1);
   });
 });

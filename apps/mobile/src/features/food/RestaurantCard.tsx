@@ -46,6 +46,11 @@ export function RestaurantCard({
         <Text variant="caption" tone="secondary" numberOfLines={1}>
           {meta}
         </Text>
+        {restaurant.address !== null ? (
+          <Text variant="caption" tone="tertiary" numberOfLines={1}>
+            {restaurant.address}
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );

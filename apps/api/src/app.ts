@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import {
   cuisineSchema,
   foodQuotesRequestSchema,
@@ -16,6 +17,7 @@ import {
   type Geocoder,
   UpstreamError,
 } from './geo/geocoder';
+import { createNominatimGeocoder, withGeocoderFallback } from './geo/nominatim';
 import {
   createEstimateRouter,
   createOsrmRouter,
@@ -48,7 +50,10 @@ export function defaultDeps(): AppDeps {
   const geocoder =
     config.geocoder === 'mock'
       ? createMockGeocoder()
-      : createPhotonGeocoder({ ...upstream, baseUrl: config.photonUrl });
+      : withGeocoderFallback(
+          createPhotonGeocoder({ ...upstream, baseUrl: config.photonUrl }),
+          createNominatimGeocoder({ ...upstream, baseUrl: config.nominatimUrl }),
+        );
   const estimate = createEstimateRouter();
   const router =
     config.router === 'estimate'
@@ -70,6 +75,7 @@ export function defaultDeps(): AppDeps {
             {
               photonUrl: config.photonUrl,
               nominatimUrl: config.nominatimUrl,
+              cacheFile: config.osmCacheFile,
               userAgent: config.userAgent,
               timeoutMs: Math.max(config.upstreamTimeoutMs, 8000),
             },
@@ -155,6 +161,22 @@ export function createApp(deps: AppDeps = defaultDeps()) {
         return c.json({ error: error.code, message: error.message }, 422);
       }
       throw error;
+    }
+  });
+
+  app.get('/v1/photos/:file', async (c) => {
+    const file = c.req.param('file');
+    if (!/^[a-z]+-\d{1,3}\.jpg$/.test(file)) {
+      return c.json({ error: 'not_found', message: 'No such photo.' }, 404);
+    }
+    try {
+      const body = await readFile(new URL(`../assets/photos/${file}`, import.meta.url));
+      return c.body(new Uint8Array(body), 200, {
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'public, max-age=604800, immutable',
+      });
+    } catch {
+      return c.json({ error: 'not_found', message: 'No such photo.' }, 404);
     }
   });
 

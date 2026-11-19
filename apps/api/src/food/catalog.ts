@@ -101,25 +101,39 @@ export function summarize(restaurant: RestaurantDetail): RestaurantSummary {
   return summary;
 }
 
-function matches(restaurant: StoredRestaurant, text: string): boolean {
-  const haystack = [
-    restaurant.name,
-    cuisineLabels[restaurant.cuisine],
-    ...restaurant.categories.flatMap((category) => category.items.map((entry) => entry.name)),
-  ]
-    .join(' ')
-    .toLowerCase();
-  return text
+export function foldText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
     .toLowerCase()
+    .replace(/[’'`]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ');
+}
+
+function matches(restaurant: StoredRestaurant, text: string): boolean {
+  const haystack = foldText(
+    [
+      restaurant.name,
+      cuisineLabels[restaurant.cuisine],
+      ...restaurant.categories.flatMap((category) => category.items.map((entry) => entry.name)),
+    ].join(' '),
+  );
+  const compact = haystack.replace(/ /g, '');
+  return foldText(text)
     .split(/\s+/)
     .filter(Boolean)
-    .every((term) => haystack.includes(term));
+    .every((term) => haystack.includes(term) || compact.includes(term));
 }
+
+const NAME_MATCH_BONUS_METERS = 100_000;
 
 function rankDistance(restaurant: RestaurantDetail, query: RestaurantQuery): number {
   const penalty =
     restaurant.cuisine === 'cafe' && query.cuisine !== 'cafe' ? CAFE_RANK_PENALTY_METERS : 0;
-  return restaurant.distanceMeters + penalty;
+  const text = foldText(query.text ?? '').trim();
+  const nameMiss =
+    text.length > 0 && !foldText(restaurant.name).includes(text) ? NAME_MATCH_BONUS_METERS : 0;
+  return restaurant.distanceMeters + penalty + nameMiss;
 }
 
 export function rankRestaurants(

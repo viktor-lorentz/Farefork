@@ -16,7 +16,7 @@ function roundedKey(point: LatLng | null): string | null {
 }
 
 export function useRestaurants(near: LatLng | null, text: string, cuisine: Cuisine | null) {
-  const query = useDebouncedValue(text.trim(), 250);
+  const query = useDebouncedValue(text.trim(), 450);
   return useQuery({
     queryKey: ['food', 'restaurants', roundedKey(near), query.toLowerCase(), cuisine],
     queryFn: ({ signal }) => {

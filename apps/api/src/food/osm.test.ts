@@ -45,23 +45,49 @@ const byKind: Record<string, unknown[]> = {
 
 type Calls = { photon: string[]; nominatim: string[] };
 
-function fakeFetch(calls: Calls, options: { photonStatus?: number } = {}): typeof fetch {
+function fakeFetch(
+  calls: Calls,
+  options: { photonStatus?: number; nominatimStatus?: number } = {},
+): typeof fetch {
   return (input) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
-    if (url.host === 'photon.test') {
-      calls.photon.push(url.searchParams.get('osm_tag') ?? '');
-      const kind = (url.searchParams.get('osm_tag') ?? '').split(':')[1] ?? '';
+    if (url.host === 'photon.test' && url.pathname === '/api/') {
+      calls.photon.push(`q:${url.searchParams.get('q') ?? ''}`);
       return Promise.resolve(
-        new Response(JSON.stringify({ features: byKind[kind] ?? [] }), {
+        new Response(
+          JSON.stringify({
+            features: [
+              feature('N', 501, 'Zuni Café', 'restaurant', 37.7735, -122.4216),
+              feature('N', 502, 'Zuni Cafe Annex', 'restaurant', 40.7, -74.0),
+            ],
+          }),
+        ),
+      );
+    }
+    if (url.host === 'photon.test') {
+      const tags = url.searchParams.getAll('osm_tag');
+      calls.photon.push(tags.join(','));
+      const features = tags.flatMap((tag) => byKind[tag.split(':')[1] ?? ''] ?? []);
+      return Promise.resolve(
+        new Response(JSON.stringify({ features }), {
           status: options.photonStatus ?? 200,
         }),
       );
     }
-    calls.nominatim.push(url.searchParams.get('osm_ids') ?? '');
+    const searched = url.pathname === '/search';
+    calls.nominatim.push(
+      searched
+        ? `search:${url.searchParams.get('amenity') ?? url.searchParams.get('q') ?? ''}`
+        : (url.searchParams.get('osm_ids') ?? ''),
+    );
+    if (searched && url.searchParams.get('amenity') !== 'restaurant') {
+      return Promise.resolve(new Response('[]', { status: options.nominatimStatus ?? 200 }));
+    }
     return Promise.resolve(
       new Response(
         JSON.stringify([
           {
+            category: 'amenity',
             osm_type: 'node',
             osm_id: 102,
             lat: '37.7605',
@@ -72,12 +98,13 @@ function fakeFetch(calls: Calls, options: { photonStatus?: number } = {}): typeo
             address: { house_number: '1', road: 'Valencia Street', city: 'San Francisco' },
           },
         ]),
+        { status: options.nominatimStatus ?? 200 },
       ),
     );
   };
 }
 
-function source(calls: Calls, options: { photonStatus?: number } = {}) {
+function source(calls: Calls, options: { photonStatus?: number; nominatimStatus?: number } = {}) {
   return createOsmRestaurantSource(
     {
       photonUrl: 'https://photon.test',
@@ -99,6 +126,7 @@ describe('OpenStreetMap restaurants', () => {
     expect(guessCuisine('Pizza Due', 'restaurant')).toBe('pizza');
     expect(guessCuisine('Pho Huynh Hiep', 'restaurant')).toBe('vietnamese');
     expect(guessCuisine('Linea', 'cafe')).toBe('cafe');
+    expect(guessCuisine('Zuni Café', 'restaurant')).toBe('american');
     expect(guessCuisine('Bandit', 'restaurant')).toBe('american');
   });
 
@@ -130,10 +158,18 @@ describe('OpenStreetMap restaurants', () => {
     expect(results.find((entry) => entry.name === 'Real Taqueria')?.cuisine).toBe('mexican');
     expect(results.every((entry) => entry.source === 'openstreetmap' && entry.photo)).toBe(true);
     await restaurants.search({ near, cuisine: 'cafe' });
-    expect(calls.photon).toHaveLength(3);
+    expect(calls.photon).toHaveLength(7);
     expect(calls.nominatim).toHaveLength(1);
     expect((await restaurants.find('osm_n101', near))?.name).toBe('Real Taqueria');
     expect(calls.nominatim).toHaveLength(1);
+  });
+
+  it('finds restaurants by name farther away, ignoring accents, and skips distant cities', async () => {
+    const calls: Calls = { photon: [], nominatim: [] };
+    const results = await source(calls).search({ near, text: 'zuni cafe' });
+    expect(results.map((entry) => entry.name)).toEqual(['Zuni Café']);
+    await source(calls).search({ near, text: 'z' });
+    expect(calls.photon.filter((call) => call.startsWith('q:'))).toEqual(['q:zuni cafe']);
   });
 
   it('looks up a restaurant it has not seen by id', async () => {
@@ -147,9 +183,19 @@ describe('OpenStreetMap restaurants', () => {
     expect(calls.nominatim).toEqual(['N102']);
   });
 
-  it('falls back to sample restaurants when the service fails', async () => {
+  it('uses Nominatim when Photon is down', async () => {
     const calls: Calls = { photon: [], nominatim: [] };
     const results = await source(calls, { photonStatus: 503 }).search({ near });
+    expect(results.map((entry) => entry.name)).toEqual(['Golden Lotus']);
+    expect(results[0]?.cuisine).toBe('vietnamese');
+    expect(calls.nominatim).toEqual(['search:restaurant', 'search:fast_food', 'search:cafe']);
+  });
+
+  it('falls back to sample restaurants when every map service fails', async () => {
+    const calls: Calls = { photon: [], nominatim: [] };
+    const results = await source(calls, { photonStatus: 503, nominatimStatus: 503 }).search({
+      near,
+    });
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((entry) => entry.source === 'sample')).toBe(true);
   });
