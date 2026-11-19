@@ -28,6 +28,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: BUNDLE_IDENTIFIER,
+    config: { usesNonExemptEncryption: false },
   },
   android: {
     package: BUNDLE_IDENTIFIER,

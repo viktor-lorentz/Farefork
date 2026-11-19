@@ -2,7 +2,7 @@ import { APP_NAME } from '@repo/shared/brand';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Linking, Platform, StyleSheet, View } from 'react-native';
 import {
   ListRow,
   ListRowIcon,
@@ -20,6 +20,7 @@ import {
   InfoIcon,
   MonitorIcon,
   MoonIcon,
+  ArrowSquareOutIcon,
   SealCheckIcon,
   SunIcon,
   UserCircleIcon,
@@ -33,6 +34,8 @@ import {
   registerForPushNotifications,
   unregisterPushNotifications,
 } from '@/features/alerts/push';
+
+const PRIVACY_URL = 'https://github.com/viktor-lorentz/Farefork/blob/main/PRIVACY.md';
 
 const pushResultNote: Record<PushRegistration, string> = {
   registered: 'On for this phone',
@@ -171,6 +174,16 @@ export default function ProfileScreen() {
           title={`About ${APP_NAME}`}
           value={`v${Constants.expoConfig?.version ?? '0.0.0'}`}
           leading={<ListRowIcon icon={InfoIcon} />}
+          divider
+        />
+        <ListRow
+          title="Privacy policy"
+          leading={<ListRowIcon icon={SealCheckIcon} />}
+          trailing={<ArrowSquareOutIcon size={18} color={colors.textSecondary} weight="bold" />}
+          accessibilityHint="Opens in your browser"
+          onPress={() => {
+            void Linking.openURL(PRIVACY_URL);
+          }}
         />
       </View>
       <Text variant="caption" tone="tertiary" style={styles.footnote}>
