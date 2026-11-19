@@ -1,7 +1,8 @@
 import { APP_NAME } from '@repo/shared/brand';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import {
   ListRow,
   ListRowIcon,
@@ -27,6 +28,19 @@ import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { usePreferences, type ThemePreference } from '@/stores/preferences';
 import { useSession } from '@/stores/session';
+import {
+  type PushRegistration,
+  registerForPushNotifications,
+  unregisterPushNotifications,
+} from '@/features/alerts/push';
+
+const pushResultNote: Record<PushRegistration, string> = {
+  registered: 'On for this phone',
+  unsupported: 'Not available in this build',
+  unconfigured: 'Needs a development build with push set up',
+  denied: 'Allow notifications in system settings',
+  failed: 'Sign in, then try again',
+};
 
 const themeOptions: readonly SegmentOption<ThemePreference>[] = [
   { value: 'system', label: 'Auto', icon: MonitorIcon },
@@ -42,6 +56,7 @@ export default function ProfileScreen() {
   const membershipCount = usePreferences((state) => state.membershipIds.length);
   const notificationPermission = usePreferences((state) => state.notificationPermission);
   const setNotificationPermission = usePreferences((state) => state.setNotificationPermission);
+  const [pushNote, setPushNote] = useState('Notifications when a ride hits your price');
   const resetOnboarding = usePreferences((state) => state.resetOnboarding);
   const sessionStatus = useSession((state) => state.status);
   const email = useSession((state) => state.session?.user.email ?? null);
@@ -89,16 +104,39 @@ export default function ProfileScreen() {
         />
         <ListRow
           title="Price alerts"
-          subtitle="Push notifications for drops"
+          subtitle={
+            Platform.OS === 'web'
+              ? 'Hits show in Alerts. Notifications need the phone app.'
+              : pushNote
+          }
           leading={<ListRowIcon icon={BellIcon} />}
+          chevron={Platform.OS === 'web'}
+          onPress={
+            Platform.OS === 'web'
+              ? () => {
+                  router.navigate('/alerts');
+                }
+              : undefined
+          }
           trailing={
-            <Toggle
-              value={notificationPermission === 'granted'}
-              accessibilityLabel="Price alert notifications"
-              onValueChange={(value) => {
-                setNotificationPermission(value ? 'granted' : 'denied');
-              }}
-            />
+            Platform.OS === 'web' ? undefined : (
+              <Toggle
+                value={notificationPermission === 'granted'}
+                accessibilityLabel="Price alert notifications"
+                onValueChange={(value) => {
+                  if (!value) {
+                    setNotificationPermission('denied');
+                    setPushNote('Off on this phone');
+                    void unregisterPushNotifications();
+                    return;
+                  }
+                  void registerForPushNotifications().then((result) => {
+                    setNotificationPermission(result === 'registered' ? 'granted' : 'denied');
+                    setPushNote(pushResultNote[result]);
+                  });
+                }}
+              />
+            )
           }
         />
       </View>

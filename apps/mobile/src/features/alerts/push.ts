@@ -82,3 +82,17 @@ export async function listenForAlertTaps(open: (url: string) => void): Promise<(
     subscription.remove();
   };
 }
+
+export async function unregisterPushNotifications(): Promise<void> {
+  const projectId = easProjectId();
+  if (!notificationsSupported || !supabase || !projectId) {
+    return;
+  }
+  try {
+    const Notifications = await import('expo-notifications');
+    const token = await Notifications.getExpoPushTokenAsync({ projectId });
+    await supabase.from('push_tokens').delete().eq('token', token.data);
+  } catch {
+    return;
+  }
+}

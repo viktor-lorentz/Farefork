@@ -45,6 +45,8 @@ function RestaurantSkeletons() {
   );
 }
 
+const PAGE_SIZE = 24;
+
 export default function RestaurantsScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -54,6 +56,10 @@ export default function RestaurantsScreen() {
   const [cuisine, setCuisine] = useState<Cuisine | null>(null);
   const query = useRestaurants(address, text, cuisine);
   const restaurants = query.data?.restaurants ?? [];
+  const listKey = `${text.trim().toLowerCase()}|${cuisine ?? ''}`;
+  const [paging, setPaging] = useState({ key: listKey, count: PAGE_SIZE });
+  const visibleCount = paging.key === listKey ? paging.count : PAGE_SIZE;
+  const shown = restaurants.slice(0, visibleCount);
   const count = cartCount(cart);
   const breakpoint = useBreakpoint();
   const columns = breakpoint === 'compact' ? 1 : breakpoint === 'medium' ? 2 : 3;
@@ -140,7 +146,7 @@ export default function RestaurantsScreen() {
                     : 'Sample restaurants with simulated menus. Real listings need provider agreements.'}
                 </Text>
                 <View style={styles.grid}>
-                  {restaurants.map((restaurant) => (
+                  {shown.map((restaurant) => (
                     <View
                       key={restaurant.id}
                       style={{ width: columns === 1 ? '100%' : `${100 / columns - 2}%` }}
@@ -154,6 +160,16 @@ export default function RestaurantsScreen() {
                     </View>
                   ))}
                 </View>
+                {restaurants.length > shown.length ? (
+                  <Button
+                    label={`Show more (${restaurants.length - shown.length})`}
+                    variant="secondary"
+                    style={styles.more}
+                    onPress={() => {
+                      setPaging({ key: listKey, count: visibleCount + PAGE_SIZE });
+                    }}
+                  />
+                ) : null}
                 {restaurants[0]?.source === 'openstreetmap' ? (
                   <Text variant="caption" tone="tertiary" style={styles.credit}>
                     Restaurant data © OpenStreetMap contributors. Photos: CC0, via Openverse.
@@ -199,6 +215,7 @@ const styles = StyleSheet.create({
   note: { paddingBottom: space.sm },
   grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: '3%', rowGap: space.lg },
   credit: { marginTop: space.lg },
+  more: { marginTop: space.lg },
   skeletons: { gap: space.lg, paddingTop: space.xs },
   skeletonCard: { gap: space.xs },
 });
