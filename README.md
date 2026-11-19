@@ -2,7 +2,7 @@
 
 Compare Uber, Lyft and Waymo ride quotes, and the true totals for Uber Eats, DoorDash, Grubhub and Postmates, in one app for iOS, Android and the web.
 
-> **Status: Milestone 2 of 7** (ride comparison). All prices in this build are **simulated** by mock providers. Address search and routes are real, from public OpenStreetMap services.
+> **Status: Milestone 3 of 7** (rides and food comparison). All prices and restaurants in this build are **simulated** by mock providers. Address search and routes are real, from public OpenStreetMap services. Every price is shown **before tip**.
 
 ## Stack
 
@@ -29,8 +29,8 @@ apps/
   mobile/              Expo app (iOS, Android, web)
     src/app/           routes (Expo Router)
     src/design/        tokens, theme, components (Button, ListRow, QuoteCard, Sheet, Chip, Toggle, Badge, EmptyState, …)
-    src/features/      feature folders: home, map, memberships, navigation, onboarding, providers, rides
-    src/stores/        persisted preferences, trip and recent places
+    src/features/      feature folders: home, map, memberships, navigation, onboarding, providers, rides, food
+    src/stores/        persisted preferences, trip and recent places, cart and delivery address, last known location
 packages/
   shared/              brand constants, provider ids, money formatting, shared Zod schemas
 scripts/               font download, map worker copy
@@ -116,7 +116,16 @@ CI runs the same checks on every push and pull request.
 - **Route:** OSRM draws the driving route on the map. If OSRM is down, the API falls back to a straight-line estimate and the app labels it "estimated".
 - **Quotes:** `POST /v1/rides/quotes` returns simulated prices for UberX, Comfort, UberXL, Uber Black, Lyft, Extra Comfort, Lyft XL, Lyft Black and Waymo. Prices come from a base fare, per-mile and per-minute rates, a booking fee, a minimum fare, and simulated surge. They stay the same within a two-minute window, so refreshing doesn't make them jump around.
 - **Waymo:** offered only when both ends of the trip are inside a rough, simulated service area (San Francisco Bay Area, Phoenix, Los Angeles, plus Austin and Atlanta through Uber).
-- **Booking:** the button opens the provider with pickup and destination filled in: Uber's universal link, Lyft's ride link, or the Waymo website (Waymo has no public deep link with a prefilled trip).
+- **Booking:** on a phone, the button opens the Uber or Lyft app directly (`uber://`, `lyft://`) with pickup and destination filled in, and falls back to the web link if the app isn't installed. Waymo has no public link with a prefilled trip, so it opens the Waymo website. Booking inside this app isn't possible: the ride-request APIs are closed to new developers, and logging into your accounts would break the providers' terms.
+- **Location:** if location is already allowed, the map opens on you and address search is biased toward you. Prices are before tip.
+
+## Food (milestone 3)
+
+- **Address:** set a delivery address, or use your current location.
+- **Restaurants:** `GET /v1/food/restaurants` returns **sample restaurants** with made-up names and simulated menus, generated from a grid around the address, so the same place always shows the same list. Search by name, cuisine or dish.
+- **Cart:** add items with the stepper. Adding from a different restaurant starts a new cart and says so.
+- **Comparison:** `POST /v1/food/quotes` returns each app's **total before tip**: menu items (with that app's markup over in-store prices), delivery fee, service fee, small order fee and estimated tax. Tip is never included, because it's optional and up to you.
+- **Ordering:** the button opens the chosen app's search for the restaurant. No delivery app accepts a cart from outside, so you add the same items there.
 
 ## Design rules
 
@@ -130,7 +139,7 @@ CI runs the same checks on every push and pull request.
 
 1. ✅ Setup, design system, navigation shell, light and dark mode
 2. ✅ Rides: geocoding, routing, mock quote providers, results sheet, deep links
-3. Food: restaurant search, cart, true-total breakdown
+3. ✅ Food: restaurant search, cart, true-total breakdown (before tip)
 4. Membership pricing rules, plus tests for pricing, memberships and tier matching
 5. Supabase auth (email code), favorites, history, savings tracker
 6. Deals, price alerts, push notifications (needs a development build)

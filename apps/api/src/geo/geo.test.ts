@@ -85,6 +85,10 @@ describe('createPhotonGeocoder', () => {
               geometry: { coordinates: [-122.4, 37.8] },
               properties: { osm_type: 'W', osm_id: 1, name: 'Pier 1', street: 'B' },
             },
+            {
+              geometry: { coordinates: [-3.7, 40.4] },
+              properties: { name: 'Valencia Street', city: 'Madrid' },
+            },
             { geometry: { coordinates: 'bad' }, properties: {} },
           ],
         }),

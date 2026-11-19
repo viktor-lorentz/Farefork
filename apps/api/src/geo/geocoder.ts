@@ -2,6 +2,8 @@ import { haversineMeters, type LatLng, type Place } from '@repo/shared';
 import { z } from 'zod';
 import { cached, TtlCache } from '../lib/ttlCache';
 
+export const MAX_BIAS_DISTANCE_METERS = 200_000;
+
 export type GeocodeQuery = {
   text: string;
   near?: LatLng;
@@ -103,7 +105,7 @@ export function createPhotonGeocoder(options: PhotonOptions): Geocoder {
       return cached(cache, key, async () => {
         const url = new URL('/api/', options.baseUrl);
         url.searchParams.set('q', query.text);
-        url.searchParams.set('limit', String(query.limit + 4));
+        url.searchParams.set('limit', String(query.limit + 12));
         url.searchParams.set('lang', 'en');
         if (query.near !== undefined) {
           url.searchParams.set('lat', query.near.latitude.toFixed(4));
@@ -129,7 +131,12 @@ export function createPhotonGeocoder(options: PhotonOptions): Geocoder {
           .map((raw) => photonFeatureSchema.safeParse(raw))
           .flatMap((parsed) => (parsed.success ? [placeFromPhoton(parsed.data)] : []))
           .filter((place): place is Place => place !== null);
-        return dedupe(places).slice(0, query.limit);
+        const near = query.near;
+        const local =
+          near === undefined
+            ? places
+            : places.filter((place) => haversineMeters(near, place) <= MAX_BIAS_DISTANCE_METERS);
+        return dedupe(local).slice(0, query.limit);
       });
     },
   };

@@ -2,7 +2,6 @@ import { deliveryProviderIds, rideProviderIds, type ProviderId, type Vertical } 
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import {
-  Badge,
   ListRow,
   ListRowIcon,
   SearchButton,
@@ -18,8 +17,10 @@ import {
   ForkKnifeIcon,
   HouseIcon,
   MagnifyingGlassIcon,
+  MapPinIcon,
   PlusIcon,
   SealCheckIcon,
+  ShoppingBagIcon,
   StorefrontIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
@@ -27,6 +28,9 @@ import { space } from '@/design/tokens';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { usePreferences } from '@/stores/preferences';
 import { useTrip } from '@/stores/trip';
+import { cartCount } from '@/features/food/cart';
+import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
+import { useFood } from '@/stores/food';
 import { useVertical } from './useVertical';
 
 const verticalOptions: readonly SegmentOption<Vertical>[] = [
@@ -111,13 +115,19 @@ function RidesContent() {
 }
 
 function FoodContent() {
+  const router = useRouter();
+  const address = useDeliveryAddress();
+  const cart = useFood((state) => state.cart);
+  const count = cartCount(cart);
   return (
     <>
       <SearchButton
         label="Search restaurants"
         icon={MagnifyingGlassIcon}
-        accessibilityHint="Food comparison arrives in milestone 3"
-        onPress={() => undefined}
+        accessibilityHint="Find a restaurant and compare delivery totals"
+        onPress={() => {
+          router.push('/food');
+        }}
       />
       <View style={styles.compareRow}>
         <Text variant="caption" tone="secondary">
@@ -126,13 +136,35 @@ function FoodContent() {
         <ProviderStrip ids={deliveryProviderIds} />
       </View>
       <View>
-        <SectionHeader title="True totals" />
+        {cart && count > 0 ? (
+          <ListRow
+            flush
+            title={`Your cart from ${cart.restaurantName}`}
+            subtitle={`${count} ${count === 1 ? 'item' : 'items'}. Compare totals before tip`}
+            leading={<ListRowIcon icon={ShoppingBagIcon} />}
+            chevron
+            divider
+            onPress={() => {
+              router.push('/food/compare');
+            }}
+          />
+        ) : null}
         <ListRow
           flush
-          title="Fees, tips and taxes included"
-          subtitle="See what you actually pay on each app, not the menu price"
+          title={address ? address.name : 'Set a delivery address'}
+          subtitle={address ? 'Deliver to' : 'Prices depend on where the food goes'}
+          leading={<ListRowIcon icon={MapPinIcon} />}
+          chevron
+          divider
+          onPress={() => {
+            router.push('/food/address');
+          }}
+        />
+        <ListRow
+          flush
+          title="True totals, before tip"
+          subtitle="Menu markup, fees and estimated tax on every app"
           leading={<ListRowIcon icon={StorefrontIcon} />}
-          trailing={<Badge label="Soon" tone="outline" />}
         />
       </View>
     </>

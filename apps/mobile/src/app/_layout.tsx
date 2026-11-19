@@ -36,6 +36,10 @@ function RootNavigator() {
         <Stack.Protected guard={onboarded}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="rides/search" options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="food/index" />
+          <Stack.Screen name="food/[id]" />
+          <Stack.Screen name="food/compare" />
+          <Stack.Screen name="food/address" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="profile/memberships" />
           <Stack.Screen name="dev/components" />
         </Stack.Protected>

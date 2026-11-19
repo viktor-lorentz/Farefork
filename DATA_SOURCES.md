@@ -14,7 +14,7 @@ interface RideProvider {
 }
 
 interface DeliveryProvider {
-  getQuote(restaurant: Restaurant, cart: Cart): Promise<DeliveryQuote>;
+  getQuote(context: { restaurant; deliverTo; distanceMeters; lines }): Promise<DeliveryQuote>;
 }
 ```
 
@@ -37,7 +37,22 @@ Swapping a mock for a real source means writing one adapter. Screens and pricing
 | DoorDash  | DoorDash Drive is a merchant delivery API, not consumer menu pricing. DoorDash has an affiliate program.     | Can consumer totals be shown? Can affiliate links be combined with price comparison? |
 | Grubhub   | Grubhub has partner APIs, and affiliate programs have existed.                                               | Same questions as above.                                                             |
 
-Menu prices often differ between apps and from in-store prices. A "true total" needs the menu price, delivery fee, service fee, small-order fee, taxes and tip, and each of these varies by market and membership.
+Menu prices often differ between apps and from in-store prices. The app's "true total" is shown **before tip**: menu price, delivery fee, service fee, small-order fee and estimated tax. Each of these varies by market and membership. Tax uses a flat 8.75% estimate for now; real rates depend on the city and on whether fees are taxed.
+
+The restaurants in this build are **samples with invented names**. A real integration needs a licensed source of restaurant listings and menus for each app.
+
+### Order links
+
+None of the delivery apps accept a prefilled cart from another app. The best a partner link can do is open a specific restaurant page. This build opens each app's search for the restaurant name:
+
+| Provider  | Link used                                         |
+| --------- | ------------------------------------------------- |
+| Uber Eats | `https://www.ubereats.com/search?q=<name>`        |
+| DoorDash  | `https://www.doordash.com/search/store/<name>/`   |
+| Grubhub   | `https://www.grubhub.com/search?queryText=<name>` |
+| Postmates | `https://postmates.com/search?q=<name>`           |
+
+With real store IDs (from an affiliate or partner program), these become direct store links.
 
 ## Memberships
 
@@ -55,15 +70,15 @@ Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned
 
 ### Location privacy (milestone 2)
 
-Search text, the pickup area (rounded to about 1 km) and trip coordinates go from the app to this API, and from the API to Photon and OSRM. Nothing is stored except in-memory caches (10 minutes) and recent destinations kept on the device. Before launch, decide whether to self-host these services so that trip locations never leave your infrastructure.
+Search text, the pickup area (rounded to about 1 km) and trip coordinates go from the app to this API, and from the API to Photon and OSRM. Nothing is stored on the server except in-memory caches (10 minutes). On the device, the app keeps recent destinations, the delivery address, the cart, and the last known location rounded to about 100 m. Before launch, decide whether to self-host these services so that trip locations never leave your infrastructure.
 
 ### Deep links to verify
 
-| Provider | Link used                                                           | To verify                                                                                                      |
-| -------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Uber     | `https://m.uber.com/ul/?action=setPickup&pickup[...]&dropoff[...]`  | Product preselection needs a per-city `product_id`, so it isn't sent. Check attribution rules.                 |
-| Lyft     | `https://lyft.com/ride?id=<ride type>&pickup[...]&destination[...]` | The ride type IDs `lyft`, `lyft_plus` and `lyft_lux` come from older docs. Extra Comfort falls back to `lyft`. |
-| Waymo    | `https://waymo.com/`                                                | No prefilled deep link is known. In Austin and Atlanta, Waymo trips open the Uber link instead.                |
+| Provider | Link used                                                                                                   | To verify                                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Uber     | `https://m.uber.com/ul/?action=setPickup&pickup[...]&dropoff[...]`                                          | Product preselection needs a per-city `product_id`, so it isn't sent. Check attribution rules.                 |
+| Lyft     | `lyft://ridetype?id=…` in the app, else `https://lyft.com/ride?id=<ride type>&pickup[...]&destination[...]` | The ride type IDs `lyft`, `lyft_plus` and `lyft_lux` come from older docs. Extra Comfort falls back to `lyft`. |
+| Waymo    | `https://waymo.com/`                                                                                        | No prefilled deep link is known. In Austin and Atlanta, Waymo trips open the Uber link instead.                |
 
 ## Trademarks and logos
 

@@ -1,4 +1,9 @@
-import { rideErrorCodes, rideQuotesRequestSchema } from '@repo/shared';
+import {
+  cuisineSchema,
+  foodQuotesRequestSchema,
+  rideErrorCodes,
+  rideQuotesRequestSchema,
+} from '@repo/shared';
 import { APP_NAME } from '@repo/shared/brand';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -18,6 +23,9 @@ import {
   withFallback,
   withRouteCache,
 } from './geo/router';
+import { findRestaurant, searchRestaurants } from './food/catalog';
+import { createMockDeliveryProviders, type DeliveryProvider } from './food/providers';
+import { FoodRequestError, getFoodQuotes } from './food/quoteService';
 import { catalogFor } from './memberships/registry';
 import { createMockRideProviders } from './rides/providers/mock';
 import type { RideProvider } from './rides/providers/types';
@@ -27,6 +35,7 @@ export type AppDeps = {
   geocoder: Geocoder;
   router: Router;
   rideProviders: readonly RideProvider[];
+  deliveryProviders: readonly DeliveryProvider[];
   now?: () => Date;
   log?: boolean;
 };
@@ -47,7 +56,13 @@ export function defaultDeps(): AppDeps {
             console.warn('Routing service unavailable, using a straight-line estimate');
           }),
         );
-  return { geocoder, router, rideProviders: createMockRideProviders(), log: true };
+  return {
+    geocoder,
+    router,
+    rideProviders: createMockRideProviders(),
+    deliveryProviders: createMockDeliveryProviders(),
+    log: true,
+  };
 }
 
 const placeSearchQuerySchema = z.object({
@@ -55,6 +70,18 @@ const placeSearchQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
   limit: z.coerce.number().int().min(1).max(10).default(8),
+});
+
+const restaurantSearchQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  q: z.string().trim().max(80).optional(),
+  cuisine: cuisineSchema.optional(),
+});
+
+const restaurantDetailQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
 });
 
 export function createApp(deps: AppDeps = defaultDeps()) {
@@ -112,6 +139,56 @@ export function createApp(deps: AppDeps = defaultDeps()) {
     } catch (error) {
       if (error instanceof TripRejectedError) {
         return c.json({ error: error.code, message: error.message }, 422);
+      }
+      throw error;
+    }
+  });
+
+  app.get('/v1/food/restaurants', (c) => {
+    const parsed = restaurantSearchQuerySchema.safeParse(c.req.query());
+    if (!parsed.success) {
+      return c.json({ error: rideErrorCodes.invalidRequest }, 400);
+    }
+    const { lat, lng, q, cuisine } = parsed.data;
+    const restaurants = searchRestaurants({
+      near: { latitude: lat, longitude: lng },
+      text: q,
+      cuisine,
+    });
+    return c.json({ simulated: true, restaurants });
+  });
+
+  app.get('/v1/food/restaurants/:id', (c) => {
+    const parsed = restaurantDetailQuerySchema.safeParse(c.req.query());
+    if (!parsed.success) {
+      return c.json({ error: rideErrorCodes.invalidRequest }, 400);
+    }
+    const { lat, lng } = parsed.data;
+    const from =
+      lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : undefined;
+    const restaurant = findRestaurant(c.req.param('id'), from);
+    if (!restaurant) {
+      return c.json({ error: 'restaurant_not_found' }, 404);
+    }
+    return c.json({ simulated: true, restaurant });
+  });
+
+  app.post('/v1/food/quotes', async (c) => {
+    const body: unknown = await c.req.json().catch(() => null);
+    const parsed = foodQuotesRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return c.json({ error: rideErrorCodes.invalidRequest }, 400);
+    }
+    try {
+      const response = await getFoodQuotes(parsed.data, {
+        providers: deps.deliveryProviders,
+        now: deps.now,
+      });
+      c.header('Cache-Control', 'no-store');
+      return c.json(response);
+    } catch (error) {
+      if (error instanceof FoodRequestError) {
+        return c.json({ error: error.code, message: error.message }, error.status);
       }
       throw error;
     }

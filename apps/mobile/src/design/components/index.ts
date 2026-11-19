@@ -13,6 +13,7 @@ export * from './SectionHeader';
 export * from './SegmentedControl';
 export * from './Sheet';
 export * from './Skeleton';
+export * from './Stepper';
 export * from './Text';
 export * from './Toggle';
 export * from './ScreenHeader';
