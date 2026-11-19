@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { fontAssets } from '@/design/fonts';
+import { BookingCheck } from '@/features/account/BookingCheck';
 import { ThemeProvider, useTheme } from '@/design/theme';
 import { queryClient } from '@/lib/queryClient';
 import { usePreferences, usePreferencesHydrated } from '@/stores/preferences';
@@ -48,6 +49,7 @@ function RootNavigator() {
           <Stack.Screen name="dev/components" />
         </Stack.Protected>
       </Stack>
+      {onboarded ? <BookingCheck /> : null}
     </>
   );
 }

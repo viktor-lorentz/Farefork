@@ -96,7 +96,7 @@ describe('mock providers', () => {
       trip({ pickup: places.texasCapitol, dropoff: places.zilkerPark }),
     );
     expect(austin[0]).toMatchObject({ providerId: 'waymo', bookVia: 'uber' });
-    expect(austin[0]?.bookingUrl.startsWith('https://m.uber.com/ul/')).toBe(true);
+    expect(austin[0]?.bookingUrl.startsWith('https://m.uber.com/go/product-selection')).toBe(true);
     expect(austin[0]?.appUrl?.startsWith('uber://')).toBe(true);
     expect(sf[0]?.appUrl).toBeNull();
   });
@@ -135,16 +135,29 @@ describe('deep links', () => {
   const target = {
     pickup: places.ferryBuilding,
     dropoff: places.doloresPark,
+    pickupName: 'Ferry Building',
     dropoffName: 'Dolores Park',
   };
 
-  it('builds an Uber universal link with pickup and dropoff', () => {
+  it('builds an Uber web link with pickup and dropoff filled in', () => {
     const url = new URL(uberBookingUrl(target));
-    expect(url.origin).toBe('https://m.uber.com');
-    expect(url.searchParams.get('action')).toBe('setPickup');
-    expect(url.searchParams.get('pickup[latitude]')).toBe('37.795500');
-    expect(url.searchParams.get('dropoff[longitude]')).toBe('-122.427000');
-    expect(url.searchParams.get('dropoff[nickname]')).toBe('Dolores Park');
+    expect(url.origin + url.pathname).toBe('https://m.uber.com/go/product-selection');
+    expect(JSON.parse(url.searchParams.get('pickup') ?? '')).toEqual({
+      addressLine1: 'Ferry Building',
+      latitude: 37.7955,
+      longitude: -122.3937,
+    });
+    expect(JSON.parse(url.searchParams.get('drop[0]') ?? '')).toMatchObject({
+      addressLine1: 'Dolores Park',
+      longitude: -122.427,
+    });
+  });
+
+  it('labels unnamed stops in the Uber web link', () => {
+    const url = new URL(uberBookingUrl({ pickup: target.pickup, dropoff: target.dropoff }));
+    expect(JSON.parse(url.searchParams.get('pickup') ?? '')).toMatchObject({
+      addressLine1: 'Pickup',
+    });
   });
 
   it('builds app scheme links that open the installed apps', () => {

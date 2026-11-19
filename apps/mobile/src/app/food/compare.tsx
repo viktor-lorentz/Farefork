@@ -14,7 +14,7 @@ import {
 import { ArrowSquareOutIcon, InfoIcon, ShoppingBagIcon, WarningCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
-import { recordHandoff } from '@/features/account/queries';
+import { rememberHandoff } from '@/features/account/queries';
 import { foodHandoff } from '@/features/account/savings';
 import { BottomBar } from '@/features/food/BottomBar';
 import { cartCount } from '@/features/food/cart';
@@ -183,11 +183,12 @@ export default function FoodCompareScreen() {
                   haptics.warning();
                   return;
                 }
-                void recordHandoff(
+                rememberHandoff(
                   foodHandoff(selected, quotes, {
                     restaurantName: cart.restaurantName,
                     itemCount: count,
                   }),
+                  providerName(selected.providerId),
                 );
               });
             }}

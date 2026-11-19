@@ -16,6 +16,11 @@ export const cuisineIds = [
   'mediterranean',
   'salads',
   'breakfast',
+  'italian',
+  'american',
+  'vietnamese',
+  'korean',
+  'cafe',
 ] as const;
 
 export const cuisineSchema = z.enum(cuisineIds);
@@ -32,7 +37,24 @@ export const cuisineLabels: Record<Cuisine, string> = {
   mediterranean: 'Mediterranean',
   salads: 'Salads',
   breakfast: 'Breakfast',
+  italian: 'Italian',
+  american: 'American',
+  vietnamese: 'Vietnamese',
+  korean: 'Korean',
+  cafe: 'Café',
 };
+
+export const restaurantSourceSchema = z.enum(['openstreetmap', 'sample']);
+export type RestaurantSource = z.infer<typeof restaurantSourceSchema>;
+
+export const restaurantPhotoSchema = z.object({
+  url: z.url(),
+  author: z.string().min(1),
+  license: z.string().min(1),
+  sourceUrl: z.url().nullable(),
+});
+
+export type RestaurantPhoto = z.infer<typeof restaurantPhotoSchema>;
 
 export const restaurantSummarySchema = z.object({
   id: z.string().min(1),
@@ -44,6 +66,9 @@ export const restaurantSummarySchema = z.object({
   priceLevel: z.number().int().min(1).max(3),
   prepMinutes: z.number().int().positive(),
   providerIds: z.array(deliveryProviderIdSchema).min(1),
+  address: z.string().nullable(),
+  photo: restaurantPhotoSchema.nullable(),
+  source: restaurantSourceSchema,
 });
 
 export type RestaurantSummary = z.infer<typeof restaurantSummarySchema>;

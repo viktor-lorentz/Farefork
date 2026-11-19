@@ -1,4 +1,5 @@
 import { providerName, type RideQuote } from '@repo/shared';
+import { Platform } from 'react-native';
 import { haptics } from '@/lib/haptics';
 import { openExternal } from '@/lib/openExternal';
 
@@ -13,4 +14,8 @@ export async function openBooking(quote: RideQuote): Promise<boolean> {
 
 export function bookingLabel(quote: RideQuote): string {
   return `Open ${providerName(quote.bookVia)}`;
+}
+
+export function canBookHere(quote: RideQuote): boolean {
+  return Platform.OS !== 'web' || quote.bookVia === 'uber';
 }

@@ -53,6 +53,7 @@ export async function getRideQuotes(
   const trip: TripContext = {
     pickup: request.pickup,
     dropoff: request.dropoff,
+    pickupName: request.pickupName,
     dropoffName: request.dropoffName,
     route,
     now,

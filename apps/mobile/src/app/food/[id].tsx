@@ -20,6 +20,7 @@ import { radius, space } from '@/design/tokens';
 import { FavoriteButton } from '@/features/account/FavoriteButton';
 import { restaurantFavorite } from '@/features/account/favorites';
 import { BottomBar } from '@/features/food/BottomBar';
+import { RestaurantPhoto } from '@/features/food/RestaurantPhoto';
 import { cartCount, cartInStoreCents, MAX_ITEM_QUANTITY, quantityOf } from '@/features/food/cart';
 import { restaurantMeta } from '@/features/food/format';
 import { useRestaurant } from '@/features/food/queries';
@@ -76,6 +77,17 @@ export default function RestaurantScreen() {
           />
         ) : (
           <>
+            <RestaurantPhoto restaurant={restaurant} style={styles.photo} />
+            {restaurant.photo ? (
+              <Text variant="caption" tone="tertiary" style={styles.photoCredit}>
+                Photo of {cuisineLabels[restaurant.cuisine].toLowerCase()} food, not this
+                restaurant.{' '}
+                {restaurant.photo.author === 'Unknown'
+                  ? restaurant.photo.license
+                  : `${restaurant.photo.author}, ${restaurant.photo.license}`}
+                .
+              </Text>
+            ) : null}
             <View style={styles.hero}>
               <Text variant="titleL" accessibilityRole="header">
                 {restaurant.name}
@@ -83,6 +95,11 @@ export default function RestaurantScreen() {
               <Text variant="caption" tone="secondary">
                 {restaurantMeta(restaurant)}
               </Text>
+              {restaurant.address !== null ? (
+                <Text variant="caption" tone="secondary">
+                  {restaurant.address}
+                </Text>
+              ) : null}
               <View style={styles.onApps}>
                 <Text variant="caption" tone="secondary">
                   On
@@ -99,7 +116,8 @@ export default function RestaurantScreen() {
             <View style={[styles.notice, { backgroundColor: colors.fill }]}>
               <InfoIcon size={16} color={colors.textPrimary} weight="bold" />
               <Text variant="caption" style={styles.flex}>
-                Menu shows in-store prices. Each app’s markup, fees and tax are in the comparison.
+                Simulated menu with in-store prices. Each app’s markup, fees and tax are in the
+                comparison.
               </Text>
             </View>
 
@@ -176,6 +194,8 @@ const styles = StyleSheet.create({
   content: { gap: space.lg },
   loading: { gap: space.md },
   hero: { gap: space.xs },
+  photo: { width: '100%', aspectRatio: 2, borderRadius: radius.lg },
+  photoCredit: { marginTop: -space.sm },
   onApps: { flexDirection: 'row', alignItems: 'center', gap: space.xs, marginTop: space.xxs },
   notice: {
     flexDirection: 'row',

@@ -13,6 +13,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
+import { usePendingHandoff } from '@/stores/pendingHandoff';
 import { useSession, useUserId } from '@/stores/session';
 
 const HISTORY_LIMIT = 100;
@@ -185,16 +186,29 @@ export function useClearHistory() {
   });
 }
 
-export async function recordHandoff(handoff: NewHandoff): Promise<void> {
-  const userId = useSession.getState().session?.user.id ?? null;
-  if (!supabase || userId === null) {
+export function rememberHandoff(handoff: NewHandoff, appName: string): void {
+  if (useSession.getState().status !== 'signedIn') {
     return;
   }
-  const { error } = await supabase.from('handoffs').insert(handoff);
-  if (!error) {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: accountKeys.history(userId) }),
-      queryClient.invalidateQueries({ queryKey: accountKeys.savings(userId) }),
-    ]);
-  }
+  usePendingHandoff.getState().setPending({ handoff, appName, openedAt: new Date().toISOString() });
+}
+
+export function useConfirmHandoff() {
+  const userId = useUserId();
+  return useMutation({
+    mutationFn: async (handoff: NewHandoff) => {
+      const { error } = await client().from('handoffs').insert(handoff);
+      if (error) {
+        fail(error);
+      }
+    },
+    onSuccess: () => {
+      usePendingHandoff.getState().clearPending();
+    },
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: accountKeys.history(userId) }),
+        queryClient.invalidateQueries({ queryKey: accountKeys.savings(userId) }),
+      ]),
+  });
 }

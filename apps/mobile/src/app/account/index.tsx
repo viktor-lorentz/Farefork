@@ -69,7 +69,7 @@ export default function AccountScreen() {
         >
           <ListRow
             title="History"
-            subtitle="Every ride and order you opened from here"
+            subtitle="Rides and orders you booked through Farefork"
             leading={<ListRowIcon icon={ReceiptIcon} />}
             chevron
             divider

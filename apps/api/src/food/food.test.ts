@@ -33,12 +33,14 @@ describe('restaurant catalog', () => {
     expect(searchRestaurants({ near })).toEqual(searchRestaurants({ near }));
   });
 
-  it('only returns restaurants inside the radius, nearest first', () => {
+  it('only returns restaurants inside the radius, nearest first, with cafes ranked lower', () => {
     const results = searchRestaurants({ near });
     expect(results.length).toBeGreaterThan(5);
     expect(results.every((entry) => entry.distanceMeters <= SEARCH_RADIUS_METERS)).toBe(true);
-    const distances = results.map((entry) => entry.distanceMeters);
-    expect(distances).toEqual([...distances].sort((a, b) => a - b));
+    const meals = results.filter((entry) => entry.cuisine !== 'cafe').map((e) => e.distanceMeters);
+    expect(meals).toEqual([...meals].sort((a, b) => a - b));
+    const cafes = searchRestaurants({ near, cuisine: 'cafe' }).map((e) => e.distanceMeters);
+    expect(cafes).toEqual([...cafes].sort((a, b) => a - b));
   });
 
   it('filters by cuisine and by text, including menu items', () => {

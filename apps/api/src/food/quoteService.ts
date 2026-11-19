@@ -8,7 +8,7 @@ import {
 } from '@repo/shared';
 import { applyFoodMembership, resolveMemberships } from '../memberships/pricing';
 import { catalogFor } from '../memberships/registry';
-import { findRestaurant } from './catalog';
+import type { RestaurantSource } from './catalog';
 import type { DeliveryLine, DeliveryProvider } from './providers';
 
 export class FoodRequestError extends Error {
@@ -24,6 +24,7 @@ export class FoodRequestError extends Error {
 
 export type FoodQuoteDeps = {
   providers: readonly DeliveryProvider[];
+  restaurants: RestaurantSource;
   now?: () => Date;
 };
 
@@ -31,7 +32,7 @@ export async function getFoodQuotes(
   request: FoodQuotesRequest,
   deps: FoodQuoteDeps,
 ): Promise<FoodQuotesResponse> {
-  const restaurant = findRestaurant(request.restaurantId, request.deliverTo);
+  const restaurant = await deps.restaurants.find(request.restaurantId, request.deliverTo);
   if (!restaurant) {
     throw new FoodRequestError(
       foodErrorCodes.restaurantNotFound,

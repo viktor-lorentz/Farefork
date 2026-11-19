@@ -85,19 +85,21 @@ On a Mac with 8 GB of RAM, run only one simulator or emulator at a time.
 
 ## Environment variables
 
-| Variable                        | Where              | Default   | Purpose                                                                          |
-| ------------------------------- | ------------------ | --------- | -------------------------------------------------------------------------------- |
-| `PORT`                          | `apps/api/.env`    | `8787`    | API port                                                                         |
-| `HOST`                          | `apps/api/.env`    | `0.0.0.0` | API bind address                                                                 |
-| `GEOCODER`                      | `apps/api/.env`    | `photon`  | `photon`, or `mock` for an offline list of places                                |
-| `ROUTER`                        | `apps/api/.env`    | `osrm`    | `osrm`, or `estimate` for straight-line routes                                   |
-| `PHOTON_URL`                    | `apps/api/.env`    | public    | Photon server (self-host for production)                                         |
-| `OSRM_URL`                      | `apps/api/.env`    | public    | OSRM server (self-host for production)                                           |
-| `GEO_USER_AGENT`                | `apps/api/.env`    | generic   | User-Agent sent to Photon and OSRM                                               |
-| `EXPO_PUBLIC_API_URL`           | `apps/mobile/.env` | auto      | Override the API base URL, for example a deployed API                            |
-| `EXPO_PUBLIC_SUPABASE_URL`      | `apps/mobile/.env` | none      | Your Supabase project URL. Without it, accounts are hidden                       |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `apps/mobile/.env` | none      | The project's public anon key. Safe in the app; row-level security protects data |
-| `SKIP_FONT_DOWNLOAD`            | shell              | unset     | Skip the font download on install                                                |
+| Variable                        | Where              | Default         | Purpose                                                                          |
+| ------------------------------- | ------------------ | --------------- | -------------------------------------------------------------------------------- |
+| `PORT`                          | `apps/api/.env`    | `8787`          | API port                                                                         |
+| `HOST`                          | `apps/api/.env`    | `0.0.0.0`       | API bind address                                                                 |
+| `GEOCODER`                      | `apps/api/.env`    | `photon`        | `photon`, or `mock` for an offline list of places                                |
+| `ROUTER`                        | `apps/api/.env`    | `osrm`          | `osrm`, or `estimate` for straight-line routes                                   |
+| `PHOTON_URL`                    | `apps/api/.env`    | public          | Photon server (self-host for production)                                         |
+| `NOMINATIM_URL`                 | `apps/api/.env`    | public          | Nominatim server for restaurant cuisine lookups (self-host for production)       |
+| `RESTAURANTS`                   | `apps/api/.env`    | `openstreetmap` | `sample` uses invented restaurants instead of OpenStreetMap                      |
+| `OSRM_URL`                      | `apps/api/.env`    | public          | OSRM server (self-host for production)                                           |
+| `GEO_USER_AGENT`                | `apps/api/.env`    | generic         | User-Agent sent to Photon and OSRM                                               |
+| `EXPO_PUBLIC_API_URL`           | `apps/mobile/.env` | auto            | Override the API base URL, for example a deployed API                            |
+| `EXPO_PUBLIC_SUPABASE_URL`      | `apps/mobile/.env` | none            | Your Supabase project URL. Without it, accounts are hidden                       |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `apps/mobile/.env` | none            | The project's public anon key. Safe in the app; row-level security protects data |
+| `SKIP_FONT_DOWNLOAD`            | shell              | unset           | Skip the font download on install                                                |
 
 Copy each `.env.example` to `.env` to change these. `.env` files are gitignored. Never put secret keys in `EXPO_PUBLIC_*` variables, because they ship inside the app.
 
@@ -125,7 +127,7 @@ CI runs the same checks on every push and pull request.
 ## Food (milestone 3)
 
 - **Address:** set a delivery address, or use your current location.
-- **Restaurants:** `GET /v1/food/restaurants` returns **sample restaurants** with made-up names and simulated menus, generated from a grid around the address, so the same place always shows the same list. Search by name, cuisine or dish.
+- **Restaurants:** `GET /v1/food/restaurants` returns **real nearby restaurants from OpenStreetMap**, each with a cuisine photo. Menus, prices and which apps carry them are simulated. If the map services are down, it falls back to invented sample restaurants (`RESTAURANTS=sample` forces that).
 - **Cart:** add items with the stepper. Adding from a different restaurant starts a new cart and says so.
 - **Comparison:** `POST /v1/food/quotes` returns each app's **total before tip**: menu items (with that app's markup over in-store prices), delivery fee, service fee, small order fee and estimated tax. Tip is never included, because it's optional and up to you.
 - **Ordering:** the button opens the chosen app's search for the restaurant. No delivery app accepts a cart from outside, so you add the same items there.
@@ -151,7 +153,7 @@ Sign-in, favorites, history and savings use [Supabase](https://supabase.com). Th
 
 - **Sign in** with an emailed code. No passwords.
 - **Favorites:** the heart on a trip or a restaurant saves it. Tapping a favorite route re-prices it; a route saved from your current location stays "from where you are" and doesn't store your position.
-- **History:** each time you open an app from a comparison, the app records the provider, the price, and what you saved. It can't know whether you finished the order there, and says so.
+- **History:** after you open an app from a comparison and come back, Farefork asks "Did you book it?". Only a yes is saved, with the price and what you saved. Ride and delivery apps don't share your trips with other apps, so this is the only honest way to know.
 - **Savings:** compared with the average of the other apps for the same ride class or order, plus what your memberships took off. Shown in **Profile → Account**.
 - **Delete account** removes the account, favorites and history.
 

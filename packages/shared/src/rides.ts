@@ -58,6 +58,7 @@ export type UnavailableRide = z.infer<typeof unavailableRideSchema>;
 export const rideQuotesRequestSchema = z.object({
   pickup: latLngSchema,
   dropoff: latLngSchema,
+  pickupName: z.string().max(200).optional(),
   dropoffName: z.string().max(200).optional(),
   membershipIds: membershipIdsSchema,
 });

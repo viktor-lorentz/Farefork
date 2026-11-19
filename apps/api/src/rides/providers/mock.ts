@@ -91,6 +91,7 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
       const target: BookingTarget = {
         pickup: trip.pickup,
         dropoff: trip.dropoff,
+        pickupName: trip.pickupName,
         dropoffName: trip.dropoffName,
       };
       const quotes: RideQuote[] = spec.products.map((product) => {

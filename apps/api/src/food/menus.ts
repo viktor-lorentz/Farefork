@@ -373,4 +373,143 @@ export const cuisineTemplates: Record<Cuisine, CuisineTemplate> = {
       },
     ],
   },
+  italian: {
+    names: ['Trattoria Lume', 'Pasta Corner', 'Via Sorrento', "Nonna's Table", 'Osteria Nove'],
+    prepMinutes: [18, 28],
+    priceLevel: 2,
+    categories: [
+      {
+        key: 'pasta',
+        name: 'Pasta',
+        items: [
+          item('spaghetti', 'Spaghetti Pomodoro', 'San Marzano tomato, basil, olive oil', 1695),
+          item('carbonara', 'Rigatoni Carbonara', 'Guanciale, egg yolk, pecorino', 1995),
+          item('lasagna', 'Lasagna', 'Beef ragù, béchamel, parmesan', 2095),
+          item('pesto', 'Trofie al Pesto', 'Basil pesto, green beans, potato', 1795),
+        ],
+      },
+      {
+        key: 'starters',
+        name: 'Starters',
+        items: [
+          item('burrata', 'Burrata', 'Tomatoes, basil, grilled bread', 1450),
+          item('arancini', 'Arancini', 'Three rice balls, mozzarella, marinara', 1095),
+          item('tiramisu', 'Tiramisu', 'Espresso, mascarpone, cocoa', 950),
+        ],
+      },
+    ],
+  },
+  american: {
+    names: [
+      'Main Street Diner',
+      'Hickory & Co.',
+      'Blue Plate Kitchen',
+      'Ember Grill',
+      'Uptown Eats',
+    ],
+    prepMinutes: [12, 22],
+    priceLevel: 2,
+    categories: [
+      {
+        key: 'mains',
+        name: 'Mains',
+        items: [
+          item('chicken', 'Fried Chicken Plate', 'Three pieces, slaw, biscuit', 1795),
+          item('ribs', 'BBQ Half Rack', 'Smoked pork ribs, cornbread', 2395),
+          item('sandwich', 'Club Sandwich', 'Turkey, bacon, lettuce, tomato', 1595),
+          item('mac', 'Mac and Cheese', 'Three cheeses, toasted crumbs', 1195),
+        ],
+      },
+      {
+        key: 'sides',
+        name: 'Sides',
+        items: [
+          item('fries', 'Fries', 'Sea salt', 595),
+          item('wings', 'Wings', 'Six pieces, buffalo or BBQ', 1295),
+          item('shake', 'Milkshake', 'Vanilla, chocolate or strawberry', 795),
+        ],
+      },
+    ],
+  },
+  vietnamese: {
+    names: [
+      'Pho Saigon House',
+      'Little Hanoi',
+      'Banh Mi Stop',
+      'Lotus Noodle Bar',
+      'Mekong Kitchen',
+    ],
+    prepMinutes: [12, 20],
+    priceLevel: 1,
+    categories: [
+      {
+        key: 'pho',
+        name: 'Pho & Noodles',
+        items: [
+          item('pho', 'Beef Pho', 'Rare steak, brisket, rice noodles, herbs', 1595),
+          item('chicken', 'Chicken Pho', 'Poached chicken, scallion, ginger', 1495),
+          item('bun', 'Lemongrass Bun', 'Grilled pork, vermicelli, nuoc cham', 1550),
+        ],
+      },
+      {
+        key: 'banhmi',
+        name: 'Banh Mi & Rolls',
+        items: [
+          item('banhmi', 'Classic Banh Mi', 'Pork, pâté, pickled carrot, cilantro', 1095),
+          item('rolls', 'Fresh Spring Rolls', 'Shrimp, herbs, peanut sauce', 895),
+          item('coffee', 'Vietnamese Iced Coffee', 'Condensed milk', 595),
+        ],
+      },
+    ],
+  },
+  korean: {
+    names: ['Seoul Bowl', 'Gochu House', 'Han River Kitchen', 'Bap & Co.', 'Kimchi Corner'],
+    prepMinutes: [15, 25],
+    priceLevel: 2,
+    categories: [
+      {
+        key: 'bowls',
+        name: 'Bowls',
+        items: [
+          item('bibimbap', 'Bibimbap', 'Rice, vegetables, egg, gochujang', 1695),
+          item('bulgogi', 'Bulgogi Bowl', 'Marinated beef, rice, kimchi', 1895),
+          item('tofu', 'Soft Tofu Stew', 'Sundubu, egg, rice', 1595),
+        ],
+      },
+      {
+        key: 'sides',
+        name: 'Sides',
+        items: [
+          item('chicken', 'Korean Fried Chicken', 'Half order, soy garlic or spicy', 1695),
+          item('mandu', 'Mandu', 'Six pork dumplings', 995),
+          item('kimchi', 'Kimchi', 'House-made', 495),
+        ],
+      },
+    ],
+  },
+  cafe: {
+    names: ['Morning Grind', 'Daylight Coffee', 'The Steam Room', 'Cup & Crumb', 'Little Roast'],
+    prepMinutes: [6, 12],
+    priceLevel: 1,
+    categories: [
+      {
+        key: 'coffee',
+        name: 'Coffee',
+        items: [
+          item('latte', 'Latte', 'Double shot, steamed milk', 575),
+          item('cappuccino', 'Cappuccino', 'Double shot, foamed milk', 525),
+          item('coldbrew', 'Cold Brew', '16 oz', 550),
+        ],
+      },
+      {
+        key: 'bakery',
+        name: 'Bakery',
+        items: [
+          item('croissant', 'Butter Croissant', 'Baked this morning', 450),
+          item('sandwich', 'Egg Sandwich', 'Egg, cheddar, tomato jam', 895),
+          item('muffin', 'Blueberry Muffin', 'Lemon sugar top', 425),
+        ],
+      },
+    ],
+  },
 };

@@ -26,20 +26,19 @@ import { space } from '@/design/tokens';
 import { BottomBar } from '@/features/food/BottomBar';
 import { cartCount } from '@/features/food/cart';
 import { useRestaurants } from '@/features/food/queries';
-import { RestaurantRow } from '@/features/food/RestaurantRow';
+import { RestaurantCard } from '@/features/food/RestaurantCard';
+import { useBreakpoint } from '@/design/layout';
 import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
 import { useFood } from '@/stores/food';
 
 function RestaurantSkeletons() {
   return (
     <View style={styles.skeletons} accessibilityLabel="Loading restaurants">
-      {[0, 1, 2, 3, 4].map((key) => (
-        <View key={key} style={styles.skeletonRow}>
-          <Skeleton width={40} height={40} radius={12} />
-          <View style={styles.skeletonText}>
-            <Skeleton width="60%" height={14} />
-            <Skeleton width="85%" height={12} />
-          </View>
+      {[0, 1, 2].map((key) => (
+        <View key={key} style={styles.skeletonCard}>
+          <Skeleton height={180} radius={16} />
+          <Skeleton width="50%" height={14} />
+          <Skeleton width="75%" height={12} />
         </View>
       ))}
     </View>
@@ -56,6 +55,8 @@ export default function RestaurantsScreen() {
   const query = useRestaurants(address, text, cuisine);
   const restaurants = query.data?.restaurants ?? [];
   const count = cartCount(cart);
+  const breakpoint = useBreakpoint();
+  const columns = breakpoint === 'compact' ? 1 : breakpoint === 'medium' ? 2 : 3;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -134,18 +135,30 @@ export default function RestaurantsScreen() {
             ) : (
               <View>
                 <Text variant="caption" tone="secondary" style={styles.note}>
-                  Sample restaurants with simulated menus. Real listings need provider agreements.
+                  {restaurants[0]?.source === 'openstreetmap'
+                    ? 'Restaurants from OpenStreetMap. Menus, prices and which apps carry them are simulated. Photos show the cuisine, not the restaurant.'
+                    : 'Sample restaurants with simulated menus. Real listings need provider agreements.'}
                 </Text>
-                {restaurants.map((restaurant, index) => (
-                  <RestaurantRow
-                    key={restaurant.id}
-                    restaurant={restaurant}
-                    divider={index < restaurants.length - 1}
-                    onPress={() => {
-                      router.push({ pathname: '/food/[id]', params: { id: restaurant.id } });
-                    }}
-                  />
-                ))}
+                <View style={styles.grid}>
+                  {restaurants.map((restaurant) => (
+                    <View
+                      key={restaurant.id}
+                      style={{ width: columns === 1 ? '100%' : `${100 / columns - 2}%` }}
+                    >
+                      <RestaurantCard
+                        restaurant={restaurant}
+                        onPress={() => {
+                          router.push({ pathname: '/food/[id]', params: { id: restaurant.id } });
+                        }}
+                      />
+                    </View>
+                  ))}
+                </View>
+                {restaurants[0]?.source === 'openstreetmap' ? (
+                  <Text variant="caption" tone="tertiary" style={styles.credit}>
+                    Restaurant data © OpenStreetMap contributors. Photos: CC0, via Openverse.
+                  </Text>
+                ) : null}
               </View>
             )}
           </>
@@ -183,8 +196,9 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { gap: space.md },
   chips: { gap: space.xs, paddingRight: space.md },
-  note: { paddingBottom: space.xs },
-  skeletons: { gap: space.md, paddingTop: space.xs },
-  skeletonRow: { flexDirection: 'row', gap: space.md, alignItems: 'center' },
-  skeletonText: { flex: 1, gap: space.xs },
+  note: { paddingBottom: space.sm },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: '3%', rowGap: space.lg },
+  credit: { marginTop: space.lg },
+  skeletons: { gap: space.lg, paddingTop: space.xs },
+  skeletonCard: { gap: space.xs },
 });

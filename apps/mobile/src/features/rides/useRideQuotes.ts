@@ -2,6 +2,7 @@ import { type Place, rideQuotesResponseSchema } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, apiPost } from '@/lib/api';
 import { usePreferences } from '@/stores/preferences';
+import { isCurrentLocation } from '@/stores/trip';
 
 const QUOTE_STALE_MS = 60 * 1000;
 
@@ -28,6 +29,7 @@ export function useRideQuotes(pickup: Place | null, dropoff: Place | null) {
         {
           pickup: { latitude: pickup.latitude, longitude: pickup.longitude },
           dropoff: { latitude: dropoff.latitude, longitude: dropoff.longitude },
+          pickupName: isCurrentLocation(pickup) ? 'Current location' : pickup.name,
           dropoffName: dropoff.name,
           membershipIds,
         },

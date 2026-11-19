@@ -38,7 +38,7 @@ import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { isCurrentLocation, useTrip } from '@/stores/trip';
-import { bookingLabel, openBooking } from './openBooking';
+import { bookingLabel, canBookHere, openBooking } from './openBooking';
 import {
   arrivalMinutes,
   cheapestQuoteId,
@@ -51,7 +51,7 @@ import {
 import { TripSummary } from './TripSummary';
 import { FavoriteButton } from '@/features/account/FavoriteButton';
 import { routeFavorite } from '@/features/account/favorites';
-import { recordHandoff } from '@/features/account/queries';
+import { rememberHandoff } from '@/features/account/queries';
 import { rideHandoff } from '@/features/account/savings';
 import { useResultsView } from './useResultsView';
 import { useRideQuotes } from './useRideQuotes';
@@ -142,6 +142,21 @@ export function RideBookingBar() {
   if (!selected) {
     return null;
   }
+  if (!canBookHere(selected)) {
+    return (
+      <View style={[styles.bookingBar, { borderTopColor: colors.border }]}>
+        <Button
+          label={`Book ${providerName(selected.bookVia)} in its phone app`}
+          fullWidth
+          disabled
+        />
+        <Text variant="caption" tone="secondary" style={styles.appOnly}>
+          {providerName(selected.bookVia)} doesn’t take ride requests on the web. Open Farefork on
+          your phone to book with your route filled in.
+        </Text>
+      </View>
+    );
+  }
   return (
     <View style={[styles.bookingBar, { borderTopColor: colors.border }]}>
       <Button
@@ -153,8 +168,9 @@ export function RideBookingBar() {
         onPress={() => {
           void openBooking(selected).then((opened) => {
             if (opened && data && pickup && dropoff) {
-              void recordHandoff(
+              rememberHandoff(
                 rideHandoff(selected, data.quotes, { from: pickup.name, to: dropoff.name }),
+                providerName(selected.bookVia),
               );
             }
           });
@@ -365,6 +381,10 @@ const styles = StyleSheet.create({
   },
   footnoteText: {
     flex: 1,
+  },
+  appOnly: {
+    textAlign: 'center',
+    marginTop: space.xs,
   },
   bookingBar: {
     paddingHorizontal: layout.gutter,

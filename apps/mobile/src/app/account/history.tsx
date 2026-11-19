@@ -42,7 +42,7 @@ export default function HistoryScreen() {
           <EmptyState
             icon={ReceiptIcon}
             title="Sign in to keep a history"
-            body="Every ride and order you open from here is saved, with what you saved."
+            body="Rides and orders you book through Farefork are saved here, with what you saved."
             action={{
               label: 'Sign in',
               onPress: () => {
@@ -72,7 +72,7 @@ export default function HistoryScreen() {
           <EmptyState
             icon={ReceiptIcon}
             title="Nothing yet"
-            body="When you open Uber, Lyft or a delivery app from a comparison, it shows up here."
+            body="After you book through a comparison, Farefork asks whether you went ahead. Rides and orders you confirm show up here."
           />
         ) : (
           <>

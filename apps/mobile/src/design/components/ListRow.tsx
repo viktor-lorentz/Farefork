@@ -71,43 +71,52 @@ export function ListRow({
           {value}
         </Text>
       ) : null}
-      {trailing}
+      {onPress ? null : trailing}
       {chevron ? <CaretRightIcon size={iconSize.md} color={colors.textTertiary} /> : null}
     </>
   );
 
   const label = accessibilityLabel ?? [title, subtitle, value].filter(Boolean).join(', ');
 
+  const action =
+    onPress && trailing !== undefined && trailing !== null ? (
+      <View style={styles.action}>{trailing}</View>
+    ) : null;
+
   return (
     <View style={style}>
-      {onPress ? (
-        <Pressable
-          accessibilityRole={accessibilityRole ?? 'button'}
-          accessibilityLabel={label}
-          accessibilityHint={accessibilityHint}
-          accessibilityState={{ disabled }}
-          disabled={disabled}
-          onPress={onPress}
-          onHoverIn={() => {
-            setHovered(true);
-          }}
-          onHoverOut={() => {
-            setHovered(false);
-          }}
-          style={({ pressed }) => [
-            styles.row,
-            flush && styles.flush,
-            (pressed || hovered) && { backgroundColor: colors.pressed },
-            disabled && styles.disabled,
-          ]}
-        >
-          {content}
-        </Pressable>
-      ) : (
-        <View accessible accessibilityLabel={label} style={[styles.row, flush && styles.flush]}>
-          {content}
-        </View>
-      )}
+      <View style={action ? styles.actionRow : undefined}>
+        {onPress ? (
+          <Pressable
+            accessibilityRole={accessibilityRole ?? 'button'}
+            accessibilityLabel={label}
+            accessibilityHint={accessibilityHint}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
+            onPress={onPress}
+            onHoverIn={() => {
+              setHovered(true);
+            }}
+            onHoverOut={() => {
+              setHovered(false);
+            }}
+            style={({ pressed }) => [
+              styles.row,
+              flush && styles.flush,
+              trailing !== undefined && trailing !== null && styles.withAction,
+              (pressed || hovered) && { backgroundColor: colors.pressed },
+              disabled && styles.disabled,
+            ]}
+          >
+            {content}
+          </Pressable>
+        ) : (
+          <View accessible accessibilityLabel={label} style={[styles.row, flush && styles.flush]}>
+            {content}
+          </View>
+        )}
+        {action}
+      </View>
       {divider ? (
         <Divider
           inset={(flush ? 0 : space.md) + (leading !== undefined ? LEADING_SIZE + space.md : 0)}
@@ -130,6 +139,16 @@ export function ListRowIcon({ icon: Glyph, accent = false }: { icon: Icon; accen
 }
 
 const styles = StyleSheet.create({
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  withAction: {
+    flex: 1,
+  },
+  action: {
+    paddingRight: space.xs,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

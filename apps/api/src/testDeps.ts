@@ -1,4 +1,5 @@
 import type { AppDeps } from './app';
+import { sampleRestaurants } from './food/catalog';
 import { createMockDeliveryProviders } from './food/providers';
 import { createMockGeocoder } from './geo/geocoder';
 import { createEstimateRouter } from './geo/router';
@@ -12,6 +13,7 @@ export function testDeps(overrides: Partial<AppDeps> = {}): AppDeps {
     router: createEstimateRouter(),
     rideProviders: createMockRideProviders(),
     deliveryProviders: createMockDeliveryProviders(),
+    restaurants: sampleRestaurants,
     now: () => fixedNow,
     ...overrides,
   };

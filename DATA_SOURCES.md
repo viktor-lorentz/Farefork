@@ -39,7 +39,12 @@ Swapping a mock for a real source means writing one adapter. Screens and pricing
 
 Menu prices often differ between apps and from in-store prices. The app's "true total" is shown **before tip**: menu price, delivery fee, service fee, small-order fee and estimated tax. Each of these varies by market and membership. Tax uses a flat 8.75% estimate for now; real rates depend on the city and on whether fees are taxed.
 
-The restaurants in this build are **samples with invented names**. A real integration needs a licensed source of restaurant listings and menus for each app.
+### Restaurants, menus and photos
+
+- **Restaurants are real places from OpenStreetMap** (ODbL, attribution shown in the app). The API lists nearby restaurants, fast food and cafes through Photon, and fills in cuisine tags through Nominatim's lookup. Results are cached per area for 24 hours. If those services fail, the API falls back to invented sample restaurants.
+- **Public Photon and Nominatim servers are for light use.** Nominatim allows at most one request per second and forbids heavy or bulk use. Before launch, self-host them or switch to a commercial provider (`PHOTON_URL`, `NOMINATIM_URL`).
+- **Menus, prices and which apps carry each restaurant are simulated**, and the app says so. Showing real restaurant names next to made-up menus and prices could mislead people or upset those restaurants. **Decide before launch** whether to keep real names, or wait for real menus from partner feeds.
+- **Photos are CC0 food photos** (Rawpixel, StockSnap and WordPress Photo Directory, found through Openverse), matched by cuisine. They aren't photos of the restaurant, and the menu page says so. Real restaurant photos need a licensed source such as Google Places Photos or Yelp Fusion, both paid and with display rules, or partner feeds.
 
 ### Order links
 
@@ -73,7 +78,7 @@ Accounts use Supabase (auth and Postgres). Per signed-in user, it stores:
 
 - **Email address**, for sign-in codes.
 - **Favorites:** saved routes (place names, addresses and coordinates of both ends; routes from your current location store only the destination) and restaurant IDs.
-- **History:** provider, product or restaurant name, the route's place names or item count, prices, and savings. No coordinates.
+- **History:** only bookings the user confirms ("Did you book it?"), with provider, product or restaurant name, the route's place names or item count, prices and savings. No coordinates. Ride and delivery apps don't let other apps read a user's trips or orders, so Farefork can't check this automatically.
 
 Everything is protected by row-level security and removed by **Delete account**. Supabase's built-in email is for testing only; production needs your own SMTP provider, which will process users' email addresses.
 

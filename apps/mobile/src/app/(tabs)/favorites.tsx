@@ -14,6 +14,8 @@ import {
 import { ForkKnifeIcon, HeartIcon, MapPinIcon, TrashIcon, WarningCircleIcon } from '@/design/icons';
 import { space } from '@/design/tokens';
 import { useFavorites, useRemoveFavorite } from '@/features/account/queries';
+import { currentLocationPlace, locateDevice } from '@/features/rides/location';
+import { useDeviceLocation } from '@/stores/location';
 import { useSession } from '@/stores/session';
 import { useTrip } from '@/stores/trip';
 
@@ -36,10 +38,18 @@ function FavoriteList({ title, rows }: { title: string; rows: FavoriteRow[] }) {
     if (pickup) {
       setTrip(pickup, dropoff);
       router.navigate('/');
-    } else {
-      addRecent(dropoff);
-      router.push({ pathname: '/rides/search', params: { recent: dropoff.id } });
+      return;
     }
+    void locateDevice({ prompt: false }).then((result) => {
+      const point = result.status === 'ok' ? result.point : useDeviceLocation.getState().lastKnown;
+      if (point) {
+        setTrip(currentLocationPlace(point), dropoff);
+        router.navigate('/');
+      } else {
+        addRecent(dropoff);
+        router.push({ pathname: '/rides/search', params: { recent: dropoff.id } });
+      }
+    });
   };
 
   return (

@@ -7,16 +7,19 @@ import {
   type LatLng,
   type MenuCategory,
   type RestaurantDetail,
+  type RestaurantSource as RestaurantSourceKind,
   type RestaurantSummary,
 } from '@repo/shared';
 import { seededRandom } from '../rides/random';
 import { cuisineTemplates } from './menus';
+import { photoFor } from './photos';
 
 export const CELL_DEGREES = 0.02;
 export const RESTAURANTS_PER_CELL = 3;
 export const SEARCH_RADIUS_METERS = 5000;
 const SEARCH_CELL_SPAN = 3;
-const MAX_RESULTS = 40;
+export const MAX_RESULTS = 120;
+const CAFE_RANK_PENALTY_METERS = 800;
 
 const carryProbability: Record<DeliveryProviderId, number> = {
   ubereats: 0.85,
@@ -25,12 +28,114 @@ const carryProbability: Record<DeliveryProviderId, number> = {
   postmates: 0.5,
 };
 
-type Generated = {
-  detail: Omit<RestaurantDetail, 'distanceMeters'>;
+export type RestaurantBase = {
+  id: string;
+  name: string;
+  cuisine: Cuisine;
+  latitude: number;
+  longitude: number;
+  address: string | null;
+  source: RestaurantSourceKind;
+};
+
+export type StoredRestaurant = Omit<RestaurantDetail, 'distanceMeters'>;
+
+export type RestaurantQuery = {
+  near: LatLng;
+  text?: string;
+  cuisine?: Cuisine;
+};
+
+export type RestaurantSource = {
+  search(query: RestaurantQuery): Promise<RestaurantSummary[]>;
+  find(id: string, from?: LatLng): Promise<RestaurantDetail | null>;
 };
 
 function roundToNickel(cents: number): number {
   return Math.max(5, Math.round(cents / 5) * 5);
+}
+
+export function buildRestaurant(base: RestaurantBase): StoredRestaurant {
+  const random = seededRandom(`menu|${base.id}`);
+  const template = cuisineTemplates[base.cuisine];
+  const priceFactor = random.between(0.9, 1.2);
+  const providerIds = (Object.keys(carryProbability) as DeliveryProviderId[]).filter((provider) =>
+    random.chance(carryProbability[provider]),
+  );
+  for (const fallback of ['doordash', 'ubereats'] as const) {
+    if (providerIds.length < 2 && !providerIds.includes(fallback)) {
+      providerIds.push(fallback);
+    }
+  }
+  const popularIndex = random.int(0, 2);
+  const categories: MenuCategory[] = template.categories.map((category, categoryIndex) => ({
+    id: category.key,
+    name: category.name,
+    items: category.items.map((entry, itemIndex) => ({
+      id: `${category.key}.${entry.key}`,
+      name: entry.name,
+      description: entry.description,
+      priceCents: roundToNickel(entry.priceCents * priceFactor),
+      popular: categoryIndex === 0 && itemIndex === popularIndex,
+    })),
+  }));
+  return {
+    ...base,
+    priceLevel: template.priceLevel,
+    prepMinutes: random.int(template.prepMinutes[0], template.prepMinutes[1]),
+    providerIds,
+    photo: photoFor(base.id, base.cuisine),
+    categories,
+  };
+}
+
+export function withDistance(restaurant: StoredRestaurant, from?: LatLng): RestaurantDetail {
+  return {
+    ...restaurant,
+    distanceMeters: from ? Math.round(haversineMeters(from, restaurant)) : 0,
+  };
+}
+
+export function summarize(restaurant: RestaurantDetail): RestaurantSummary {
+  const { categories: _categories, ...summary } = restaurant;
+  return summary;
+}
+
+function matches(restaurant: StoredRestaurant, text: string): boolean {
+  const haystack = [
+    restaurant.name,
+    cuisineLabels[restaurant.cuisine],
+    ...restaurant.categories.flatMap((category) => category.items.map((entry) => entry.name)),
+  ]
+    .join(' ')
+    .toLowerCase();
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((term) => haystack.includes(term));
+}
+
+function rankDistance(restaurant: RestaurantDetail, query: RestaurantQuery): number {
+  const penalty =
+    restaurant.cuisine === 'cafe' && query.cuisine !== 'cafe' ? CAFE_RANK_PENALTY_METERS : 0;
+  return restaurant.distanceMeters + penalty;
+}
+
+export function rankRestaurants(
+  restaurants: readonly StoredRestaurant[],
+  query: RestaurantQuery,
+  radiusMeters: number,
+): RestaurantSummary[] {
+  const text = query.text?.trim() ?? '';
+  return restaurants
+    .map((restaurant) => withDistance(restaurant, query.near))
+    .filter((restaurant) => restaurant.distanceMeters <= radiusMeters)
+    .filter((restaurant) => query.cuisine === undefined || restaurant.cuisine === query.cuisine)
+    .filter((restaurant) => text.length === 0 || matches(restaurant, text))
+    .sort((a, b) => rankDistance(a, query) - rankDistance(b, query))
+    .slice(0, MAX_RESULTS)
+    .map(summarize);
 }
 
 export function restaurantId(cellLat: number, cellLng: number, index: number): string {
@@ -51,48 +156,21 @@ export function parseRestaurantId(
   return { cellLat: Number(match[1]), cellLng: Number(match[2]), index };
 }
 
-function generate(cellLat: number, cellLng: number, index: number): Generated {
+function generateSample(cellLat: number, cellLng: number, index: number): StoredRestaurant {
   const id = restaurantId(cellLat, cellLng, index);
   const random = seededRandom(`restaurant|${id}`);
   const cuisine: Cuisine = cuisineIds[random.int(0, cuisineIds.length - 1)] ?? 'pizza';
   const template = cuisineTemplates[cuisine];
   const name = template.names[random.int(0, template.names.length - 1)] ?? cuisineLabels[cuisine];
-  const latitude = (cellLat + random.next()) * CELL_DEGREES;
-  const longitude = (cellLng + random.next()) * CELL_DEGREES;
-  const priceFactor = random.between(0.9, 1.2);
-  const providerIds = (Object.keys(carryProbability) as DeliveryProviderId[]).filter((provider) =>
-    random.chance(carryProbability[provider]),
-  );
-  for (const fallback of ['doordash', 'ubereats'] as const) {
-    if (providerIds.length < 2 && !providerIds.includes(fallback)) {
-      providerIds.push(fallback);
-    }
-  }
-  const popularIndex = random.int(0, 3);
-  const categories: MenuCategory[] = template.categories.map((category, categoryIndex) => ({
-    id: category.key,
-    name: category.name,
-    items: category.items.map((entry, itemIndex) => ({
-      id: `${category.key}.${entry.key}`,
-      name: entry.name,
-      description: entry.description,
-      priceCents: roundToNickel(entry.priceCents * priceFactor),
-      popular: categoryIndex === 0 && itemIndex === popularIndex,
-    })),
-  }));
-  return {
-    detail: {
-      id,
-      name,
-      cuisine,
-      latitude,
-      longitude,
-      priceLevel: template.priceLevel,
-      prepMinutes: random.int(template.prepMinutes[0], template.prepMinutes[1]),
-      providerIds,
-      categories,
-    },
-  };
+  return buildRestaurant({
+    id,
+    name,
+    cuisine,
+    latitude: (cellLat + random.next()) * CELL_DEGREES,
+    longitude: (cellLng + random.next()) * CELL_DEGREES,
+    address: null,
+    source: 'sample',
+  });
 }
 
 export function findRestaurant(id: string, from?: LatLng): RestaurantDetail | null {
@@ -100,56 +178,24 @@ export function findRestaurant(id: string, from?: LatLng): RestaurantDetail | nu
   if (!parsed) {
     return null;
   }
-  const { detail } = generate(parsed.cellLat, parsed.cellLng, parsed.index);
-  return {
-    ...detail,
-    distanceMeters: from ? Math.round(haversineMeters(from, detail)) : 0,
-  };
-}
-
-export type RestaurantQuery = {
-  near: LatLng;
-  text?: string;
-  cuisine?: Cuisine;
-};
-
-function matches(detail: Generated['detail'], text: string): boolean {
-  const haystack = [
-    detail.name,
-    cuisineLabels[detail.cuisine],
-    ...detail.categories.flatMap((category) => category.items.map((entry) => entry.name)),
-  ]
-    .join(' ')
-    .toLowerCase();
-  return text
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .every((term) => haystack.includes(term));
+  return withDistance(generateSample(parsed.cellLat, parsed.cellLng, parsed.index), from);
 }
 
 export function searchRestaurants(query: RestaurantQuery): RestaurantSummary[] {
   const baseLat = Math.floor(query.near.latitude / CELL_DEGREES);
   const baseLng = Math.floor(query.near.longitude / CELL_DEGREES);
-  const results: RestaurantSummary[] = [];
+  const all: StoredRestaurant[] = [];
   for (let dLat = -SEARCH_CELL_SPAN; dLat <= SEARCH_CELL_SPAN; dLat += 1) {
     for (let dLng = -SEARCH_CELL_SPAN; dLng <= SEARCH_CELL_SPAN; dLng += 1) {
       for (let index = 0; index < RESTAURANTS_PER_CELL; index += 1) {
-        const { detail } = generate(baseLat + dLat, baseLng + dLng, index);
-        const distanceMeters = haversineMeters(query.near, detail);
-        if (distanceMeters > SEARCH_RADIUS_METERS) {
-          continue;
-        }
-        if (query.cuisine !== undefined && detail.cuisine !== query.cuisine) {
-          continue;
-        }
-        if (query.text !== undefined && query.text.length > 0 && !matches(detail, query.text)) {
-          continue;
-        }
-        const { categories: _categories, ...summary } = detail;
-        results.push({ ...summary, distanceMeters: Math.round(distanceMeters) });
+        all.push(generateSample(baseLat + dLat, baseLng + dLng, index));
       }
     }
   }
-  return results.sort((a, b) => a.distanceMeters - b.distanceMeters).slice(0, MAX_RESULTS);
+  return rankRestaurants(all, query, SEARCH_RADIUS_METERS);
 }
+
+export const sampleRestaurants: RestaurantSource = {
+  search: (query) => Promise.resolve(searchRestaurants(query)),
+  find: (id, from) => Promise.resolve(findRestaurant(id, from)),
+};

@@ -23,7 +23,8 @@ import {
   withFallback,
   withRouteCache,
 } from './geo/router';
-import { findRestaurant, searchRestaurants } from './food/catalog';
+import { type RestaurantSource, sampleRestaurants } from './food/catalog';
+import { createOsmRestaurantSource } from './food/osm';
 import { createMockDeliveryProviders, type DeliveryProvider } from './food/providers';
 import { FoodRequestError, getFoodQuotes } from './food/quoteService';
 import { catalogFor } from './memberships/registry';
@@ -36,6 +37,7 @@ export type AppDeps = {
   router: Router;
   rideProviders: readonly RideProvider[];
   deliveryProviders: readonly DeliveryProvider[];
+  restaurants: RestaurantSource;
   now?: () => Date;
   log?: boolean;
 };
@@ -61,6 +63,18 @@ export function defaultDeps(): AppDeps {
     router,
     rideProviders: createMockRideProviders(),
     deliveryProviders: createMockDeliveryProviders(),
+    restaurants:
+      config.restaurants === 'sample'
+        ? sampleRestaurants
+        : createOsmRestaurantSource(
+            {
+              photonUrl: config.photonUrl,
+              nominatimUrl: config.nominatimUrl,
+              userAgent: config.userAgent,
+              timeoutMs: Math.max(config.upstreamTimeoutMs, 8000),
+            },
+            sampleRestaurants,
+          ),
     log: true,
   };
 }
@@ -144,13 +158,13 @@ export function createApp(deps: AppDeps = defaultDeps()) {
     }
   });
 
-  app.get('/v1/food/restaurants', (c) => {
+  app.get('/v1/food/restaurants', async (c) => {
     const parsed = restaurantSearchQuerySchema.safeParse(c.req.query());
     if (!parsed.success) {
       return c.json({ error: rideErrorCodes.invalidRequest }, 400);
     }
     const { lat, lng, q, cuisine } = parsed.data;
-    const restaurants = searchRestaurants({
+    const restaurants = await deps.restaurants.search({
       near: { latitude: lat, longitude: lng },
       text: q,
       cuisine,
@@ -158,7 +172,7 @@ export function createApp(deps: AppDeps = defaultDeps()) {
     return c.json({ simulated: true, restaurants });
   });
 
-  app.get('/v1/food/restaurants/:id', (c) => {
+  app.get('/v1/food/restaurants/:id', async (c) => {
     const parsed = restaurantDetailQuerySchema.safeParse(c.req.query());
     if (!parsed.success) {
       return c.json({ error: rideErrorCodes.invalidRequest }, 400);
@@ -166,7 +180,7 @@ export function createApp(deps: AppDeps = defaultDeps()) {
     const { lat, lng } = parsed.data;
     const from =
       lat !== undefined && lng !== undefined ? { latitude: lat, longitude: lng } : undefined;
-    const restaurant = findRestaurant(c.req.param('id'), from);
+    const restaurant = await deps.restaurants.find(c.req.param('id'), from);
     if (!restaurant) {
       return c.json({ error: 'restaurant_not_found' }, 404);
     }
@@ -182,6 +196,7 @@ export function createApp(deps: AppDeps = defaultDeps()) {
     try {
       const response = await getFoodQuotes(parsed.data, {
         providers: deps.deliveryProviders,
+        restaurants: deps.restaurants,
         now: deps.now,
       });
       c.header('Cache-Control', 'no-store');
