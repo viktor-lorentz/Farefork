@@ -1,0 +1,10 @@
+node_modules
+dist
+web-build
+coverage
+.expo
+apps/mobile/ios
+apps/mobile/android
+apps/mobile/assets
+package-lock.json
+apps/mobile/public/maplibre-gl-worker.mjs

@@ -1,0 +1,46 @@
+{
+  "version": "2026-11-01",
+  "effectiveFrom": "2026-11-01",
+  "programs": [
+    {
+      "id": "uber_one",
+      "name": "Uber One",
+      "providerIds": ["uber", "ubereats", "postmates"],
+      "summary": "$0 delivery fee on eligible orders over the minimum, member pricing on rides. Verify current terms.",
+      "available": true,
+      "monthlyPriceCents": 999
+    },
+    {
+      "id": "dashpass",
+      "name": "DashPass",
+      "providerIds": ["doordash"],
+      "summary": "$0 delivery fee and reduced service fees on eligible orders over the minimum. Verify current terms.",
+      "available": true,
+      "monthlyPriceCents": 999
+    },
+    {
+      "id": "grubhub_plus",
+      "name": "Grubhub+",
+      "providerIds": ["grubhub"],
+      "summary": "$0 delivery fee on eligible orders over the minimum. Verify current terms.",
+      "available": true,
+      "monthlyPriceCents": 999
+    },
+    {
+      "id": "lyft_pink",
+      "name": "Lyft Pink",
+      "providerIds": ["lyft"],
+      "summary": "Member discount on eligible rides. Verify current terms.",
+      "available": true,
+      "monthlyPriceCents": 999
+    },
+    {
+      "id": "waymo",
+      "name": "Waymo",
+      "providerIds": ["waymo"],
+      "summary": "No membership program announced.",
+      "available": false,
+      "monthlyPriceCents": null
+    }
+  ]
+}

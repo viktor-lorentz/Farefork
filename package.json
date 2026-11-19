@@ -1,0 +1,40 @@
+{
+  "name": "@repo/root",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names api,app --prefix-colors gray,white \"npm:dev:api\" \"npm:dev:app\"",
+    "dev:api": "npm run dev --workspace @repo/api",
+    "dev:app": "npm run start --workspace @repo/mobile",
+    "android": "concurrently --kill-others-on-fail --names api,app --prefix-colors gray,white \"npm:dev:api\" \"npm run android --workspace @repo/mobile\"",
+    "web": "concurrently --kill-others-on-fail --names api,app --prefix-colors gray,white \"npm:dev:api\" \"npm run web --workspace @repo/mobile\"",
+    "ios": "concurrently --kill-others-on-fail --names api,app --prefix-colors gray,white \"npm:dev:api\" \"npm run ios --workspace @repo/mobile\"",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
+    "fonts": "node scripts/fetch-fonts.mjs --force",
+    "postinstall": "node scripts/fetch-fonts.mjs && node scripts/copy-map-worker.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "concurrently": "^10.0.7",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~58.0.4",
+    "eslint-config-prettier": "^10.1.8",
+    "fflate": "^0.8.3",
+    "globals": "^17.14.0",
+    "prettier": "^3.10.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.1"
+  }
+}
