@@ -45,13 +45,25 @@ Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned
 
 ## Maps and geodata
 
-| Service                     | Use                                  | Terms to check                                                                                                                                       |
-| --------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Apple Maps (iOS)            | Base map through `react-native-maps` | Apple's MapKit terms                                                                                                                                 |
-| Google Maps (Android)       | Base map through `react-native-maps` | Expo Go includes a key for development. A production build needs your own key and Google Maps Platform billing.                                      |
-| OpenFreeMap (web)           | Vector tiles                         | Free with attribution. No SLA. Consider self-hosting or a paid provider at scale.                                                                    |
-| OpenStreetMap data          | Underlying data for the web map      | ODbL attribution (shown on the map)                                                                                                                  |
-| Photon / OSRM (planned, M2) | Geocoding and routing                | The public demo servers have usage limits and are not for production. Self-host, or use a commercial provider. A generic User-Agent is configurable. |
+| Service                  | Use                                  | Terms to check                                                                                                                                       |
+| ------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Apple Maps (iOS)         | Base map through `react-native-maps` | Apple's MapKit terms                                                                                                                                 |
+| Google Maps (Android)    | Base map through `react-native-maps` | Expo Go includes a key for development. A production build needs your own key and Google Maps Platform billing.                                      |
+| OpenFreeMap (web)        | Vector tiles                         | Free with attribution. No SLA. Consider self-hosting or a paid provider at scale.                                                                    |
+| OpenStreetMap data       | Underlying data for the web map      | ODbL attribution (shown on the map)                                                                                                                  |
+| Photon / OSRM (live, M2) | Geocoding and routing                | The public demo servers have usage limits and are not for production. Self-host, or use a commercial provider. A generic User-Agent is configurable. |
+
+### Location privacy (milestone 2)
+
+Search text, the pickup area (rounded to about 1 km) and trip coordinates go from the app to this API, and from the API to Photon and OSRM. Nothing is stored except in-memory caches (10 minutes) and recent destinations kept on the device. Before launch, decide whether to self-host these services so that trip locations never leave your infrastructure.
+
+### Deep links to verify
+
+| Provider | Link used                                                           | To verify                                                                                                      |
+| -------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Uber     | `https://m.uber.com/ul/?action=setPickup&pickup[...]&dropoff[...]`  | Product preselection needs a per-city `product_id`, so it isn't sent. Check attribution rules.                 |
+| Lyft     | `https://lyft.com/ride?id=<ride type>&pickup[...]&destination[...]` | The ride type IDs `lyft`, `lyft_plus` and `lyft_lux` come from older docs. Extra Comfort falls back to `lyft`. |
+| Waymo    | `https://waymo.com/`                                                | No prefilled deep link is known. In Austin and Atlanta, Waymo trips open the Uber link instead.                |
 
 ## Trademarks and logos
 

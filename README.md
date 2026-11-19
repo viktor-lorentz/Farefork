@@ -2,7 +2,7 @@
 
 Compare Uber, Lyft and Waymo ride quotes, and the true totals for Uber Eats, DoorDash, Grubhub and Postmates, in one app for iOS, Android and the web.
 
-> **Status: Milestone 1 of 7** (setup, design system, navigation shell, light and dark mode). All prices in this build are **simulated**. No provider data is fetched yet.
+> **Status: Milestone 2 of 7** (ride comparison). All prices in this build are **simulated** by mock providers. Address search and routes are real, from public OpenStreetMap services.
 
 ## Stack
 
@@ -29,8 +29,8 @@ apps/
   mobile/              Expo app (iOS, Android, web)
     src/app/           routes (Expo Router)
     src/design/        tokens, theme, components (Button, ListRow, QuoteCard, Sheet, Chip, Toggle, Badge, EmptyState, …)
-    src/features/      feature folders: home, map, memberships, navigation, onboarding, providers
-    src/stores/        persisted preferences
+    src/features/      feature folders: home, map, memberships, navigation, onboarding, providers, rides
+    src/stores/        persisted preferences, trip and recent places
 packages/
   shared/              brand constants, provider ids, money formatting, shared Zod schemas
 scripts/               font download, map worker copy
@@ -88,6 +88,11 @@ On a Mac with 8 GB of RAM, run only one simulator or emulator at a time.
 | --------------------- | ------------------ | --------- | ----------------------------------------------------- |
 | `PORT`                | `apps/api/.env`    | `8787`    | API port                                              |
 | `HOST`                | `apps/api/.env`    | `0.0.0.0` | API bind address                                      |
+| `GEOCODER`            | `apps/api/.env`    | `photon`  | `photon`, or `mock` for an offline list of places     |
+| `ROUTER`              | `apps/api/.env`    | `osrm`    | `osrm`, or `estimate` for straight-line routes        |
+| `PHOTON_URL`          | `apps/api/.env`    | public    | Photon server (self-host for production)              |
+| `OSRM_URL`            | `apps/api/.env`    | public    | OSRM server (self-host for production)                |
+| `GEO_USER_AGENT`      | `apps/api/.env`    | generic   | User-Agent sent to Photon and OSRM                    |
 | `EXPO_PUBLIC_API_URL` | `apps/mobile/.env` | auto      | Override the API base URL, for example a deployed API |
 | `SKIP_FONT_DOWNLOAD`  | shell              | unset     | Skip the font download on install                     |
 
@@ -105,6 +110,14 @@ npm run check     # all of the above
 
 CI runs the same checks on every push and pull request.
 
+## Rides (milestone 2)
+
+- **Search:** type a pickup and a destination, or use your current location. Results come from Photon, biased toward your pickup. Recent destinations are saved on the device.
+- **Route:** OSRM draws the driving route on the map. If OSRM is down, the API falls back to a straight-line estimate and the app labels it "estimated".
+- **Quotes:** `POST /v1/rides/quotes` returns simulated prices for UberX, Comfort, UberXL, Uber Black, Lyft, Extra Comfort, Lyft XL, Lyft Black and Waymo. Prices come from a base fare, per-mile and per-minute rates, a booking fee, a minimum fare, and simulated surge. They stay the same within a two-minute window, so refreshing doesn't make them jump around.
+- **Waymo:** offered only when both ends of the trip are inside a rough, simulated service area (San Francisco Bay Area, Phoenix, Los Angeles, plus Austin and Atlanta through Uber).
+- **Booking:** the button opens the provider with pickup and destination filled in: Uber's universal link, Lyft's ride link, or the Waymo website (Waymo has no public deep link with a prefilled trip).
+
 ## Design rules
 
 - Black and white, with a true black dark mode. The only accent is signal yellow `#FFD400`, always as a fill behind black text, and used only for best-price and deal moments.
@@ -116,7 +129,7 @@ CI runs the same checks on every push and pull request.
 ## Milestones
 
 1. ✅ Setup, design system, navigation shell, light and dark mode
-2. Rides: geocoding, routing, mock quote providers, results sheet, deep links
+2. ✅ Rides: geocoding, routing, mock quote providers, results sheet, deep links
 3. Food: restaurant search, cart, true-total breakdown
 4. Membership pricing rules, plus tests for pricing, memberships and tier matching
 5. Supabase auth (email code), favorites, history, savings tracker

@@ -1,19 +1,48 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Map as MapLibreMap, setWorkerUrl } from 'maplibre-gl';
+import { boundsOf } from '@repo/shared';
+import { type GeoJSONSource, Map as MapLibreMap, setWorkerUrl } from 'maplibre-gl';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 import { useTheme } from '@/design/theme';
 import { mapPalettes } from './palette';
-import { defaultZoom, type MapCanvasProps } from './types';
-import { webMapStyle } from './webMapStyle';
+import { defaultZoom, fitPadding, type MapCanvasProps, type MapTrip, resolveInsets } from './types';
+import { TRIP_SOURCE, tripGeoJSON, webMapStyle } from './webMapStyle';
 
 setWorkerUrl('/maplibre-gl-worker.mjs');
 
-export function MapCanvas({ center, zoom = defaultZoom, insets, style }: MapCanvasProps) {
+function fitTrip(map: MapLibreMap, trip: MapTrip, animate: boolean) {
+  const bounds = boundsOf(trip.path.length > 1 ? trip.path : [trip.pickup, trip.dropoff]);
+  if (!bounds) {
+    return;
+  }
+  map.fitBounds(
+    [
+      [bounds.west, bounds.south],
+      [bounds.east, bounds.north],
+    ],
+    {
+      padding: fitPadding,
+      maxZoom: 16,
+      duration: animate ? 600 : 0,
+    },
+  );
+}
+
+export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: MapCanvasProps) {
   const { scheme } = useTheme();
+  const reducedMotion = useReducedMotion();
   const containerRef = useRef<ComponentRef<typeof View>>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const initial = useRef({ center, zoom, scheme });
+  const tripRef = useRef(trip);
+  const padding = resolveInsets(insets);
+  const paddingRef = useRef(padding);
+
+  useEffect(() => {
+    tripRef.current = trip;
+    paddingRef.current = padding;
+  });
 
   useEffect(() => {
     const element = containerRef.current as unknown as HTMLElement | null;
@@ -22,7 +51,7 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, style }: MapCanv
     }
     const map = new MapLibreMap({
       container: element,
-      style: webMapStyle(mapPalettes[initial.current.scheme]),
+      style: webMapStyle(mapPalettes[initial.current.scheme], tripRef.current),
       center: [initial.current.center.longitude, initial.current.center.latitude],
       zoom: initial.current.zoom,
       attributionControl: { compact: true },
@@ -32,6 +61,10 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, style }: MapCanv
     });
     map.touchZoomRotate.disableRotation();
     mapRef.current = map;
+    if (tripRef.current) {
+      map.setPadding(paddingRef.current);
+      fitTrip(map, tripRef.current, false);
+    }
     const observer = new ResizeObserver(() => {
       map.resize();
     });
@@ -44,22 +77,56 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, style }: MapCanv
   }, []);
 
   useEffect(() => {
-    mapRef.current?.setStyle(webMapStyle(mapPalettes[scheme]));
+    if (scheme === initial.current.scheme && mapRef.current?.isStyleLoaded() !== true) {
+      return;
+    }
+    mapRef.current?.setStyle(webMapStyle(mapPalettes[scheme], tripRef.current));
   }, [scheme]);
 
   useEffect(() => {
     mapRef.current?.setPadding({
-      top: insets?.top ?? 0,
-      right: insets?.right ?? 0,
-      bottom: insets?.bottom ?? 0,
-      left: insets?.left ?? 0,
+      top: padding.top,
+      right: padding.right,
+      bottom: padding.bottom,
+      left: padding.left,
     });
-  }, [insets?.top, insets?.right, insets?.bottom, insets?.left]);
+  }, [padding.top, padding.right, padding.bottom, padding.left]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+    const source = map.getSource<GeoJSONSource>(TRIP_SOURCE);
+    if (source) {
+      void source.setData(tripGeoJSON(trip));
+    } else {
+      map.once('idle', () => {
+        void map.getSource<GeoJSONSource>(TRIP_SOURCE)?.setData(tripGeoJSON(tripRef.current));
+      });
+    }
+    if (trip) {
+      fitTrip(map, trip, !reducedMotion);
+    }
+  }, [trip, reducedMotion]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || tripRef.current) {
+      return;
+    }
+    const target: [number, number] = [center.longitude, center.latitude];
+    const current = map.getCenter();
+    if (Math.abs(current.lng - target[0]) < 1e-6 && Math.abs(current.lat - target[1]) < 1e-6) {
+      return;
+    }
+    map.easeTo({ center: target, duration: reducedMotion ? 0 : 400 });
+  }, [center.latitude, center.longitude, reducedMotion]);
 
   return (
     <View
       style={[StyleSheet.absoluteFill, style]}
-      accessibilityLabel="Map"
+      accessibilityLabel={trip ? 'Map showing your route' : 'Map'}
       accessibilityRole="image"
     >
       <View ref={containerRef} style={styles.fill} />

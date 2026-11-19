@@ -5,6 +5,7 @@ export const deliveryProviderIds = ['ubereats', 'doordash', 'grubhub', 'postmate
 export const providerIds = [...rideProviderIds, ...deliveryProviderIds] as const;
 
 export const providerIdSchema = z.enum(providerIds);
+export const rideProviderIdSchema = z.enum(rideProviderIds);
 
 export type ProviderId = z.infer<typeof providerIdSchema>;
 export type RideProviderId = (typeof rideProviderIds)[number];

@@ -1,6 +1,10 @@
-import BottomSheet, { type BottomSheetProps } from '@gorhom/bottom-sheet';
-import type { ReactNode, Ref } from 'react';
-import { StyleSheet } from 'react-native';
+import BottomSheet, {
+  BottomSheetFooter,
+  type BottomSheetFooterProps,
+  type BottomSheetProps,
+} from '@gorhom/bottom-sheet';
+import { useCallback, type ReactNode, type Ref } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useTheme } from '../theme';
 import { radius } from '../tokens/spacing';
 
@@ -20,6 +24,7 @@ export type SheetProps = {
   topInset?: number;
   bottomInset?: number;
   children: ReactNode;
+  footer?: ReactNode;
   ref?: Ref<BottomSheet>;
 };
 
@@ -31,9 +36,18 @@ export function Sheet({
   topInset = 0,
   bottomInset = 0,
   children,
+  footer,
   ref,
 }: SheetProps) {
   const { colors, elevation } = useTheme();
+  const renderFooter = useCallback(
+    (props: BottomSheetFooterProps) => (
+      <BottomSheetFooter {...props}>
+        <View style={{ backgroundColor: colors.surface }}>{footer}</View>
+      </BottomSheetFooter>
+    ),
+    [footer, colors.surface],
+  );
   return (
     <BottomSheet
       ref={ref}
@@ -48,6 +62,7 @@ export function Sheet({
       backgroundStyle={[styles.background, { backgroundColor: colors.surface }]}
       handleStyle={styles.handle}
       handleIndicatorStyle={[styles.indicator, { backgroundColor: colors.borderStrong }]}
+      footerComponent={footer !== undefined && footer !== null ? renderFooter : undefined}
       accessibilityLabel="Results sheet"
     >
       {children}

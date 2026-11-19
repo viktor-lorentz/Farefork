@@ -13,6 +13,7 @@ import {
 } from '@/design/components';
 import {
   BriefcaseIcon,
+  ClockCounterClockwiseIcon,
   CarIcon,
   ForkKnifeIcon,
   HouseIcon,
@@ -25,6 +26,7 @@ import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { usePreferences } from '@/stores/preferences';
+import { useTrip } from '@/stores/trip';
 import { useVertical } from './useVertical';
 
 const verticalOptions: readonly SegmentOption<Vertical>[] = [
@@ -45,6 +47,7 @@ function ProviderStrip({ ids }: { ids: readonly ProviderId[] }) {
 function RidesContent() {
   const router = useRouter();
   const { colors } = useTheme();
+  const recents = useTrip((state) => state.recents).slice(0, 3);
   return (
     <>
       <SearchButton
@@ -60,6 +63,25 @@ function RidesContent() {
         </Text>
         <ProviderStrip ids={rideProviderIds} />
       </View>
+      {recents.length > 0 ? (
+        <View>
+          <SectionHeader title="Recent" />
+          {recents.map((place, index) => (
+            <ListRow
+              key={place.id}
+              flush
+              title={place.name}
+              subtitle={place.address || undefined}
+              leading={<ListRowIcon icon={ClockCounterClockwiseIcon} />}
+              accessibilityHint="Compare rides to this place"
+              divider={index < recents.length - 1}
+              onPress={() => {
+                router.push({ pathname: '/rides/search', params: { recent: place.id } });
+              }}
+            />
+          ))}
+        </View>
+      ) : null}
       <View>
         <SectionHeader title="Saved places" />
         <ListRow

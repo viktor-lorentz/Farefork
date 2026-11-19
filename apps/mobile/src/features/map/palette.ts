@@ -14,6 +14,8 @@ export type MapPalette = {
   labelPrimary: string;
   labelSecondary: string;
   labelHalo: string;
+  route: string;
+  routeCasing: string;
 };
 
 export const mapPalettes: Record<ColorScheme, MapPalette> = {
@@ -31,6 +33,8 @@ export const mapPalettes: Record<ColorScheme, MapPalette> = {
     labelPrimary: '#3A3A3A',
     labelSecondary: '#7A7A78',
     labelHalo: '#F4F4F2',
+    route: '#000000',
+    routeCasing: '#FFFFFF',
   },
   dark: {
     land: '#0E0E0E',
@@ -46,5 +50,7 @@ export const mapPalettes: Record<ColorScheme, MapPalette> = {
     labelPrimary: '#B5B5B5',
     labelSecondary: '#6E6E6E',
     labelHalo: '#0E0E0E',
+    route: '#FFFFFF',
+    routeCasing: '#000000',
   },
 };

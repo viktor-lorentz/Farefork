@@ -1,0 +1,38 @@
+import type { LatLng } from '@repo/shared';
+
+export type BookingTarget = {
+  pickup: LatLng;
+  dropoff: LatLng;
+  dropoffName?: string;
+};
+
+function coordinate(value: number): string {
+  return value.toFixed(6);
+}
+
+export function uberBookingUrl(target: BookingTarget): string {
+  const url = new URL('https://m.uber.com/ul/');
+  url.searchParams.set('action', 'setPickup');
+  url.searchParams.set('pickup[latitude]', coordinate(target.pickup.latitude));
+  url.searchParams.set('pickup[longitude]', coordinate(target.pickup.longitude));
+  url.searchParams.set('dropoff[latitude]', coordinate(target.dropoff.latitude));
+  url.searchParams.set('dropoff[longitude]', coordinate(target.dropoff.longitude));
+  if (target.dropoffName !== undefined && target.dropoffName.length > 0) {
+    url.searchParams.set('dropoff[nickname]', target.dropoffName);
+  }
+  return url.toString();
+}
+
+export function lyftBookingUrl(target: BookingTarget, rideTypeId: string): string {
+  const url = new URL('https://lyft.com/ride');
+  url.searchParams.set('id', rideTypeId);
+  url.searchParams.set('pickup[latitude]', coordinate(target.pickup.latitude));
+  url.searchParams.set('pickup[longitude]', coordinate(target.pickup.longitude));
+  url.searchParams.set('destination[latitude]', coordinate(target.dropoff.latitude));
+  url.searchParams.set('destination[longitude]', coordinate(target.dropoff.longitude));
+  return url.toString();
+}
+
+export function waymoBookingUrl(): string {
+  return 'https://waymo.com/';
+}

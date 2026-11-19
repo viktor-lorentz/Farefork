@@ -1,36 +1,79 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { decodePolyline, type LatLng } from '@repo/shared';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { IconButton, Sheet, SheetScrollView } from '@/design/components';
+import { IconButton, Sheet, type SheetHandle, SheetScrollView } from '@/design/components';
 import { CrosshairIcon } from '@/design/icons';
 import { useIsDesktopLayout } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { layout, space } from '@/design/tokens';
 import { HomePanel } from '@/features/home/HomePanel';
 import { MapCanvas } from '@/features/map/MapCanvas';
-import { defaultCenter } from '@/features/map/types';
+import { defaultCenter, type MapTrip } from '@/features/map/types';
+import { locateDevice } from '@/features/rides/location';
+import { RideBookingBar, RideResults } from '@/features/rides/RideResults';
+import { useRideQuotes } from '@/features/rides/useRideQuotes';
+import { haptics } from '@/lib/haptics';
+import { useTrip } from '@/stores/trip';
 
 const SHEET_PEEK = 380;
+const SHEET_RESULTS = 0.68;
+const BOOKING_BAR_HEIGHT = 81;
+
+function useMapTrip(): MapTrip | null {
+  const pickup = useTrip((state) => state.pickup);
+  const dropoff = useTrip((state) => state.dropoff);
+  const { data } = useRideQuotes(pickup, dropoff);
+  const polyline = data?.route.polyline;
+  return useMemo(() => {
+    if (!pickup || !dropoff) {
+      return null;
+    }
+    return {
+      pickup: { latitude: pickup.latitude, longitude: pickup.longitude },
+      dropoff: { latitude: dropoff.latitude, longitude: dropoff.longitude },
+      path: polyline !== undefined ? decodePolyline(polyline) : [],
+    };
+  }, [pickup, dropoff, polyline]);
+}
 
 export default function HomeScreen() {
   const desktop = useIsDesktopLayout();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const trip = useMapTrip();
+  const [center, setCenter] = useState<LatLng>(defaultCenter);
+  const { height } = useWindowDimensions();
+  const sheetRef = useRef<SheetHandle>(null);
+  const hasTrip = trip !== null;
+  const resultsHeight = Math.max(SHEET_PEEK, Math.round(height * SHEET_RESULTS));
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      sheetRef.current?.snapToIndex(hasTrip ? 1 : 0);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [hasTrip]);
+
+  const panel = trip ? <RideResults /> : <HomePanel />;
 
   if (desktop) {
     return (
       <View style={[styles.desktop, { backgroundColor: colors.background }]}>
         <View style={styles.desktopMap}>
-          <MapCanvas center={defaultCenter} />
+          <MapCanvas center={center} trip={trip} />
         </View>
-        <ScrollView
+        <View
           style={[
             styles.desktopPanel,
             { borderLeftColor: colors.border, backgroundColor: colors.background },
           ]}
-          contentContainerStyle={styles.desktopPanelContent}
         >
-          <HomePanel />
-        </ScrollView>
+          <ScrollView contentContainerStyle={styles.desktopPanelContent}>{panel}</ScrollView>
+          {trip ? <RideBookingBar /> : null}
+        </View>
       </View>
     );
   }
@@ -38,20 +81,43 @@ export default function HomeScreen() {
   return (
     <View style={[styles.mobile, { backgroundColor: colors.background }]}>
       <MapCanvas
-        center={defaultCenter}
-        insets={{ top: insets.top, bottom: SHEET_PEEK - 40 }}
+        center={center}
+        trip={trip}
+        insets={{ top: insets.top, bottom: (hasTrip ? resultsHeight : SHEET_PEEK) - 40 }}
         showsUserLocation
       />
-      <View style={[styles.mapControls, { top: insets.top + space.sm }]}>
-        <IconButton
-          icon={CrosshairIcon}
-          accessibilityLabel="Center on my location"
-          variant="raised"
-        />
-      </View>
-      <Sheet snapPoints={[SHEET_PEEK, '88%']} topInset={insets.top}>
-        <SheetScrollView contentContainerStyle={styles.sheetContent}>
-          <HomePanel />
+      {trip ? null : (
+        <View style={[styles.mapControls, { top: insets.top + space.sm }]}>
+          <IconButton
+            icon={CrosshairIcon}
+            accessibilityLabel="Center on my location"
+            variant="raised"
+            onPress={() => {
+              haptics.light();
+              void locateDevice().then((result) => {
+                if (result.status === 'ok') {
+                  setCenter(result.point);
+                } else {
+                  haptics.warning();
+                }
+              });
+            }}
+          />
+        </View>
+      )}
+      <Sheet
+        ref={sheetRef}
+        snapPoints={[SHEET_PEEK, resultsHeight, '88%']}
+        topInset={insets.top}
+        footer={trip ? <RideBookingBar /> : undefined}
+      >
+        <SheetScrollView
+          contentContainerStyle={[
+            styles.sheetContent,
+            trip ? { paddingBottom: BOOKING_BAR_HEIGHT + space.lg } : null,
+          ]}
+        >
+          {panel}
         </SheetScrollView>
       </Sheet>
     </View>

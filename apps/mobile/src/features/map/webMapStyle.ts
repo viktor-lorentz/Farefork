@@ -1,14 +1,50 @@
-import type { StyleSpecification } from 'maplibre-gl';
+import type { LatLng } from '@repo/shared';
+import type { GeoJSONSourceSpecification, StyleSpecification } from 'maplibre-gl';
+import type { MapTrip } from './types';
 import type { MapPalette } from './palette';
 
 const SOURCE = 'openmaptiles';
+export const TRIP_SOURCE = 'trip';
 
-export function webMapStyle(palette: MapPalette): StyleSpecification {
+type TripGeoJSON = Exclude<GeoJSONSourceSpecification['data'], string>;
+
+function position(point: LatLng): [number, number] {
+  return [point.longitude, point.latitude];
+}
+
+export function tripGeoJSON(trip: MapTrip | null | undefined): TripGeoJSON {
+  if (!trip) {
+    return { type: 'FeatureCollection', features: [] };
+  }
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: { kind: 'route' },
+        geometry: { type: 'LineString', coordinates: trip.path.map(position) },
+      },
+      {
+        type: 'Feature',
+        properties: { kind: 'pickup' },
+        geometry: { type: 'Point', coordinates: position(trip.pickup) },
+      },
+      {
+        type: 'Feature',
+        properties: { kind: 'dropoff' },
+        geometry: { type: 'Point', coordinates: position(trip.dropoff) },
+      },
+    ],
+  };
+}
+
+export function webMapStyle(palette: MapPalette, trip?: MapTrip | null): StyleSpecification {
   return {
     version: 8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources: {
       [SOURCE]: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' },
+      [TRIP_SOURCE]: { type: 'geojson', data: tripGeoJSON(trip) },
     },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': palette.land } },
@@ -115,6 +151,22 @@ export function webMapStyle(palette: MapPalette): StyleSpecification {
         },
       },
       {
+        id: 'trip-route-casing',
+        type: 'line',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'route'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': palette.routeCasing, 'line-width': 8 },
+      },
+      {
+        id: 'trip-route',
+        type: 'line',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'route'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': palette.route, 'line-width': 4 },
+      },
+      {
         id: 'water-label',
         type: 'symbol',
         source: SOURCE,
@@ -183,6 +235,30 @@ export function webMapStyle(palette: MapPalette): StyleSpecification {
           'text-color': palette.labelPrimary,
           'text-halo-color': palette.labelHalo,
           'text-halo-width': 1.5,
+        },
+      },
+      {
+        id: 'trip-pickup',
+        type: 'circle',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'pickup'],
+        paint: {
+          'circle-radius': 6,
+          'circle-color': palette.routeCasing,
+          'circle-stroke-color': palette.route,
+          'circle-stroke-width': 5,
+        },
+      },
+      {
+        id: 'trip-dropoff',
+        type: 'circle',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'dropoff'],
+        paint: {
+          'circle-radius': 8,
+          'circle-color': palette.route,
+          'circle-stroke-color': palette.routeCasing,
+          'circle-stroke-width': 2,
         },
       },
     ],
