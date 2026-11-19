@@ -26,6 +26,7 @@ import {
 import {
   ArrowsClockwiseIcon,
   ArrowSquareOutIcon,
+  BellRingingIcon,
   CarIcon,
   InfoIcon,
   SealCheckIcon,
@@ -201,6 +202,10 @@ export function RideResults() {
   const present = classesPresent(data?.quotes ?? []);
   const spread = providerSpreadCents(visible.filter((quote) => quote.rideClass === 'economy'));
   const generatedAt = data ? new Date(data.generatedAt) : new Date();
+  const cheapestCents =
+    data && data.quotes.length > 0
+      ? Math.min(...data.quotes.map((quote) => quote.priceCents))
+      : null;
 
   return (
     <View style={styles.container}>
@@ -344,6 +349,19 @@ export function RideResults() {
               reason={entry.reason}
             />
           ))}
+          {cheapestCents !== null ? (
+            <Button
+              label="Alert me when it drops"
+              variant="secondary"
+              leadingIcon={BellRingingIcon}
+              onPress={() => {
+                router.push({
+                  pathname: '/alerts/new',
+                  params: { cheapest: String(cheapestCents) },
+                });
+              }}
+            />
+          ) : null}
           <View style={styles.footnote}>
             <InfoIcon size={16} color={colors.textSecondary} weight="bold" />
             <Text variant="caption" tone="secondary" style={styles.footnoteText}>

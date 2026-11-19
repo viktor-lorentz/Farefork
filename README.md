@@ -85,21 +85,23 @@ On a Mac with 8 GB of RAM, run only one simulator or emulator at a time.
 
 ## Environment variables
 
-| Variable                        | Where              | Default         | Purpose                                                                          |
-| ------------------------------- | ------------------ | --------------- | -------------------------------------------------------------------------------- |
-| `PORT`                          | `apps/api/.env`    | `8787`          | API port                                                                         |
-| `HOST`                          | `apps/api/.env`    | `0.0.0.0`       | API bind address                                                                 |
-| `GEOCODER`                      | `apps/api/.env`    | `photon`        | `photon`, or `mock` for an offline list of places                                |
-| `ROUTER`                        | `apps/api/.env`    | `osrm`          | `osrm`, or `estimate` for straight-line routes                                   |
-| `PHOTON_URL`                    | `apps/api/.env`    | public          | Photon server (self-host for production)                                         |
-| `NOMINATIM_URL`                 | `apps/api/.env`    | public          | Nominatim server for restaurant cuisine lookups (self-host for production)       |
-| `RESTAURANTS`                   | `apps/api/.env`    | `openstreetmap` | `sample` uses invented restaurants instead of OpenStreetMap                      |
-| `OSRM_URL`                      | `apps/api/.env`    | public          | OSRM server (self-host for production)                                           |
-| `GEO_USER_AGENT`                | `apps/api/.env`    | generic         | User-Agent sent to Photon and OSRM                                               |
-| `EXPO_PUBLIC_API_URL`           | `apps/mobile/.env` | auto            | Override the API base URL, for example a deployed API                            |
-| `EXPO_PUBLIC_SUPABASE_URL`      | `apps/mobile/.env` | none            | Your Supabase project URL. Without it, accounts are hidden                       |
-| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `apps/mobile/.env` | none            | The project's public anon key. Safe in the app; row-level security protects data |
-| `SKIP_FONT_DOWNLOAD`            | shell              | unset           | Skip the font download on install                                                |
+| Variable                        | Where                                  | Default         | Purpose                                                                                                |
+| ------------------------------- | -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------ |
+| `PORT`                          | `apps/api/.env`                        | `8787`          | API port                                                                                               |
+| `HOST`                          | `apps/api/.env`                        | `0.0.0.0`       | API bind address                                                                                       |
+| `GEOCODER`                      | `apps/api/.env`                        | `photon`        | `photon`, or `mock` for an offline list of places                                                      |
+| `ROUTER`                        | `apps/api/.env`                        | `osrm`          | `osrm`, or `estimate` for straight-line routes                                                         |
+| `EAS_PROJECT_ID`                | `apps/mobile/.env` and EAS environment | none            | Expo project ID, needed for push tokens                                                                |
+| `GOOGLE_SERVICES_JSON`          | EAS file variable                      | none            | Firebase config for Android push (or put `google-services.json` in `apps/mobile`, which is gitignored) |
+| `PHOTON_URL`                    | `apps/api/.env`                        | public          | Photon server (self-host for production)                                                               |
+| `NOMINATIM_URL`                 | `apps/api/.env`                        | public          | Nominatim server for restaurant cuisine lookups (self-host for production)                             |
+| `RESTAURANTS`                   | `apps/api/.env`                        | `openstreetmap` | `sample` uses invented restaurants instead of OpenStreetMap                                            |
+| `OSRM_URL`                      | `apps/api/.env`                        | public          | OSRM server (self-host for production)                                                                 |
+| `GEO_USER_AGENT`                | `apps/api/.env`                        | generic         | User-Agent sent to Photon and OSRM                                                                     |
+| `EXPO_PUBLIC_API_URL`           | `apps/mobile/.env`                     | auto            | Override the API base URL, for example a deployed API                                                  |
+| `EXPO_PUBLIC_SUPABASE_URL`      | `apps/mobile/.env`                     | none            | Your Supabase project URL. Without it, accounts are hidden                                             |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `apps/mobile/.env`                     | none            | The project's public anon key. Safe in the app; row-level security protects data                       |
+| `SKIP_FONT_DOWNLOAD`            | shell                                  | unset           | Skip the font download on install                                                                      |
 
 Copy each `.env.example` to `.env` to change these. `.env` files are gitignored. Never put secret keys in `EXPO_PUBLIC_*` variables, because they ship inside the app.
 
@@ -157,6 +159,20 @@ Sign-in, favorites, history and savings use [Supabase](https://supabase.com). Th
 - **Savings:** compared with the average of the other apps for the same ride class or order, plus what your memberships took off. Shown in **Profile → Account**.
 - **Delete account** removes the account, favorites and history.
 
+## Deals and price alerts (milestone 6)
+
+- **Deals:** `GET /v1/deals` returns this week's promos for every app, behind a `DealsSource` adapter. Deals your memberships unlock come first, then by estimated savings. The mock source rotates weekly and never invents promo codes.
+- **Price alerts:** pick a target under any ride comparison ("Alert me when it drops"). Alerts live in Supabase (`price_alerts`), last 7 days, and pause after they hit, so you get one ping, not twenty.
+- **Checking runs off your computer:** `.github/workflows/price-alerts.yml` runs every 15 minutes on GitHub Actions. It prices each alert with the same quote code as the API (`apps/api/src/alerts/cli.ts`) and sends Expo push notifications to the phones of users whose alerts hit. On the web, hits appear in the Alerts tab.
+
+**One-time setup:**
+
+1. **Supabase SQL Editor:** run `supabase/migrations/20261120000000_alerts.sql` (creates `price_alerts`, `push_tokens` and `register_push_token()`).
+2. **GitHub secrets** (repo → Settings → Secrets and variables → Actions): `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` from Supabase → Project Settings → API. The service role key bypasses row-level security, so it only ever goes in GitHub secrets, never in the app. Until both are set, the job skips.
+3. **Push notifications (Android):** `npx eas-cli login`, then `npx eas-cli init` in `apps/mobile`, put the project ID in `apps/mobile/.env` as `EAS_PROJECT_ID`, add a Firebase Android app for `com.farefork.app` and upload its FCM V1 service account key with `npx eas-cli credentials`. Then `npx eas-cli build --profile development --platform android`. iOS needs an Apple Developer account.
+
+GitHub pauses scheduled workflows in repos with no activity for 60 days. For a real launch, move the checker to a server or a Supabase Edge Function.
+
 ## Design rules
 
 - Black and white, with a true black dark mode. The only accent is signal yellow `#FFD400`, always as a fill behind black text, and used only for best-price and deal moments.
@@ -171,8 +187,8 @@ Sign-in, favorites, history and savings use [Supabase](https://supabase.com). Th
 2. ✅ Rides: geocoding, routing, mock quote providers, results sheet, deep links
 3. ✅ Food: restaurant search, cart, true-total breakdown (before tip)
 4. ✅ Membership pricing rules, plus tests for pricing, memberships and tier matching
-5. 🚧 Supabase auth (email code), favorites, history, savings tracker (built; waiting on database setup and a sign-in test)
-6. Deals, price alerts, push notifications (needs a development build)
+5. ✅ Supabase auth (email code), favorites, history, savings tracker, real restaurants with photos
+6. ✅ Deals, price alerts, push notifications (push needs the EAS and Firebase setup above)
 7. Polish
 
 Data sourcing and legal open questions are in [DATA_SOURCES.md](DATA_SOURCES.md).

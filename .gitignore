@@ -32,3 +32,5 @@ apps/mobile/assets/fonts/
 apps/mobile/public/maplibre-gl-worker.mjs
 
 .cache/
+
+apps/mobile/google-services.json

@@ -6,3 +6,5 @@ export * from './memberships';
 export * from './money';
 export * from './providers';
 export * from './rides';
+export * from './alerts';
+export * from './deals';

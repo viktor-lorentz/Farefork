@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 import {
   APP_NAME,
@@ -9,6 +10,11 @@ import {
 const fontFiles = ['Regular', 'Medium', 'Bold', 'Black'].map(
   (face) => `./assets/fonts/Satoshi-${face}.otf`,
 );
+
+const easProjectId = process.env.EAS_PROJECT_ID;
+const googleServicesFile =
+  process.env.GOOGLE_SERVICES_JSON ??
+  (existsSync('./google-services.json') ? './google-services.json' : undefined);
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -31,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    ...(googleServicesFile ? { googleServicesFile } : {}),
   },
   web: {
     output: 'single',
@@ -57,8 +64,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         locationWhenInUsePermission: `${APP_NAME} uses your location to set your pickup point and sort nearby deals.`,
       },
     ],
-    'expo-notifications',
+    ['expo-notifications', { color: '#FFD400', defaultChannel: 'price-alerts' }],
   ],
+  extra: {
+    ...config.extra,
+    ...(easProjectId ? { eas: { projectId: easProjectId } } : {}),
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import {
   cuisineSchema,
+  type DealsResponse,
+  dealsQuerySchema,
   foodQuotesRequestSchema,
   rideErrorCodes,
   rideQuotesRequestSchema,
@@ -17,6 +19,7 @@ import {
   type Geocoder,
   UpstreamError,
 } from './geo/geocoder';
+import { createMockDealsSource, type DealsSource } from './deals/mock';
 import { createNominatimGeocoder, withGeocoderFallback } from './geo/nominatim';
 import {
   createEstimateRouter,
@@ -40,6 +43,7 @@ export type AppDeps = {
   rideProviders: readonly RideProvider[];
   deliveryProviders: readonly DeliveryProvider[];
   restaurants: RestaurantSource;
+  deals: DealsSource;
   now?: () => Date;
   log?: boolean;
 };
@@ -67,6 +71,7 @@ export function defaultDeps(): AppDeps {
     geocoder,
     router,
     rideProviders: createMockRideProviders(),
+    deals: createMockDealsSource(),
     deliveryProviders: createMockDeliveryProviders(),
     restaurants:
       config.restaurants === 'sample'
@@ -162,6 +167,17 @@ export function createApp(deps: AppDeps = defaultDeps()) {
       }
       throw error;
     }
+  });
+
+  app.get('/v1/deals', async (c) => {
+    const parsed = dealsQuerySchema.safeParse(c.req.query());
+    if (!parsed.success) {
+      return c.json({ error: 'invalid_request', message: 'Invalid deals query.' }, 400);
+    }
+    const now = deps.now?.() ?? new Date();
+    const deals = await deps.deals.list({ ...parsed.data, now });
+    const body: DealsResponse = { simulated: true, generatedAt: now.toISOString(), deals };
+    return c.json(body);
   });
 
   app.get('/v1/photos/:file', async (c) => {

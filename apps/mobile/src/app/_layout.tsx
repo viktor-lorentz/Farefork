@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { type Href, Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StyleSheet } from 'react-native';
 import { fontAssets } from '@/design/fonts';
 import { BookingCheck } from '@/features/account/BookingCheck';
+import { listenForAlertTaps } from '@/features/alerts/push';
 import { ThemeProvider, useTheme } from '@/design/theme';
 import { queryClient } from '@/lib/queryClient';
 import { usePreferences, usePreferencesHydrated } from '@/stores/preferences';
@@ -23,6 +24,24 @@ export const unstable_settings = {
 function RootNavigator() {
   const { colors, scheme } = useTheme();
   const onboarded = usePreferences((state) => state.onboardingCompletedAt !== null);
+  const router = useRouter();
+  useEffect(() => {
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    void listenForAlertTaps((url) => {
+      router.push(url as Href);
+    }).then((cleanup) => {
+      if (cancelled) {
+        cleanup();
+      } else {
+        stop = cleanup;
+      }
+    });
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  }, [router]);
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -46,6 +65,7 @@ function RootNavigator() {
           <Stack.Screen name="account/index" />
           <Stack.Screen name="account/history" />
           <Stack.Screen name="account/sign-in" options={{ animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="alerts/new" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="dev/components" />
         </Stack.Protected>
       </Stack>

@@ -62,6 +62,10 @@ None of the delivery apps accept a prefilled cart from another app. The best a p
 
 With real store IDs (from an affiliate or partner program), these become direct store links.
 
+## Deals
+
+Deals come through a `DealsSource` adapter. This build uses simulated weekly promos with no codes. Real promos need provider partnerships or affiliate feeds; scraping promo pages isn't allowed by the brief.
+
 ## Memberships
 
 Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned by effective date. To change terms, add a new file with a later `effectiveFrom` instead of editing an old one. **Every price and perk in the current file is a placeholder to verify** against each provider's current terms:
@@ -82,6 +86,11 @@ Accounts use Supabase (auth and Postgres). Per signed-in user, it stores:
 - **Email address**, for sign-in codes.
 - **Favorites:** saved routes (place names, addresses and coordinates of both ends; routes from your current location store only the destination) and restaurant IDs.
 - **History:** only bookings the user confirms ("Did you book it?"), with provider, product or restaurant name, the route's place names or item count, prices and savings. No coordinates. Ride and delivery apps don't let other apps read a user's trips or orders, so Farefork can't check this automatically.
+
+- **Price alerts:** both ends of the route (names and coordinates), the target price, membership IDs and the last checked price. Alerts end after 7 days and are deleted 30 days after that.
+- **Push tokens:** the Expo push token for each phone that allowed notifications, removed when Expo reports the app was uninstalled.
+
+The price-alert job on GitHub Actions reads alerts and push tokens with the service role key, and sends notification text (route name and price) through Expo's push service, which hands it to Google or Apple.
 
 Everything is protected by row-level security and removed by **Delete account**. Supabase's built-in email is for testing only; production needs your own SMTP provider, which will process users' email addresses.
 
