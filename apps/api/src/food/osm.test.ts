@@ -199,4 +199,33 @@ describe('OpenStreetMap restaurants', () => {
     expect(results.length).toBeGreaterThan(0);
     expect(results.every((entry) => entry.source === 'sample')).toBe(true);
   });
+
+  it('fixes cuisines when slow lookups finish after the first response', async () => {
+    const calls: Calls = { photon: [], nominatim: [] };
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const slowFetch = fakeFetch(calls);
+    const restaurants = createOsmRestaurantSource({
+      photonUrl: 'https://photon.test',
+      nominatimUrl: 'https://nominatim.test',
+      userAgent: 'test',
+      timeoutMs: 1000,
+      sleep: () => Promise.resolve(),
+      fetch: async (input, init) => {
+        const url = new URL(input instanceof Request ? input.url : String(input));
+        if (url.host === 'nominatim.test') {
+          await gate;
+        }
+        return slowFetch(input, init);
+      },
+    });
+    const first = await restaurants.search({ near });
+    expect(first.find((entry) => entry.name === 'Golden Lotus')?.cuisine).toBe('american');
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const second = await restaurants.search({ near });
+    expect(second.find((entry) => entry.name === 'Golden Lotus')?.cuisine).toBe('vietnamese');
+  });
 });

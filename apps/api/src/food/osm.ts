@@ -558,28 +558,41 @@ export function createOsmRestaurantSource(
     return { places: [...unique.values()], tags };
   }
 
-  async function cuisineTags(places: readonly NearbyPlace[]): Promise<Map<string, string>> {
+  function tagsFrom(found: readonly NominatimPlace[]): Map<string, string> {
     const tags = new Map<string, string>();
-    const found: z.infer<typeof nominatimPlaceSchema>[] = [];
-    try {
-      await Promise.race([
-        lookup(
-          places.map((place) => place.lookupKey),
-          { sink: found },
-        ),
-        budget(LOOKUP_BUDGET_MS),
-      ]);
-    } catch {
-      tags.clear();
-    }
     for (const place of found) {
       const cuisine = place.extratags?.cuisine;
       if (cuisine !== undefined) {
-        const type = place.osm_type === 'node' ? 'N' : place.osm_type === 'way' ? 'W' : 'R';
-        tags.set(osmRestaurantId(type, place.osm_id), cuisine);
+        tags.set(osmRestaurantId(nominatimType(place.osm_type), place.osm_id), cuisine);
       }
     }
     return tags;
+  }
+
+  async function cuisineTags(
+    places: readonly NearbyPlace[],
+    onLate?: (tags: Map<string, string>) => void,
+  ): Promise<Map<string, string>> {
+    const found: NominatimPlace[] = [];
+    const state = { done: false };
+    const full = lookup(
+      places.map((place) => place.lookupKey),
+      { sink: found },
+    ).then(
+      () => {
+        state.done = true;
+      },
+      () => {
+        state.done = true;
+      },
+    );
+    await Promise.race([full, budget(LOOKUP_BUDGET_MS)]);
+    if (!state.done && onLate) {
+      void full.then(() => {
+        onLate(tagsFrom(found));
+      });
+    }
+    return tagsFrom(found);
   }
 
   function remember(places: readonly NearbyPlace[], tags: Map<string, string>): StoredRestaurant[] {
@@ -591,7 +604,7 @@ export function createOsmRestaurantSource(
     });
   }
 
-  async function loadCell(center: LatLng): Promise<StoredRestaurant[]> {
+  async function loadCell(center: LatLng, key?: string): Promise<StoredRestaurant[]> {
     const probes = [
       ...amenityKinds.map((kind) => () => nearby(center, kind)),
       ...PROBE_OFFSETS.slice(1).map(
@@ -627,11 +640,28 @@ export function createOsmRestaurantSource(
     if (places.length === 0) {
       return [];
     }
-    return remember(places, await cuisineTags(places));
+    const tags = await cuisineTags(places, (late) => {
+      const updated = places.map((place) => {
+        const current = byId.get(place.id);
+        const tag = late.get(place.id);
+        const better = cuisineFromTag(tag);
+        if (current && tag !== undefined && better !== null && better !== current.cuisine) {
+          const fixed = toRestaurant(place, tag);
+          byId.set(place.id, fixed);
+          return fixed;
+        }
+        return current ?? toRestaurant(place, tag);
+      });
+      if (key !== undefined) {
+        cells.set(key, updated);
+        persist(key, updated);
+      }
+    });
+    return remember(places, tags);
   }
 
   async function loadAndPersistCell(key: string, center: LatLng): Promise<StoredRestaurant[]> {
-    const restaurants = await loadCell(center);
+    const restaurants = await loadCell(center, key);
     if (restaurants.length > 0) {
       persist(key, restaurants);
     }
