@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,6 +14,7 @@ export type ScreenHeaderProps = {
   large?: boolean;
   back?: boolean;
   padTop?: boolean;
+  trailing?: ReactNode;
 };
 
 export function ScreenHeader({
@@ -20,6 +22,7 @@ export function ScreenHeader({
   large = false,
   back = true,
   padTop = true,
+  trailing,
 }: ScreenHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -59,7 +62,10 @@ export function ScreenHeader({
           >
             {title}
           </Text>
-        ) : null}
+        ) : (
+          <View style={styles.spacer} />
+        )}
+        {trailing}
       </View>
       {large && title !== undefined ? (
         <Text variant="titleXL" accessibilityRole="header" style={styles.largeTitle}>
@@ -71,6 +77,7 @@ export function ScreenHeader({
 }
 
 const styles = StyleSheet.create({
+  spacer: { flex: 1 },
   container: {
     width: '100%',
     maxWidth: layout.contentMaxWidth,

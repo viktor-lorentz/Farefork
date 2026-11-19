@@ -11,6 +11,7 @@ import { fontAssets } from '@/design/fonts';
 import { ThemeProvider, useTheme } from '@/design/theme';
 import { queryClient } from '@/lib/queryClient';
 import { usePreferences, usePreferencesHydrated } from '@/stores/preferences';
+import { startSessionSync } from '@/stores/session';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -41,6 +42,9 @@ function RootNavigator() {
           <Stack.Screen name="food/compare" />
           <Stack.Screen name="food/address" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="profile/memberships" />
+          <Stack.Screen name="account/index" />
+          <Stack.Screen name="account/history" />
+          <Stack.Screen name="account/sign-in" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="dev/components" />
         </Stack.Protected>
       </Stack>
@@ -52,6 +56,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const hydrated = usePreferencesHydrated();
   const ready = (fontsLoaded || fontError !== null) && hydrated;
+
+  useEffect(() => startSessionSync(), []);
 
   useEffect(() => {
     if (ready) {

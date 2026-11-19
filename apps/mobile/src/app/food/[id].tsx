@@ -1,4 +1,4 @@
-import { formatUsd, providerName } from '@repo/shared';
+import { cuisineLabels, formatUsd, providerName } from '@repo/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -17,6 +17,8 @@ import {
 import { InfoIcon, ShoppingBagIcon, WarningCircleIcon, XIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
+import { FavoriteButton } from '@/features/account/FavoriteButton';
+import { restaurantFavorite } from '@/features/account/favorites';
 import { BottomBar } from '@/features/food/BottomBar';
 import { cartCount, cartInStoreCents, MAX_ITEM_QUANTITY, quantityOf } from '@/features/food/cart';
 import { restaurantMeta } from '@/features/food/format';
@@ -41,7 +43,16 @@ export default function RestaurantScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScreenHeader title={restaurant?.name ?? 'Restaurant'} />
+      <ScreenHeader
+        title={restaurant?.name ?? 'Restaurant'}
+        trailing={
+          restaurant ? (
+            <FavoriteButton
+              favorite={restaurantFavorite(restaurant, cuisineLabels[restaurant.cuisine])}
+            />
+          ) : undefined
+        }
+      />
       <Screen padTop={false} contentStyle={styles.content}>
         {query.isPending ? (
           <View style={styles.loading} accessibilityLabel="Loading menu">

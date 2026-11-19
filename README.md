@@ -85,17 +85,19 @@ On a Mac with 8 GB of RAM, run only one simulator or emulator at a time.
 
 ## Environment variables
 
-| Variable              | Where              | Default   | Purpose                                               |
-| --------------------- | ------------------ | --------- | ----------------------------------------------------- |
-| `PORT`                | `apps/api/.env`    | `8787`    | API port                                              |
-| `HOST`                | `apps/api/.env`    | `0.0.0.0` | API bind address                                      |
-| `GEOCODER`            | `apps/api/.env`    | `photon`  | `photon`, or `mock` for an offline list of places     |
-| `ROUTER`              | `apps/api/.env`    | `osrm`    | `osrm`, or `estimate` for straight-line routes        |
-| `PHOTON_URL`          | `apps/api/.env`    | public    | Photon server (self-host for production)              |
-| `OSRM_URL`            | `apps/api/.env`    | public    | OSRM server (self-host for production)                |
-| `GEO_USER_AGENT`      | `apps/api/.env`    | generic   | User-Agent sent to Photon and OSRM                    |
-| `EXPO_PUBLIC_API_URL` | `apps/mobile/.env` | auto      | Override the API base URL, for example a deployed API |
-| `SKIP_FONT_DOWNLOAD`  | shell              | unset     | Skip the font download on install                     |
+| Variable                        | Where              | Default   | Purpose                                                                          |
+| ------------------------------- | ------------------ | --------- | -------------------------------------------------------------------------------- |
+| `PORT`                          | `apps/api/.env`    | `8787`    | API port                                                                         |
+| `HOST`                          | `apps/api/.env`    | `0.0.0.0` | API bind address                                                                 |
+| `GEOCODER`                      | `apps/api/.env`    | `photon`  | `photon`, or `mock` for an offline list of places                                |
+| `ROUTER`                        | `apps/api/.env`    | `osrm`    | `osrm`, or `estimate` for straight-line routes                                   |
+| `PHOTON_URL`                    | `apps/api/.env`    | public    | Photon server (self-host for production)                                         |
+| `OSRM_URL`                      | `apps/api/.env`    | public    | OSRM server (self-host for production)                                           |
+| `GEO_USER_AGENT`                | `apps/api/.env`    | generic   | User-Agent sent to Photon and OSRM                                               |
+| `EXPO_PUBLIC_API_URL`           | `apps/mobile/.env` | auto      | Override the API base URL, for example a deployed API                            |
+| `EXPO_PUBLIC_SUPABASE_URL`      | `apps/mobile/.env` | none      | Your Supabase project URL. Without it, accounts are hidden                       |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | `apps/mobile/.env` | none      | The project's public anon key. Safe in the app; row-level security protects data |
+| `SKIP_FONT_DOWNLOAD`            | shell              | unset     | Skip the font download on install                                                |
 
 Copy each `.env.example` to `.env` to change these. `.env` files are gitignored. Never put secret keys in `EXPO_PUBLIC_*` variables, because they ship inside the app.
 
@@ -135,6 +137,24 @@ CI runs the same checks on every push and pull request.
 - **Applied before ranking:** the API applies perks before sorting, so "best price" is best for you. Cards show the standard price struck through and what the plan saves. Uber One ride credits are shown but don't lower the price, because they're paid back later.
 - **Below the minimum:** food cards say how much more to add to get the perks.
 
+## Accounts (milestone 5)
+
+Sign-in, favorites, history and savings use [Supabase](https://supabase.com). The app talks to Supabase directly; row-level security lets each user read and change only their own rows. The pricing API doesn't touch accounts.
+
+**One-time setup in the Supabase dashboard:**
+
+1. **SQL Editor:** run `supabase/migrations/20261119000000_accounts.sql`. It creates `favorites`, `handoffs` (history), the `savings_summary` view and `delete_my_account()`.
+2. **Authentication → Email Templates:** in both **Magic Link** and **Confirm signup**, show the code with `{{ .Token }}` instead of a link. The app asks for the code.
+3. **Email sending:** Supabase's built-in email is rate limited and meant for testing. Before other people sign in, add your own SMTP provider under **Authentication → SMTP Settings**.
+
+**What it does:**
+
+- **Sign in** with an emailed code. No passwords.
+- **Favorites:** the heart on a trip or a restaurant saves it. Tapping a favorite route re-prices it; a route saved from your current location stays "from where you are" and doesn't store your position.
+- **History:** each time you open an app from a comparison, the app records the provider, the price, and what you saved. It can't know whether you finished the order there, and says so.
+- **Savings:** compared with the average of the other apps for the same ride class or order, plus what your memberships took off. Shown in **Profile → Account**.
+- **Delete account** removes the account, favorites and history.
+
 ## Design rules
 
 - Black and white, with a true black dark mode. The only accent is signal yellow `#FFD400`, always as a fill behind black text, and used only for best-price and deal moments.
@@ -149,7 +169,7 @@ CI runs the same checks on every push and pull request.
 2. ✅ Rides: geocoding, routing, mock quote providers, results sheet, deep links
 3. ✅ Food: restaurant search, cart, true-total breakdown (before tip)
 4. ✅ Membership pricing rules, plus tests for pricing, memberships and tier matching
-5. Supabase auth (email code), favorites, history, savings tracker
+5. 🚧 Supabase auth (email code), favorites, history, savings tracker (built; waiting on database setup and a sign-in test)
 6. Deals, price alerts, push notifications (needs a development build)
 7. Polish
 

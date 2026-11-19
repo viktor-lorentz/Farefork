@@ -37,7 +37,7 @@ import { layout, space } from '@/design/tokens';
 import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
-import { useTrip } from '@/stores/trip';
+import { isCurrentLocation, useTrip } from '@/stores/trip';
 import { bookingLabel, openBooking } from './openBooking';
 import {
   arrivalMinutes,
@@ -49,6 +49,10 @@ import {
   type QuoteSort,
 } from './quoteSorting';
 import { TripSummary } from './TripSummary';
+import { FavoriteButton } from '@/features/account/FavoriteButton';
+import { routeFavorite } from '@/features/account/favorites';
+import { recordHandoff } from '@/features/account/queries';
+import { rideHandoff } from '@/features/account/savings';
 import { useResultsView } from './useResultsView';
 import { useRideQuotes } from './useRideQuotes';
 
@@ -131,7 +135,9 @@ export function useVisibleQuotes(): VisibleQuotes {
 }
 
 export function RideBookingBar() {
-  const { selected } = useVisibleQuotes();
+  const { selected, data } = useVisibleQuotes();
+  const pickup = useTrip((state) => state.pickup);
+  const dropoff = useTrip((state) => state.dropoff);
   const { colors } = useTheme();
   if (!selected) {
     return null;
@@ -145,7 +151,13 @@ export function RideBookingBar() {
         haptic={false}
         accessibilityHint={`Opens ${providerName(selected.bookVia)} with your pickup and destination filled in`}
         onPress={() => {
-          void openBooking(selected);
+          void openBooking(selected).then((opened) => {
+            if (opened && data && pickup && dropoff) {
+              void recordHandoff(
+                rideHandoff(selected, data.quotes, { from: pickup.name, to: dropoff.name }),
+              );
+            }
+          });
         }}
       />
     </View>
@@ -185,6 +197,9 @@ export function RideResults() {
         onClear={() => {
           clearTrip();
         }}
+        trailing={
+          <FavoriteButton favorite={routeFavorite(pickup, dropoff, isCurrentLocation(pickup))} />
+        }
       />
 
       {data ? (

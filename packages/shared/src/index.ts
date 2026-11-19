@@ -1,3 +1,4 @@
+export * from './account';
 export * from './brand';
 export * from './food';
 export * from './geo';

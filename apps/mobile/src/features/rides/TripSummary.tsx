@@ -1,4 +1,5 @@
 import type { Place } from '@repo/shared';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { IconButton, Text } from '@/design/components';
 import { XIcon } from '@/design/icons';
@@ -10,6 +11,7 @@ export type TripSummaryProps = {
   dropoff: Place;
   onEdit: () => void;
   onClear: () => void;
+  trailing?: ReactNode;
 };
 
 function Stop({ kind, place }: { kind: 'pickup' | 'dropoff'; place: Place }) {
@@ -32,7 +34,7 @@ function Stop({ kind, place }: { kind: 'pickup' | 'dropoff'; place: Place }) {
   );
 }
 
-export function TripSummary({ pickup, dropoff, onEdit, onClear }: TripSummaryProps) {
+export function TripSummary({ pickup, dropoff, onEdit, onClear, trailing }: TripSummaryProps) {
   const { colors } = useTheme();
   return (
     <View style={styles.container}>
@@ -52,6 +54,7 @@ export function TripSummary({ pickup, dropoff, onEdit, onClear }: TripSummaryPro
         </View>
         <Stop kind="dropoff" place={dropoff} />
       </Pressable>
+      {trailing}
       <IconButton icon={XIcon} accessibilityLabel="Clear trip" onPress={onClear} size={44} />
     </View>
   );

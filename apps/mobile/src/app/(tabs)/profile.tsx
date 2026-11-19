@@ -21,10 +21,12 @@ import {
   MoonIcon,
   SealCheckIcon,
   SunIcon,
+  UserCircleIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { usePreferences, type ThemePreference } from '@/stores/preferences';
+import { useSession } from '@/stores/session';
 
 const themeOptions: readonly SegmentOption<ThemePreference>[] = [
   { value: 'system', label: 'Auto', icon: MonitorIcon },
@@ -41,12 +43,38 @@ export default function ProfileScreen() {
   const notificationPermission = usePreferences((state) => state.notificationPermission);
   const setNotificationPermission = usePreferences((state) => state.setNotificationPermission);
   const resetOnboarding = usePreferences((state) => state.resetOnboarding);
+  const sessionStatus = useSession((state) => state.status);
+  const email = useSession((state) => state.session?.user.email ?? null);
 
   return (
     <Screen>
       <Text variant="titleXL" accessibilityRole="header" style={styles.title}>
         Profile
       </Text>
+
+      {sessionStatus !== 'unavailable' ? (
+        <View
+          style={[
+            styles.group,
+            styles.accountGroup,
+            { backgroundColor: colors.surface, borderColor: colors.border },
+          ]}
+        >
+          <ListRow
+            title={sessionStatus === 'signedIn' ? (email ?? 'Account') : 'Sign in'}
+            subtitle={
+              sessionStatus === 'signedIn'
+                ? 'Savings, history and account'
+                : 'Save favorites and track what you save'
+            }
+            leading={<ListRowIcon icon={UserCircleIcon} />}
+            chevron
+            onPress={() => {
+              router.push(sessionStatus === 'signedIn' ? '/account' : '/account/sign-in');
+            }}
+          />
+        </View>
+      ) : null}
 
       <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <ListRow
@@ -116,6 +144,9 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  accountGroup: {
+    marginBottom: space.md,
+  },
   title: {
     marginBottom: space.lg,
   },

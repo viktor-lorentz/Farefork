@@ -14,6 +14,7 @@ export type IconButtonProps = {
   variant?: IconButtonVariant;
   size?: 36 | 44 | 48;
   disabled?: boolean;
+  active?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -24,6 +25,7 @@ export function IconButton({
   variant = 'plain',
   size = 44,
   disabled = false,
+  active,
   style,
 }: IconButtonProps) {
   const { colors, elevation } = useTheme();
@@ -31,7 +33,7 @@ export function IconButton({
     <PressableScale
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
+      accessibilityState={active === undefined ? { disabled } : { disabled, selected: active }}
       disabled={disabled}
       hitSlop={size < 44 ? (44 - size) / 2 : 0}
       onPress={() => {
@@ -50,7 +52,11 @@ export function IconButton({
         style,
       ]}
     >
-      <Glyph size={size >= 44 ? iconSize.lg : iconSize.md} color={colors.textPrimary} />
+      <Glyph
+        size={size >= 44 ? iconSize.lg : iconSize.md}
+        color={colors.textPrimary}
+        weight={active ? 'fill' : 'regular'}
+      />
     </PressableScale>
   );
 }

@@ -67,6 +67,16 @@ Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned
 
 Waymo has no program. Real perks also have exceptions (some restaurants, regions, or ride types), which this build doesn't model.
 
+## Accounts and stored data
+
+Accounts use Supabase (auth and Postgres). Per signed-in user, it stores:
+
+- **Email address**, for sign-in codes.
+- **Favorites:** saved routes (place names, addresses and coordinates of both ends; routes from your current location store only the destination) and restaurant IDs.
+- **History:** provider, product or restaurant name, the route's place names or item count, prices, and savings. No coordinates.
+
+Everything is protected by row-level security and removed by **Delete account**. Supabase's built-in email is for testing only; production needs your own SMTP provider, which will process users' email addresses.
+
 ## Maps and geodata
 
 | Service                  | Use                                  | Terms to check                                                                                                                                       |
