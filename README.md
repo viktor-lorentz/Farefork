@@ -189,6 +189,6 @@ GitHub pauses scheduled workflows in repos with no activity for 60 days. For a r
 4. ✅ Membership pricing rules, plus tests for pricing, memberships and tier matching
 5. ✅ Supabase auth (email code), favorites, history, savings tracker, real restaurants with photos
 6. ✅ Deals, price alerts, push notifications (push needs the EAS and Firebase setup above)
-7. Polish
+7. ✅ Polish: accessibility labels, empty and error states, paged lists, real push toggle, privacy policy draft, store config (Android build needs `eas login`; iOS needs an Apple Developer account)
 
 Data sourcing and legal open questions are in [DATA_SOURCES.md](DATA_SOURCES.md).
