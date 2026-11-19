@@ -135,7 +135,7 @@ export function RideBookingBar() {
   return (
     <View style={[styles.bookingBar, { borderTopColor: colors.border }]}>
       <Button
-        label={`${bookingLabel(selected)} · ${formatUsd(selected.priceCents)}`}
+        label={`${bookingLabel(selected)} · ${formatUsd(selected.priceCents)} before tip`}
         trailingIcon={ArrowSquareOutIcon}
         fullWidth
         haptic={false}
@@ -311,8 +311,8 @@ export function RideResults() {
           <View style={styles.footnote}>
             <InfoIcon size={16} color={colors.textSecondary} weight="bold" />
             <Text variant="caption" tone="secondary" style={styles.footnoteText}>
-              Simulated prices, updated {clockTime(generatedAt, 0)}. The app you book in sets the
-              final price.
+              Simulated prices before tip, updated {clockTime(generatedAt, 0)}. The app you book in
+              sets the final price, and opens with your pickup and destination filled in.
             </Text>
           </View>
         </>

@@ -14,6 +14,7 @@ import { locateDevice } from '@/features/rides/location';
 import { RideBookingBar, RideResults } from '@/features/rides/RideResults';
 import { useRideQuotes } from '@/features/rides/useRideQuotes';
 import { haptics } from '@/lib/haptics';
+import { useDeviceLocation } from '@/stores/location';
 import { useTrip } from '@/stores/trip';
 
 const SHEET_PEEK = 380;
@@ -42,7 +43,35 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const trip = useMapTrip();
-  const [center, setCenter] = useState<LatLng>(defaultCenter);
+  const [center, setCenter] = useState<LatLng>(
+    () => useDeviceLocation.getState().lastKnown ?? defaultCenter,
+  );
+
+  useEffect(() => {
+    void locateDevice({ prompt: false }).then((result) => {
+      if (result.status === 'ok') {
+        setCenter(result.point);
+      }
+    });
+  }, []);
+
+  const locateButton = (
+    <IconButton
+      icon={CrosshairIcon}
+      accessibilityLabel="Center on my location"
+      variant="raised"
+      onPress={() => {
+        haptics.light();
+        void locateDevice().then((result) => {
+          if (result.status === 'ok') {
+            setCenter(result.point);
+          } else {
+            haptics.warning();
+          }
+        });
+      }}
+    />
+  );
   const { height } = useWindowDimensions();
   const sheetRef = useRef<SheetHandle>(null);
   const hasTrip = trip !== null;
@@ -63,7 +92,10 @@ export default function HomeScreen() {
     return (
       <View style={[styles.desktop, { backgroundColor: colors.background }]}>
         <View style={styles.desktopMap}>
-          <MapCanvas center={center} trip={trip} />
+          <MapCanvas center={center} trip={trip} showsUserLocation />
+          {trip ? null : (
+            <View style={[styles.mapControls, { top: space.md }]}>{locateButton}</View>
+          )}
         </View>
         <View
           style={[
@@ -87,23 +119,7 @@ export default function HomeScreen() {
         showsUserLocation
       />
       {trip ? null : (
-        <View style={[styles.mapControls, { top: insets.top + space.sm }]}>
-          <IconButton
-            icon={CrosshairIcon}
-            accessibilityLabel="Center on my location"
-            variant="raised"
-            onPress={() => {
-              haptics.light();
-              void locateDevice().then((result) => {
-                if (result.status === 'ok') {
-                  setCenter(result.point);
-                } else {
-                  haptics.warning();
-                }
-              });
-            }}
-          />
-        </View>
+        <View style={[styles.mapControls, { top: insets.top + space.sm }]}>{locateButton}</View>
       )}
       <Sheet
         ref={sheetRef}

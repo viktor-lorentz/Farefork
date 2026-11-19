@@ -12,13 +12,26 @@ function position(point: LatLng): [number, number] {
   return [point.longitude, point.latitude];
 }
 
-export function tripGeoJSON(trip: MapTrip | null | undefined): TripGeoJSON {
+export function tripGeoJSON(
+  trip: MapTrip | null | undefined,
+  user: LatLng | null = null,
+): TripGeoJSON {
+  const userFeatures = user
+    ? [
+        {
+          type: 'Feature' as const,
+          properties: { kind: 'user' },
+          geometry: { type: 'Point' as const, coordinates: position(user) },
+        },
+      ]
+    : [];
   if (!trip) {
-    return { type: 'FeatureCollection', features: [] };
+    return { type: 'FeatureCollection', features: userFeatures };
   }
   return {
     type: 'FeatureCollection',
     features: [
+      ...userFeatures,
       {
         type: 'Feature',
         properties: { kind: 'route' },
@@ -38,13 +51,17 @@ export function tripGeoJSON(trip: MapTrip | null | undefined): TripGeoJSON {
   };
 }
 
-export function webMapStyle(palette: MapPalette, trip?: MapTrip | null): StyleSpecification {
+export function webMapStyle(
+  palette: MapPalette,
+  trip?: MapTrip | null,
+  user: LatLng | null = null,
+): StyleSpecification {
   return {
     version: 8,
     glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
     sources: {
       [SOURCE]: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' },
-      [TRIP_SOURCE]: { type: 'geojson', data: tripGeoJSON(trip) },
+      [TRIP_SOURCE]: { type: 'geojson', data: tripGeoJSON(trip, user) },
     },
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': palette.land } },
@@ -235,6 +252,25 @@ export function webMapStyle(palette: MapPalette, trip?: MapTrip | null): StyleSp
           'text-color': palette.labelPrimary,
           'text-halo-color': palette.labelHalo,
           'text-halo-width': 1.5,
+        },
+      },
+      {
+        id: 'user-halo',
+        type: 'circle',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'user'],
+        paint: { 'circle-radius': 14, 'circle-color': palette.route, 'circle-opacity': 0.15 },
+      },
+      {
+        id: 'user-dot',
+        type: 'circle',
+        source: TRIP_SOURCE,
+        filter: ['==', ['get', 'kind'], 'user'],
+        paint: {
+          'circle-radius': 6,
+          'circle-color': palette.route,
+          'circle-stroke-color': palette.routeCasing,
+          'circle-stroke-width': 2,
         },
       },
       {

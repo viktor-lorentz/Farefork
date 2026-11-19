@@ -1,8 +1,9 @@
 import type { LatLng, Place } from '@repo/shared';
 import * as Location from 'expo-location';
+import { useDeviceLocation } from '@/stores/location';
 import { CURRENT_LOCATION_ID } from '@/stores/trip';
 import { usePreferences } from '@/stores/preferences';
-import { requestLocationPermission } from '@/lib/permissions';
+import { currentLocationPermission, requestLocationPermission } from '@/lib/permissions';
 
 const LOCATE_TIMEOUT_MS = 10_000;
 
@@ -20,8 +21,11 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
   ]);
 }
 
-export async function locateDevice(): Promise<LocateResult> {
-  const permission = await requestLocationPermission();
+export async function locateDevice(options: { prompt?: boolean } = {}): Promise<LocateResult> {
+  const permission =
+    options.prompt === false
+      ? await currentLocationPermission()
+      : await requestLocationPermission();
   usePreferences.getState().setLocationPermission(permission);
   if (permission !== 'granted') {
     return { status: 'denied' };
@@ -37,10 +41,9 @@ export async function locateDevice(): Promise<LocateResult> {
     if (!position) {
       return { status: 'unavailable' };
     }
-    return {
-      status: 'ok',
-      point: { latitude: position.coords.latitude, longitude: position.coords.longitude },
-    };
+    const point = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+    useDeviceLocation.getState().setLastKnown(point);
+    return { status: 'ok', point };
   } catch {
     return { status: 'unavailable' };
   }

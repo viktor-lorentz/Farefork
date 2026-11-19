@@ -2,7 +2,7 @@ import type { RideQuote, Route } from '@repo/shared';
 import { describe, expect, it } from 'vitest';
 import { createEstimateRouter } from '../geo/router';
 import { fixedNow, places } from '../testDeps';
-import { lyftBookingUrl, uberBookingUrl } from './deepLinks';
+import { lyftAppUrl, lyftBookingUrl, uberAppUrl, uberBookingUrl } from './deepLinks';
 import {
   createMockProvider,
   createMockRideProviders,
@@ -97,6 +97,8 @@ describe('mock providers', () => {
     );
     expect(austin[0]).toMatchObject({ providerId: 'waymo', bookVia: 'uber' });
     expect(austin[0]?.bookingUrl.startsWith('https://m.uber.com/ul/')).toBe(true);
+    expect(austin[0]?.appUrl?.startsWith('uber://')).toBe(true);
+    expect(sf[0]?.appUrl).toBeNull();
   });
 
   it('reports Waymo as unavailable when the trip leaves the service area', async () => {
@@ -143,6 +145,16 @@ describe('deep links', () => {
     expect(url.searchParams.get('pickup[latitude]')).toBe('37.795500');
     expect(url.searchParams.get('dropoff[longitude]')).toBe('-122.427000');
     expect(url.searchParams.get('dropoff[nickname]')).toBe('Dolores Park');
+  });
+
+  it('builds app scheme links that open the installed apps', () => {
+    const uber = new URL(uberAppUrl(target));
+    expect(uber.protocol).toBe('uber:');
+    expect(uber.searchParams.get('dropoff[latitude]')).toBe('37.759600');
+    const lyft = new URL(lyftAppUrl(target, 'lyft'));
+    expect(lyft.protocol).toBe('lyft:');
+    expect(lyft.host).toBe('ridetype');
+    expect(lyft.searchParams.get('pickup[longitude]')).toBe('-122.393700');
   });
 
   it('builds a Lyft link with the ride type', () => {

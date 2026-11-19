@@ -22,6 +22,7 @@ function quote(overrides: Partial<RideQuote> & Pick<RideQuote, 'id'>): RideQuote
     tripMinutes: 20,
     bookVia: 'uber',
     bookingUrl: 'https://m.uber.com/ul/',
+    appUrl: null,
     ...overrides,
   };
 }

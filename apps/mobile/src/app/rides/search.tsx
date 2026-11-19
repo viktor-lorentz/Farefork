@@ -30,6 +30,7 @@ import { currentLocationPlace, locateDevice } from '@/features/rides/location';
 import { MIN_QUERY_LENGTH, usePlaceSearch } from '@/features/rides/usePlaceSearch';
 import { useResultsView } from '@/features/rides/useResultsView';
 import { haptics } from '@/lib/haptics';
+import { useDeviceLocation } from '@/stores/location';
 import { usePreferences } from '@/stores/preferences';
 import { isCurrentLocation, useTrip } from '@/stores/trip';
 
@@ -72,7 +73,8 @@ export default function RideSearchScreen() {
   const dropoffRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   const active = focused === 'pickup' ? pickup : dropoff;
-  const bias = pickup.place ?? dropoff.place ?? defaultCenter;
+  const lastKnown = useDeviceLocation((state) => state.lastKnown);
+  const bias = pickup.place ?? dropoff.place ?? lastKnown ?? defaultCenter;
   const search = usePlaceSearch(active.place ? '' : active.text, bias);
 
   const finish = (nextPickup: Place | null, nextDropoff: Place | null): boolean => {
@@ -223,9 +225,9 @@ export default function RideSearchScreen() {
                 title="Current location"
                 subtitle={
                   locate === 'denied'
-                    ? 'Location access is off. Turn it on in Settings, or type an address.'
+                    ? 'Location access is off for this app. Turn it on in Settings, or type an address.'
                     : locate === 'unavailable'
-                      ? 'Couldn’t find your location. Type an address instead.'
+                      ? 'Couldn’t get a location fix. Check that Location Services is on, or type an address.'
                       : isCurrentLocation(pickup.place)
                         ? 'Selected as pickup'
                         : 'Use where you are now as pickup'

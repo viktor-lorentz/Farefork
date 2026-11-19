@@ -6,9 +6,23 @@ import type { PermissionState } from '@/stores/preferences';
 export async function requestLocationPermission(): Promise<PermissionState> {
   try {
     const response = await Location.requestForegroundPermissionsAsync();
-    return response.granted ? 'granted' : 'denied';
+    return response.granted || response.status === Location.PermissionStatus.GRANTED
+      ? 'granted'
+      : 'denied';
   } catch {
     return 'denied';
+  }
+}
+
+export async function currentLocationPermission(): Promise<PermissionState> {
+  try {
+    const response = await Location.getForegroundPermissionsAsync();
+    if (response.granted) {
+      return 'granted';
+    }
+    return response.status === Location.PermissionStatus.DENIED ? 'denied' : 'unknown';
+  } catch {
+    return 'unknown';
   }
 }
 

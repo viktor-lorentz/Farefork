@@ -5,6 +5,7 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useTheme } from '@/design/theme';
+import { useDeviceLocation } from '@/stores/location';
 import { mapPalettes } from './palette';
 import { defaultZoom, fitPadding, type MapCanvasProps, type MapTrip, resolveInsets } from './types';
 import { TRIP_SOURCE, tripGeoJSON, webMapStyle } from './webMapStyle';
@@ -29,7 +30,17 @@ function fitTrip(map: MapLibreMap, trip: MapTrip, animate: boolean) {
   );
 }
 
-export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: MapCanvasProps) {
+export function MapCanvas({
+  center,
+  zoom = defaultZoom,
+  insets,
+  trip,
+  showsUserLocation = false,
+  style,
+}: MapCanvasProps) {
+  const lastKnown = useDeviceLocation((state) => state.lastKnown);
+  const user = showsUserLocation ? lastKnown : null;
+  const userRef = useRef(user);
   const { scheme } = useTheme();
   const reducedMotion = useReducedMotion();
   const containerRef = useRef<ComponentRef<typeof View>>(null);
@@ -42,6 +53,7 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: M
   useEffect(() => {
     tripRef.current = trip;
     paddingRef.current = padding;
+    userRef.current = user;
   });
 
   useEffect(() => {
@@ -51,7 +63,7 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: M
     }
     const map = new MapLibreMap({
       container: element,
-      style: webMapStyle(mapPalettes[initial.current.scheme], tripRef.current),
+      style: webMapStyle(mapPalettes[initial.current.scheme], tripRef.current, userRef.current),
       center: [initial.current.center.longitude, initial.current.center.latitude],
       zoom: initial.current.zoom,
       attributionControl: { compact: true },
@@ -80,7 +92,7 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: M
     if (scheme === initial.current.scheme && mapRef.current?.isStyleLoaded() !== true) {
       return;
     }
-    mapRef.current?.setStyle(webMapStyle(mapPalettes[scheme], tripRef.current));
+    mapRef.current?.setStyle(webMapStyle(mapPalettes[scheme], tripRef.current, userRef.current));
   }, [scheme]);
 
   useEffect(() => {
@@ -99,16 +111,24 @@ export function MapCanvas({ center, zoom = defaultZoom, insets, trip, style }: M
     }
     const source = map.getSource<GeoJSONSource>(TRIP_SOURCE);
     if (source) {
-      void source.setData(tripGeoJSON(trip));
+      void source.setData(tripGeoJSON(trip, userRef.current));
     } else {
       map.once('idle', () => {
-        void map.getSource<GeoJSONSource>(TRIP_SOURCE)?.setData(tripGeoJSON(tripRef.current));
+        void map
+          .getSource<GeoJSONSource>(TRIP_SOURCE)
+          ?.setData(tripGeoJSON(tripRef.current, userRef.current));
       });
     }
     if (trip) {
       fitTrip(map, trip, !reducedMotion);
     }
   }, [trip, reducedMotion]);
+
+  useEffect(() => {
+    void mapRef.current
+      ?.getSource<GeoJSONSource>(TRIP_SOURCE)
+      ?.setData(tripGeoJSON(tripRef.current, user));
+  }, [user]);
 
   useEffect(() => {
     const map = mapRef.current;

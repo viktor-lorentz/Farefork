@@ -1,5 +1,12 @@
 import { metersToMiles, type RideClass, type RideProviderId, type RideQuote } from '@repo/shared';
-import { type BookingTarget, lyftBookingUrl, uberBookingUrl, waymoBookingUrl } from '../deepLinks';
+import {
+  type BookingTarget,
+  lyftAppUrl,
+  lyftBookingUrl,
+  uberAppUrl,
+  uberBookingUrl,
+  waymoBookingUrl,
+} from '../deepLinks';
 import { seededRandom } from '../random';
 import { areaServing, type ServiceArea, waymoServiceAreas } from '../serviceAreas';
 import type { RideProvider, TripContext } from './types';
@@ -34,6 +41,7 @@ export type MockProviderSpec = {
   surge: SurgeSpec;
   availability: (trip: TripContext) => Availability;
   bookingUrl: (target: BookingTarget, product: ProductSpec, bookVia: RideProviderId) => string;
+  appUrl: (target: BookingTarget, product: ProductSpec, bookVia: RideProviderId) => string | null;
 };
 
 function roundCoordinate(value: number): string {
@@ -104,6 +112,7 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
         tripMinutes: Math.max(1, Math.ceil(minutes)),
         bookVia: availability.bookVia,
         bookingUrl: spec.bookingUrl(target, product, availability.bookVia),
+        appUrl: spec.appUrl(target, product, availability.bookVia),
       }));
       return Promise.resolve({ status: 'ok', quotes });
     },
@@ -116,6 +125,7 @@ export const uberSpec: MockProviderSpec = {
   surge: { probability: 0.3, max: 1.9 },
   availability: () => ({ bookVia: 'uber' }),
   bookingUrl: (target) => uberBookingUrl(target),
+  appUrl: (target) => uberAppUrl(target),
   products: [
     {
       key: 'uberx',
@@ -174,6 +184,7 @@ export const lyftSpec: MockProviderSpec = {
   surge: { probability: 0.3, max: 1.8 },
   availability: () => ({ bookVia: 'lyft' }),
   bookingUrl: (target, product) => lyftBookingUrl(target, product.deepLinkId ?? 'lyft'),
+  appUrl: (target, product) => lyftAppUrl(target, product.deepLinkId ?? 'lyft'),
   products: [
     {
       key: 'standard',
@@ -242,6 +253,7 @@ export function waymoSpec(areas: readonly ServiceArea[] = waymoServiceAreas): Mo
     },
     bookingUrl: (target, _product, bookVia) =>
       bookVia === 'uber' ? uberBookingUrl(target) : waymoBookingUrl(),
+    appUrl: (target, _product, bookVia) => (bookVia === 'uber' ? uberAppUrl(target) : null),
     products: [
       {
         key: 'waymo',

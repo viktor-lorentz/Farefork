@@ -38,6 +38,7 @@ export const rideQuoteSchema = z.object({
   tripMinutes: z.number().int().nonnegative(),
   bookVia: rideProviderIdSchema,
   bookingUrl: z.url(),
+  appUrl: z.string().min(1).nullable(),
 });
 
 export type RideQuote = z.infer<typeof rideQuoteSchema>;

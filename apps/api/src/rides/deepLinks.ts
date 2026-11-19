@@ -36,3 +36,28 @@ export function lyftBookingUrl(target: BookingTarget, rideTypeId: string): strin
 export function waymoBookingUrl(): string {
   return 'https://waymo.com/';
 }
+
+export function uberAppUrl(target: BookingTarget): string {
+  const params = new URLSearchParams({
+    action: 'setPickup',
+    'pickup[latitude]': coordinate(target.pickup.latitude),
+    'pickup[longitude]': coordinate(target.pickup.longitude),
+    'dropoff[latitude]': coordinate(target.dropoff.latitude),
+    'dropoff[longitude]': coordinate(target.dropoff.longitude),
+  });
+  if (target.dropoffName !== undefined && target.dropoffName.length > 0) {
+    params.set('dropoff[nickname]', target.dropoffName);
+  }
+  return `uber://?${params.toString()}`;
+}
+
+export function lyftAppUrl(target: BookingTarget, rideTypeId: string): string {
+  const params = new URLSearchParams({
+    id: rideTypeId,
+    'pickup[latitude]': coordinate(target.pickup.latitude),
+    'pickup[longitude]': coordinate(target.pickup.longitude),
+    'destination[latitude]': coordinate(target.dropoff.latitude),
+    'destination[longitude]': coordinate(target.dropoff.longitude),
+  });
+  return `lyft://ridetype?${params.toString()}`;
+}
