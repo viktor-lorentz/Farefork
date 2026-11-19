@@ -28,6 +28,7 @@ import {
   ArrowSquareOutIcon,
   CarIcon,
   InfoIcon,
+  SealCheckIcon,
   SteeringWheelIcon,
   WarningCircleIcon,
 } from '@/design/icons';
@@ -72,6 +73,9 @@ function quoteNote(quote: RideQuote): QuoteCardNote | undefined {
           ? `Driverless, booked in ${providerName(quote.bookVia)}`
           : 'Driverless',
     };
+  }
+  if (quote.membershipNote !== null) {
+    return { icon: SealCheckIcon, text: quote.membershipNote };
   }
   return undefined;
 }
@@ -271,6 +275,7 @@ export function RideResults() {
                   meta={`${quote.seats} seats`}
                   detail={`${quote.pickupEtaMinutes} min away · arrive ${clockTime(generatedAt, arrivalMinutes(quote))}`}
                   priceCents={quote.priceCents}
+                  originalPriceCents={quote.standardPriceCents}
                   bestPrice={quote.id === bestId}
                   surgeLabel={
                     quote.surgeMultiplier > 1

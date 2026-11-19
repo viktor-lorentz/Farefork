@@ -1,6 +1,7 @@
 import { type Place, rideQuotesResponseSchema } from '@repo/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ApiError, apiPost } from '@/lib/api';
+import { usePreferences } from '@/stores/preferences';
 
 const QUOTE_STALE_MS = 60 * 1000;
 
@@ -9,12 +10,14 @@ function coordinateKey(place: Place): string {
 }
 
 export function useRideQuotes(pickup: Place | null, dropoff: Place | null) {
+  const membershipIds = usePreferences((state) => state.membershipIds);
   return useQuery({
     queryKey: [
       'rides',
       'quotes',
       pickup ? coordinateKey(pickup) : null,
       dropoff ? coordinateKey(dropoff) : null,
+      [...membershipIds].sort().join(','),
     ],
     queryFn: ({ signal }) => {
       if (!pickup || !dropoff) {
@@ -26,6 +29,7 @@ export function useRideQuotes(pickup: Place | null, dropoff: Place | null) {
           pickup: { latitude: pickup.latitude, longitude: pickup.longitude },
           dropoff: { latitude: dropoff.latitude, longitude: dropoff.longitude },
           dropoffName: dropoff.name,
+          membershipIds,
         },
         rideQuotesResponseSchema,
         signal,

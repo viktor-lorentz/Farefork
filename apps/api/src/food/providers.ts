@@ -89,6 +89,7 @@ export function createMockDeliveryProvider(spec: DeliverySpec): DeliveryProvider
               spec.delivery.baseCents + spec.delivery.perKmCents * km,
             ),
           ),
+          standardAmountCents: null,
         },
         {
           kind: 'service',
@@ -99,6 +100,7 @@ export function createMockDeliveryProvider(spec: DeliverySpec): DeliveryProvider
               Math.max(spec.service.minCents, subtotalCents * spec.service.rate),
             ),
           ),
+          standardAmountCents: null,
         },
       ];
       if (subtotalCents < spec.smallOrder.thresholdCents) {
@@ -106,10 +108,12 @@ export function createMockDeliveryProvider(spec: DeliverySpec): DeliveryProvider
           kind: 'small_order',
           label: 'Small order fee',
           amountCents: spec.smallOrder.feeCents,
+          standardAmountCents: null,
         });
       }
       const taxCents = Math.round(subtotalCents * ESTIMATED_TAX_RATE);
       const feeTotal = fees.reduce((sum, fee) => sum + fee.amountCents, 0);
+      const totalBeforeTipCents = subtotalCents + feeTotal + taxCents;
       const travelMinutes = Math.round(km * 2.6);
       return Promise.resolve({
         status: 'ok',
@@ -118,7 +122,10 @@ export function createMockDeliveryProvider(spec: DeliverySpec): DeliveryProvider
           subtotalCents,
           fees,
           taxCents,
-          totalBeforeTipCents: subtotalCents + feeTotal + taxCents,
+          totalBeforeTipCents,
+          standardTotalBeforeTipCents: totalBeforeTipCents,
+          membership: null,
+          membershipNote: null,
           etaMinutes:
             context.restaurant.prepMinutes +
             travelMinutes +

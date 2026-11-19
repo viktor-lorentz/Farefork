@@ -173,7 +173,7 @@ describe('getRideQuotes', () => {
     };
     const [uber] = createMockRideProviders();
     const response = await getRideQuotes(
-      { pickup: places.ferryBuilding, dropoff: places.doloresPark },
+      { pickup: places.ferryBuilding, dropoff: places.doloresPark, membershipIds: [] },
       { router: createEstimateRouter(), providers: [uber!, broken], now: () => fixedNow },
     );
     expect(response.quotes.every((quote) => quote.providerId === 'uber')).toBe(true);

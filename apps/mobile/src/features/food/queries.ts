@@ -6,6 +6,7 @@ import {
   restaurantSearchResponseSchema,
 } from '@repo/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { usePreferences } from '@/stores/preferences';
 import { ApiError, apiGet, apiPost } from '@/lib/api';
 import type { Cart } from './cart';
 import { useDebouncedValue } from '@/features/rides/useDebouncedValue';
@@ -65,9 +66,17 @@ export function useRestaurant(id: string | undefined, near: LatLng | null) {
 }
 
 export function useFoodQuotes(cart: Cart | null, deliverTo: LatLng | null) {
+  const membershipIds = usePreferences((state) => state.membershipIds);
   const lines = cart?.items.map((item) => `${item.itemId}x${item.quantity}`).join(',') ?? '';
   return useQuery({
-    queryKey: ['food', 'quotes', cart?.restaurantId ?? null, lines, roundedKey(deliverTo)],
+    queryKey: [
+      'food',
+      'quotes',
+      cart?.restaurantId ?? null,
+      lines,
+      roundedKey(deliverTo),
+      [...membershipIds].sort().join(','),
+    ],
     queryFn: ({ signal }) => {
       if (!cart || !deliverTo) {
         throw new Error('A cart and a delivery address are required');
@@ -78,6 +87,7 @@ export function useFoodQuotes(cart: Cart | null, deliverTo: LatLng | null) {
           restaurantId: cart.restaurantId,
           deliverTo: { latitude: deliverTo.latitude, longitude: deliverTo.longitude },
           items: cart.items.map((item) => ({ itemId: item.itemId, quantity: item.quantity })),
+          membershipIds,
         },
         foodQuotesResponseSchema,
         signal,

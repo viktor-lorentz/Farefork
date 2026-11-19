@@ -24,10 +24,19 @@ describe('membership registry', () => {
     }
   });
 
-  it('never prices unavailable programs', () => {
+  it('gives unavailable programs no tiers or benefits', () => {
     const catalog = catalogFor(new Date('2026-11-18T00:00:00Z'));
     for (const program of catalog.programs.filter((item) => !item.available)) {
-      expect(program.monthlyPriceCents).toBeNull();
+      expect(program.tiers).toEqual([]);
+      expect(program.benefits).toEqual([]);
+    }
+  });
+
+  it('gives every available program at least one tier and benefit', () => {
+    const catalog = catalogFor(new Date('2026-11-18T00:00:00Z'));
+    for (const program of catalog.programs.filter((item) => item.available)) {
+      expect(program.tiers.length).toBeGreaterThan(0);
+      expect(program.benefits.length).toBeGreaterThan(0);
     }
   });
 });

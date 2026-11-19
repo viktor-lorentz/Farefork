@@ -1,6 +1,7 @@
 import { type FoodQuote, formatUsd, providerName } from '@repo/shared';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Badge, Divider, Text } from '@/design/components';
+import { SealCheckIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
@@ -16,20 +17,37 @@ export type FoodQuoteCardProps = {
 function Line({
   label,
   value,
+  was,
   strong = false,
 }: {
   label: string;
   value: string;
+  was?: string;
   strong?: boolean;
 }) {
   return (
     <View style={styles.line}>
-      <Text variant={strong ? 'labelStrong' : 'caption'} tone={strong ? 'primary' : 'secondary'}>
+      <Text
+        variant={strong ? 'labelStrong' : 'caption'}
+        tone={strong ? 'primary' : 'secondary'}
+        style={styles.shrink}
+      >
         {label}
       </Text>
-      <Text variant={strong ? 'priceS' : 'caption'} tone={strong ? 'primary' : 'secondary'} tabular>
-        {value}
-      </Text>
+      <View style={styles.values}>
+        {was !== undefined ? (
+          <Text variant="caption" tone="tertiary" tabular style={styles.struck}>
+            {was}
+          </Text>
+        ) : null}
+        <Text
+          variant={strong ? 'priceS' : 'caption'}
+          tone={strong ? 'primary' : 'secondary'}
+          tabular
+        >
+          {value}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -45,6 +63,7 @@ export function FoodQuoteCard({
   const name = providerName(quote.providerId);
   const markup = quote.subtotalCents - inStoreSubtotalCents;
   const total = formatUsd(quote.totalBeforeTipCents);
+  const saved = quote.standardTotalBeforeTipCents - quote.totalBeforeTipCents;
 
   return (
     <Pressable
@@ -54,6 +73,8 @@ export function FoodQuoteCard({
         name,
         `${total} before tip`,
         bestPrice ? 'best price' : null,
+        saved > 0 ? `was ${formatUsd(quote.standardTotalBeforeTipCents)}` : null,
+        quote.membershipNote,
         `about ${quote.etaMinutes} minutes`,
       ]
         .filter(Boolean)
@@ -73,9 +94,24 @@ export function FoodQuoteCard({
           <Text variant="caption" tone="secondary" tabular>
             About {quote.etaMinutes} min
           </Text>
+          {quote.membershipNote !== null ? (
+            <View style={styles.member}>
+              {quote.membership !== null ? (
+                <SealCheckIcon size={14} color={colors.textPrimary} weight="fill" />
+              ) : null}
+              <Text variant="caption" style={styles.shrink}>
+                {quote.membershipNote}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View style={styles.priceColumn}>
           <Text variant="priceM">{total}</Text>
+          {saved > 0 ? (
+            <Text variant="caption" tone="tertiary" tabular style={styles.struck}>
+              {formatUsd(quote.standardTotalBeforeTipCents)}
+            </Text>
+          ) : null}
           <Text variant="caption" tone="tertiary">
             before tip
           </Text>
@@ -94,9 +130,21 @@ export function FoodQuoteCard({
             value={formatUsd(quote.subtotalCents)}
           />
           {quote.fees.map((fee) => (
-            <Line key={fee.kind} label={fee.label} value={formatUsd(fee.amountCents)} />
+            <Line
+              key={fee.kind}
+              label={fee.label}
+              value={fee.amountCents === 0 ? 'Free' : formatUsd(fee.amountCents)}
+              was={
+                fee.standardAmountCents !== null && fee.standardAmountCents > fee.amountCents
+                  ? formatUsd(fee.standardAmountCents)
+                  : undefined
+              }
+            />
           ))}
           <Line label="Estimated tax" value={formatUsd(quote.taxCents)} />
+          {saved > 0 && quote.membership !== null ? (
+            <Line label={`${quote.membership.name} saves`} value={`−${formatUsd(saved)}`} />
+          ) : null}
           <Line label="Total before tip" value={total} strong />
         </View>
       ) : null}
@@ -133,4 +181,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: space.md,
   },
+  values: { flexDirection: 'row', gap: space.xs, alignItems: 'baseline' },
+  struck: { textDecorationLine: 'line-through' },
+  shrink: { flexShrink: 1 },
+  member: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
 });

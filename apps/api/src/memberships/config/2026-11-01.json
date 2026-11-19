@@ -6,33 +6,75 @@
       "id": "uber_one",
       "name": "Uber One",
       "providerIds": ["uber", "ubereats", "postmates"],
-      "summary": "$0 delivery fee on eligible orders over the minimum, member pricing on rides. Verify current terms.",
+      "summary": "$0 delivery fee and lower service fees on food orders over $15, credits back on rides. Verify current terms.",
       "available": true,
-      "monthlyPriceCents": 999
+      "tiers": [
+        { "id": "uber_one", "name": "Monthly", "billing": "monthly", "monthlyPriceCents": 999 },
+        { "id": "uber_one_annual", "name": "Annual", "billing": "annual", "monthlyPriceCents": 800 }
+      ],
+      "benefits": [
+        {
+          "type": "ride_credit_back",
+          "percent": 6,
+          "creditName": "Uber One credits",
+          "rideClasses": null
+        },
+        { "type": "delivery_fee_waived", "minSubtotalCents": 1500 },
+        { "type": "service_fee_rate", "rate": 0.05, "minSubtotalCents": 1500 }
+      ]
     },
     {
       "id": "dashpass",
       "name": "DashPass",
       "providerIds": ["doordash"],
-      "summary": "$0 delivery fee and reduced service fees on eligible orders over the minimum. Verify current terms.",
+      "summary": "$0 delivery fee and lower service fees on orders over $12. Verify current terms.",
       "available": true,
-      "monthlyPriceCents": 999
+      "tiers": [
+        { "id": "dashpass", "name": "Monthly", "billing": "monthly", "monthlyPriceCents": 999 },
+        { "id": "dashpass_annual", "name": "Annual", "billing": "annual", "monthlyPriceCents": 800 }
+      ],
+      "benefits": [
+        { "type": "delivery_fee_waived", "minSubtotalCents": 1200 },
+        { "type": "service_fee_rate", "rate": 0.05, "minSubtotalCents": 1200 }
+      ]
     },
     {
       "id": "grubhub_plus",
       "name": "Grubhub+",
       "providerIds": ["grubhub"],
-      "summary": "$0 delivery fee on eligible orders over the minimum. Verify current terms.",
+      "summary": "$0 delivery fee and lower service fees on orders over $12. Verify current terms.",
       "available": true,
-      "monthlyPriceCents": 999
+      "tiers": [
+        { "id": "grubhub_plus", "name": "Monthly", "billing": "monthly", "monthlyPriceCents": 999 }
+      ],
+      "benefits": [
+        { "type": "delivery_fee_waived", "minSubtotalCents": 1200 },
+        { "type": "service_fee_rate", "rate": 0.08, "minSubtotalCents": 1200 }
+      ]
     },
     {
       "id": "lyft_pink",
       "name": "Lyft Pink",
       "providerIds": ["lyft"],
-      "summary": "Member discount on eligible rides. Verify current terms.",
+      "summary": "Member discount on standard, comfort and XL rides. Verify current terms.",
       "available": true,
-      "monthlyPriceCents": 999
+      "tiers": [
+        { "id": "lyft_pink", "name": "Monthly", "billing": "monthly", "monthlyPriceCents": 999 },
+        {
+          "id": "lyft_pink_annual",
+          "name": "Annual",
+          "billing": "annual",
+          "monthlyPriceCents": 833
+        }
+      ],
+      "benefits": [
+        {
+          "type": "ride_percent_off",
+          "percent": 5,
+          "maxCents": 1500,
+          "rideClasses": ["economy", "comfort", "xl"]
+        }
+      ]
     },
     {
       "id": "waymo",
@@ -40,7 +82,8 @@
       "providerIds": ["waymo"],
       "summary": "No membership program announced.",
       "available": false,
-      "monthlyPriceCents": null
+      "tiers": [],
+      "benefits": []
     }
   ]
 }

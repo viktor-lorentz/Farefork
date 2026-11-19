@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { latLngSchema } from './geo';
+import { appliedMembershipSchema, membershipIdsSchema } from './memberships';
 import { rideProviderIdSchema } from './providers';
 
 export const rideClasses = ['economy', 'comfort', 'xl', 'premium'] as const;
@@ -33,6 +34,10 @@ export const rideQuoteSchema = z.object({
   seats: z.number().int().positive(),
   autonomous: z.boolean(),
   priceCents: z.number().int().nonnegative(),
+  standardPriceCents: z.number().int().nonnegative(),
+  membership: appliedMembershipSchema.nullable(),
+  creditBackCents: z.number().int().nonnegative(),
+  membershipNote: z.string().nullable(),
   surgeMultiplier: z.number().min(1),
   pickupEtaMinutes: z.number().int().nonnegative(),
   tripMinutes: z.number().int().nonnegative(),
@@ -54,9 +59,11 @@ export const rideQuotesRequestSchema = z.object({
   pickup: latLngSchema,
   dropoff: latLngSchema,
   dropoffName: z.string().max(200).optional(),
+  membershipIds: membershipIdsSchema,
 });
 
 export type RideQuotesRequest = z.infer<typeof rideQuotesRequestSchema>;
+export type RideQuotesRequestInput = z.input<typeof rideQuotesRequestSchema>;
 
 export const rideQuotesResponseSchema = z.object({
   simulated: z.literal(true),

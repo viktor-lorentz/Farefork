@@ -199,6 +199,34 @@ describe('food endpoints', () => {
     expect(totals).toEqual([...totals].sort((a, b) => a - b));
   });
 
+  it('applies delivery memberships before sorting', async () => {
+    const big = restaurant.categories.flatMap((category) => category.items)[0]!;
+    const request = (membershipIds: string[]) =>
+      app.request('/v1/food/quotes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          deliverTo: near,
+          items: [{ itemId: big.id, quantity: 4 }],
+          membershipIds,
+        }),
+      });
+    const plain = foodQuotesResponseSchema.parse(await (await request([])).json());
+    const member = foodQuotesResponseSchema.parse(
+      await (await request(['dashpass_annual', 'grubhub_plus', 'uber_one'])).json(),
+    );
+    for (const quote of member.quotes) {
+      const before = plain.quotes.find((entry) => entry.providerId === quote.providerId)!;
+      expect(quote.standardTotalBeforeTipCents).toBe(before.totalBeforeTipCents);
+      expect(quote.totalBeforeTipCents).toBeLessThan(before.totalBeforeTipCents);
+      expect(quote.membership).not.toBeNull();
+      expect(quote.fees.find((fee) => fee.kind === 'delivery')?.amountCents).toBe(0);
+    }
+    const totals = member.quotes.map((quote) => quote.totalBeforeTipCents);
+    expect(totals).toEqual([...totals].sort((a, b) => a - b));
+  });
+
   it('rejects unknown items and restaurants', async () => {
     const post = (body: unknown) =>
       app.request('/v1/food/quotes', {

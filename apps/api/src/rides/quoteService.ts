@@ -6,6 +6,8 @@ import {
   type UnavailableRide,
 } from '@repo/shared';
 import type { Router } from '../geo/router';
+import { applyRideMembership, resolveMemberships } from '../memberships/pricing';
+import { catalogFor } from '../memberships/registry';
 import { QUOTE_WINDOW_MS } from './providers/mock';
 import type { RideProvider, TripContext } from './providers/types';
 
@@ -82,14 +84,16 @@ export async function getRideQuotes(
     }
   });
 
-  quotes.sort((a, b) => a.priceCents - b.priceCents);
+  const memberships = resolveMemberships(catalogFor(now), request.membershipIds);
+  const priced = quotes.map((quote) => applyRideMembership(quote, memberships));
+  priced.sort((a, b) => a.priceCents - b.priceCents);
 
   return {
     simulated: true,
     generatedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + QUOTE_WINDOW_MS).toISOString(),
     route,
-    quotes,
+    quotes: priced,
     unavailable,
   };
 }

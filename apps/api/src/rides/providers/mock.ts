@@ -93,27 +93,34 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
         dropoff: trip.dropoff,
         dropoffName: trip.dropoffName,
       };
-      const quotes: RideQuote[] = spec.products.map((product) => ({
-        id: `${spec.id}:${product.key}`,
-        providerId: spec.id,
-        productName: product.name,
-        rideClass: product.rideClass,
-        seats: product.seats,
-        autonomous: spec.autonomous,
-        priceCents: priceProduct(
+      const quotes: RideQuote[] = spec.products.map((product) => {
+        const priceCents = priceProduct(
           product,
           miles,
           minutes,
           surgeMultiplier,
           random.between(0.95, 1.06),
-        ),
-        surgeMultiplier,
-        pickupEtaMinutes: random.int(product.pickupEta[0], product.pickupEta[1]),
-        tripMinutes: Math.max(1, Math.ceil(minutes)),
-        bookVia: availability.bookVia,
-        bookingUrl: spec.bookingUrl(target, product, availability.bookVia),
-        appUrl: spec.appUrl(target, product, availability.bookVia),
-      }));
+        );
+        return {
+          id: `${spec.id}:${product.key}`,
+          providerId: spec.id,
+          productName: product.name,
+          rideClass: product.rideClass,
+          seats: product.seats,
+          autonomous: spec.autonomous,
+          priceCents,
+          standardPriceCents: priceCents,
+          membership: null,
+          creditBackCents: 0,
+          membershipNote: null,
+          surgeMultiplier,
+          pickupEtaMinutes: random.int(product.pickupEta[0], product.pickupEta[1]),
+          tripMinutes: Math.max(1, Math.ceil(minutes)),
+          bookVia: availability.bookVia,
+          bookingUrl: spec.bookingUrl(target, product, availability.bookVia),
+          appUrl: spec.appUrl(target, product, availability.bookVia),
+        };
+      });
       return Promise.resolve({ status: 'ok', quotes });
     },
   };

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { latLngSchema } from './geo';
+import { appliedMembershipSchema, membershipIdsSchema } from './memberships';
 import { deliveryProviderIds } from './providers';
 
 export const deliveryProviderIdSchema = z.enum(deliveryProviderIds);
@@ -94,9 +95,11 @@ export const foodQuotesRequestSchema = z.object({
   restaurantId: z.string().min(1).max(80),
   deliverTo: latLngSchema,
   items: z.array(cartLineSchema).min(1).max(30),
+  membershipIds: membershipIdsSchema,
 });
 
 export type FoodQuotesRequest = z.infer<typeof foodQuotesRequestSchema>;
+export type FoodQuotesRequestInput = z.input<typeof foodQuotesRequestSchema>;
 
 export const feeKinds = ['delivery', 'service', 'small_order'] as const;
 export const feeKindSchema = z.enum(feeKinds);
@@ -106,6 +109,7 @@ export const feeLineSchema = z.object({
   kind: feeKindSchema,
   label: z.string().min(1),
   amountCents: z.number().int().nonnegative(),
+  standardAmountCents: z.number().int().nonnegative().nullable(),
 });
 
 export type FeeLine = z.infer<typeof feeLineSchema>;
@@ -116,6 +120,9 @@ export const foodQuoteSchema = z.object({
   fees: z.array(feeLineSchema),
   taxCents: z.number().int().nonnegative(),
   totalBeforeTipCents: z.number().int().nonnegative(),
+  standardTotalBeforeTipCents: z.number().int().nonnegative(),
+  membership: appliedMembershipSchema.nullable(),
+  membershipNote: z.string().nullable(),
   etaMinutes: z.number().int().positive(),
   orderUrl: z.url(),
   appUrl: z.string().min(1).nullable(),

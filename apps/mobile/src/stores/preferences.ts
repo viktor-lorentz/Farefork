@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 export type PermissionState = 'unknown' | 'granted' | 'denied';
+export type MembershipRef = { id: string; tierIds: readonly string[] };
 
 type PreferencesState = {
   themePreference: ThemePreference;
@@ -18,7 +19,7 @@ type PreferencesActions = {
   setThemePreference: (preference: ThemePreference) => void;
   completeOnboarding: () => void;
   resetOnboarding: () => void;
-  setMembership: (programId: string, enabled: boolean) => void;
+  setMembershipTier: (program: MembershipRef, tierId: string | null) => void;
   setLocationPermission: (state: PermissionState) => void;
   setNotificationPermission: (state: PermissionState) => void;
 };
@@ -40,10 +41,11 @@ export const usePreferences = create<PreferencesState & PreferencesActions>()(
       resetOnboarding: () => {
         set({ onboardingCompletedAt: null });
       },
-      setMembership: (programId, enabled) => {
+      setMembershipTier: (program, tierId) => {
         set((state) => {
-          const others = state.membershipIds.filter((id) => id !== programId);
-          return { membershipIds: enabled ? [...others, programId] : others };
+          const owned = new Set([program.id, ...program.tierIds]);
+          const others = state.membershipIds.filter((id) => !owned.has(id));
+          return { membershipIds: tierId === null ? others : [...others, tierId] };
         });
       },
       setLocationPermission: (locationPermission) => {

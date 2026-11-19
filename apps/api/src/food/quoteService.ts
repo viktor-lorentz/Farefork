@@ -6,6 +6,8 @@ import {
   type MenuItem,
   type UnavailableDelivery,
 } from '@repo/shared';
+import { applyFoodMembership, resolveMemberships } from '../memberships/pricing';
+import { catalogFor } from '../memberships/registry';
 import { findRestaurant } from './catalog';
 import type { DeliveryLine, DeliveryProvider } from './providers';
 
@@ -84,7 +86,9 @@ export async function getFoodQuotes(
       unavailable.push({ providerId: provider.id, reason: result.value.reason });
     }
   });
-  quotes.sort((a, b) => a.totalBeforeTipCents - b.totalBeforeTipCents);
+  const memberships = resolveMemberships(catalogFor(now), request.membershipIds);
+  const priced = quotes.map((quote) => applyFoodMembership(quote, memberships));
+  priced.sort((a, b) => a.totalBeforeTipCents - b.totalBeforeTipCents);
 
   return {
     simulated: true,
@@ -94,7 +98,7 @@ export async function getFoodQuotes(
       (sum, line) => sum + line.item.priceCents * line.quantity,
       0,
     ),
-    quotes,
+    quotes: priced,
     unavailable,
   };
 }

@@ -1,7 +1,6 @@
-import type { MembershipProgram } from '@repo/shared';
-import { formatUsd } from '@repo/shared';
+import { cheapestTier, formatUsd, type MembershipProgram, selectedTier } from '@repo/shared';
 import { StyleSheet, View } from 'react-native';
-import { Button, Skeleton, Text, Toggle } from '@/design/components';
+import { Button, SegmentedControl, Skeleton, Text, Toggle } from '@/design/components';
 import { WarningCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
@@ -11,13 +10,17 @@ import { useMembershipCatalog } from './useMembershipCatalog';
 
 function MembershipRow({ program, last }: { program: MembershipProgram; last: boolean }) {
   const { colors } = useTheme();
-  const enabled = usePreferences((state) => state.membershipIds.includes(program.id));
-  const setMembership = usePreferences((state) => state.setMembership);
+  const membershipIds = usePreferences((state) => state.membershipIds);
+  const setMembershipTier = usePreferences((state) => state.setMembershipTier);
+  const tier = selectedTier(program, membershipIds);
+  const enabled = tier !== null;
+  const ref = { id: program.id, tierIds: program.tiers.map((item) => item.id) };
   const primaryProvider = program.providerIds[0];
+  const shown = tier ?? cheapestTier(program);
   const price =
-    program.monthlyPriceCents !== null
-      ? `${formatUsd(program.monthlyPriceCents)}/mo`
-      : 'Not offered';
+    shown === null
+      ? 'Not offered'
+      : `${tier === null && program.tiers.length > 1 ? 'From ' : ''}${formatUsd(shown.monthlyPriceCents)}/mo${shown.billing === 'annual' ? ', billed yearly' : ''}`;
 
   return (
     <View
@@ -38,13 +41,25 @@ function MembershipRow({ program, last }: { program: MembershipProgram; last: bo
         <Text variant="caption" tone="secondary" numberOfLines={3}>
           {program.summary}
         </Text>
+        {tier !== null && program.tiers.length > 1 ? (
+          <View style={styles.tiers}>
+            <SegmentedControl
+              accessibilityLabel={`${program.name} billing`}
+              options={program.tiers.map((item) => ({ value: item.id, label: item.name }))}
+              value={tier.id}
+              onChange={(tierId) => {
+                setMembershipTier(ref, tierId);
+              }}
+            />
+          </View>
+        ) : null}
       </View>
       <Toggle
         value={enabled}
         disabled={!program.available}
         accessibilityLabel={`I have ${program.name}`}
         onValueChange={(value) => {
-          setMembership(program.id, value);
+          setMembershipTier(ref, value ? (program.tiers[0]?.id ?? null) : null);
         }}
       />
     </View>
@@ -122,6 +137,10 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     gap: space.xs,
     flexWrap: 'wrap',
+  },
+  tiers: {
+    marginTop: space.xs,
+    maxWidth: 260,
   },
   unavailable: {
     opacity: 0.55,

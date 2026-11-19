@@ -86,6 +86,36 @@ describe('POST /v1/rides/quotes', () => {
     expect(prices).toEqual([...prices].sort((a, b) => a - b));
   });
 
+  it('applies memberships to the matching provider only', async () => {
+    const trip = { pickup: places.ferryBuilding, dropoff: places.doloresPark };
+    const plain = rideQuotesResponseSchema.parse(await (await postQuotes(app, trip)).json());
+    const member = rideQuotesResponseSchema.parse(
+      await (await postQuotes(app, { ...trip, membershipIds: ['lyft_pink', 'uber_one'] })).json(),
+    );
+    const byId = new Map(plain.quotes.map((quote) => [quote.id, quote]));
+    const lyft = member.quotes.find((quote) => quote.id === 'lyft:standard')!;
+    expect(lyft.priceCents).toBeLessThan(byId.get('lyft:standard')!.priceCents);
+    expect(lyft.standardPriceCents).toBe(byId.get('lyft:standard')!.priceCents);
+    expect(lyft.membership?.programId).toBe('lyft_pink');
+    const uber = member.quotes.find((quote) => quote.providerId === 'uber')!;
+    expect(uber.priceCents).toBe(byId.get(uber.id)!.priceCents);
+    expect(uber.creditBackCents).toBeGreaterThan(0);
+    const waymo = member.quotes.find((quote) => quote.providerId === 'waymo')!;
+    expect(waymo.membership).toBeNull();
+    const prices = member.quotes.map((quote) => quote.priceCents);
+    expect(prices).toEqual([...prices].sort((a, b) => a - b));
+  });
+
+  it('ignores unknown membership ids', async () => {
+    const response = await postQuotes(app, {
+      pickup: places.ferryBuilding,
+      dropoff: places.doloresPark,
+      membershipIds: ['made_up'],
+    });
+    const body = rideQuotesResponseSchema.parse(await response.json());
+    expect(body.quotes.every((quote) => quote.membership === null)).toBe(true);
+  });
+
   it('marks Waymo unavailable outside its service areas', async () => {
     const response = await postQuotes(app, { pickup: places.timesSquare, dropoff: places.jfk });
     const body = rideQuotesResponseSchema.parse(await response.json());
