@@ -56,7 +56,16 @@ With real store IDs (from an affiliate or partner program), these become direct 
 
 ## Memberships
 
-Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned by effective date. **Every price and perk in the current file is a placeholder to verify**: Uber One, DashPass, Grubhub+ and Lyft Pink, all at $9.99/mo. Waymo has no program.
+Rules live in `apps/api/src/memberships/config/<version>.json` and are versioned by effective date. To change terms, add a new file with a later `effectiveFrom` instead of editing an old one. **Every price and perk in the current file is a placeholder to verify** against each provider's current terms:
+
+| Plan      | Tiers in file                | Perks in file                                                        |
+| --------- | ---------------------------- | -------------------------------------------------------------------- |
+| Uber One  | $9.99/mo, or $8.00/mo yearly | 6% back as credits on rides; $0 delivery and 5% service fee over $15 |
+| DashPass  | $9.99/mo, or $8.00/mo yearly | $0 delivery and 5% service fee over $12                              |
+| Grubhub+  | $9.99/mo                     | $0 delivery and 8% service fee over $12                              |
+| Lyft Pink | $9.99/mo, or $8.33/mo yearly | 5% off standard, comfort and XL rides, up to $15                     |
+
+Waymo has no program. Real perks also have exceptions (some restaurants, regions, or ride types), which this build doesn't model.
 
 ## Maps and geodata
 

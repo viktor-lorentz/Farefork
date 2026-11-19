@@ -2,7 +2,7 @@
 
 Compare Uber, Lyft and Waymo ride quotes, and the true totals for Uber Eats, DoorDash, Grubhub and Postmates, in one app for iOS, Android and the web.
 
-> **Status: Milestone 3 of 7** (rides and food comparison). All prices and restaurants in this build are **simulated** by mock providers. Address search and routes are real, from public OpenStreetMap services. Every price is shown **before tip**.
+> **Status: Milestone 4 of 7** (rides and food comparison, with your memberships applied). All prices and restaurants in this build are **simulated** by mock providers. Address search and routes are real, from public OpenStreetMap services. Every price is shown **before tip**.
 
 ## Stack
 
@@ -24,8 +24,9 @@ Supabase (auth, favorites, history, savings, with row-level security on every ta
 
 ```
 apps/
-  api/                 Hono API: membership catalog now, quote engine next
-    src/memberships/config/2026-11-01.json   versioned membership rules
+  api/                 Hono API: quote engine, membership rules, mock providers
+    src/memberships/config/2026-11-01.json   versioned membership plans and perk rules
+    src/memberships/pricing.ts               applies perks to ride and food quotes
   mobile/              Expo app (iOS, Android, web)
     src/app/           routes (Expo Router)
     src/design/        tokens, theme, components (Button, ListRow, QuoteCard, Sheet, Chip, Toggle, Badge, EmptyState, …)
@@ -127,6 +128,13 @@ CI runs the same checks on every push and pull request.
 - **Comparison:** `POST /v1/food/quotes` returns each app's **total before tip**: menu items (with that app's markup over in-store prices), delivery fee, service fee, small order fee and estimated tax. Tip is never included, because it's optional and up to you.
 - **Ordering:** the button opens the chosen app's search for the restaurant. No delivery app accepts a cart from outside, so you add the same items there.
 
+## Memberships (milestone 4)
+
+- **Your plans:** turn on the plans you pay for under **Profile → Memberships**, and pick monthly or annual billing. They're stored on your device and sent with each quote request, nothing else.
+- **Perk rules:** each plan lists typed rules in the catalog file: percent off rides (with a cap and ride classes), credits back on rides, delivery fee waived, and a lower service fee above an order minimum.
+- **Applied before ranking:** the API applies perks before sorting, so "best price" is best for you. Cards show the standard price struck through and what the plan saves. Uber One ride credits are shown but don't lower the price, because they're paid back later.
+- **Below the minimum:** food cards say how much more to add to get the perks.
+
 ## Design rules
 
 - Black and white, with a true black dark mode. The only accent is signal yellow `#FFD400`, always as a fill behind black text, and used only for best-price and deal moments.
@@ -140,7 +148,7 @@ CI runs the same checks on every push and pull request.
 1. ✅ Setup, design system, navigation shell, light and dark mode
 2. ✅ Rides: geocoding, routing, mock quote providers, results sheet, deep links
 3. ✅ Food: restaurant search, cart, true-total breakdown (before tip)
-4. Membership pricing rules, plus tests for pricing, memberships and tier matching
+4. ✅ Membership pricing rules, plus tests for pricing, memberships and tier matching
 5. Supabase auth (email code), favorites, history, savings tracker
 6. Deals, price alerts, push notifications (needs a development build)
 7. Polish
