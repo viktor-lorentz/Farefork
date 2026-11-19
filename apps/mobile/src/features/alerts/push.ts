@@ -51,7 +51,7 @@ export async function registerForPushNotifications(): Promise<PushRegistration> 
   }
 }
 
-export async function listenForAlertTaps(open: (url: string) => void): Promise<() => void> {
+export async function listenForAlertTaps(open: (alertId: string) => void): Promise<() => void> {
   if (!notificationsSupported) {
     return () => undefined;
   }
@@ -66,9 +66,9 @@ export async function listenForAlertTaps(open: (url: string) => void): Promise<(
       }),
   });
   const handle = (data: Record<string, unknown> | undefined) => {
-    const url = data?.url;
-    if (typeof url === 'string' && url.startsWith('/alerts')) {
-      open(url);
+    const alertId = data?.alertId;
+    if (typeof alertId === 'string' && /^[0-9a-f-]{36}$/i.test(alertId)) {
+      open(alertId);
     }
   };
   const last = Notifications.getLastNotificationResponse();
