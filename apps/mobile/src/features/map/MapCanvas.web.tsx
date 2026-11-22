@@ -10,13 +10,16 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useTheme } from '@/design/theme';
+import { iconSize, radius, space } from '@/design/tokens';
+import { duration } from '@/design/tokens/motion';
 import { useDeviceLocation } from '@/stores/location';
 import { CUISINE_ICON_VIEWBOX, cuisineIconPaths } from './cuisineIcons';
 import { mapPalettes } from './palette';
 import {
   defaultZoom,
-  fitPadding,
+  framePadding,
   type MapCanvasProps,
+  type MapInsets,
   type MapPlace,
   type MapTrip,
   resolveInsets,
@@ -25,27 +28,34 @@ import { TRIP_SOURCE, tripGeoJSON, webMapStyle } from './webMapStyle';
 
 setWorkerUrl('/maplibre-gl-worker.mjs');
 
-function fitTrip(map: MapLibreMap, trip: MapTrip, animate: boolean) {
+const noPadding: MapInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+function fitTrip(map: MapLibreMap, trip: MapTrip, insets: MapInsets, animate: boolean) {
   const bounds = boundsOf(trip.path.length > 1 ? trip.path : [trip.pickup, trip.dropoff]);
   if (!bounds) {
     return;
   }
+  map.setPadding(noPadding);
   map.fitBounds(
     [
       [bounds.west, bounds.south],
       [bounds.east, bounds.north],
     ],
     {
-      padding: fitPadding,
+      padding: framePadding(insets, {
+        width: map.getContainer().clientWidth,
+        height: map.getContainer().clientHeight,
+      }),
       maxZoom: 16,
-      duration: animate ? 600 : 0,
+      duration: animate ? duration.scene : 0,
     },
   );
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-type MarkerColors = { fill: string; ring: string; icon: string };
+type MarkerColors = { fill: string; ring: string; icon: string; shadow: string };
+const MARKER = space.xl;
 
 function placeElement(
   place: MapPlace,
@@ -58,23 +68,23 @@ function placeElement(
   button.title = place.name;
   button.setAttribute('aria-label', `${place.name}, ${cuisineLabels[place.cuisine]}`);
   Object.assign(button.style, {
-    width: '30px',
-    height: '30px',
+    width: `${MARKER}px`,
+    height: `${MARKER}px`,
     padding: '0',
-    borderRadius: '15px',
-    border: `1.5px solid ${colors.ring}`,
+    borderRadius: `${radius.round}px`,
+    border: `1px solid ${colors.ring}`,
     background: colors.fill,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     cursor: 'pointer',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-    transition: 'transform 120ms ease-out',
+    boxShadow: colors.shadow,
+    transition: `transform ${duration.fast}ms ease-out`,
   });
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${CUISINE_ICON_VIEWBOX} ${CUISINE_ICON_VIEWBOX}`);
-  svg.setAttribute('width', '16');
-  svg.setAttribute('height', '16');
+  svg.setAttribute('width', String(iconSize.sm));
+  svg.setAttribute('height', String(iconSize.sm));
   svg.setAttribute('aria-hidden', 'true');
   const path = document.createElementNS(SVG_NS, 'path');
   path.setAttribute('d', cuisineIconPaths[place.cuisine]);
@@ -105,7 +115,7 @@ export function MapCanvas({
   showsUserLocation = false,
   style,
 }: MapCanvasProps) {
-  const { colors, scheme } = useTheme();
+  const { colors, scheme, elevation } = useTheme();
   const onPlacePressRef = useRef(onPlacePress);
   const lastKnown = useDeviceLocation((state) => state.lastKnown);
   const user = showsUserLocation ? lastKnown : null;
@@ -142,9 +152,16 @@ export function MapCanvas({
     });
     map.touchZoomRotate.disableRotation();
     mapRef.current = map;
+    const canvas = map.getCanvasContainer();
+    canvas.style.opacity = '0';
+    canvas.style.transition = `opacity ${duration.slow}ms ease-out`;
+    map.once('load', () => {
+      canvas.style.opacity = '1';
+    });
     if (tripRef.current) {
+      fitTrip(map, tripRef.current, paddingRef.current, false);
+    } else {
       map.setPadding(paddingRef.current);
-      fitTrip(map, tripRef.current, false);
     }
     const observer = new ResizeObserver(() => {
       map.resize();
@@ -165,13 +182,22 @@ export function MapCanvas({
   }, [scheme]);
 
   useEffect(() => {
-    mapRef.current?.setPadding({
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
+    const next = {
       top: padding.top,
       right: padding.right,
       bottom: padding.bottom,
       left: padding.left,
-    });
-  }, [padding.top, padding.right, padding.bottom, padding.left]);
+    };
+    if (tripRef.current) {
+      fitTrip(map, tripRef.current, next, !reducedMotion);
+    } else {
+      map.easeTo({ padding: next, duration: reducedMotion ? 0 : duration.base });
+    }
+  }, [padding.top, padding.right, padding.bottom, padding.left, reducedMotion]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -189,7 +215,9 @@ export function MapCanvas({
       });
     }
     if (trip) {
-      fitTrip(map, trip, !reducedMotion);
+      fitTrip(map, trip, paddingRef.current, !reducedMotion);
+    } else {
+      map.easeTo({ padding: paddingRef.current, duration: 0 });
     }
   }, [trip, reducedMotion]);
 
@@ -213,7 +241,12 @@ export function MapCanvas({
     ) {
       return;
     }
-    map.easeTo({ center: target, zoom, duration: reducedMotion ? 0 : 400 });
+    map.easeTo({
+      center: target,
+      zoom,
+      padding: paddingRef.current,
+      duration: reducedMotion ? 0 : duration.slow,
+    });
   }, [center.latitude, center.longitude, zoom, reducedMotion]);
 
   useEffect(() => {
@@ -221,7 +254,12 @@ export function MapCanvas({
     if (!map) {
       return;
     }
-    const markerColors = { fill: colors.surface, ring: colors.primary, icon: colors.textPrimary };
+    const markerColors = {
+      fill: colors.surface,
+      ring: colors.border,
+      icon: colors.textPrimary,
+      shadow: elevation.raised,
+    };
     const markers = (trip ? [] : (places ?? [])).map((place) =>
       new MapLibreMarker({
         element: placeElement(place, markerColors, (id) => {
@@ -234,11 +272,11 @@ export function MapCanvas({
     return () => {
       markers.forEach((marker) => marker.remove());
     };
-  }, [places, trip, colors.surface, colors.primary, colors.textPrimary]);
+  }, [places, trip, colors.surface, colors.border, colors.textPrimary, elevation.raised]);
 
   return (
     <View
-      style={[StyleSheet.absoluteFill, style]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: mapPalettes[scheme].land }, style]}
       accessibilityLabel={
         trip
           ? 'Map showing your route'
