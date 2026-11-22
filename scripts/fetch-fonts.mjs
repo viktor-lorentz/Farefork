@@ -59,7 +59,7 @@ async function download() {
 }
 
 async function main() {
-  if (process.env.CI || process.env.SKIP_FONT_DOWNLOAD === '1') {
+  if ((process.env.CI && !process.env.EAS_BUILD) || process.env.SKIP_FONT_DOWNLOAD === '1') {
     return;
   }
   if (!force && (await fontsPresent())) {
