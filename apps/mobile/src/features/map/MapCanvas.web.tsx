@@ -51,7 +51,8 @@ function placeElement(
   place: MapPlace,
   colors: MarkerColors,
   onPress: (id: string) => void,
-): HTMLButtonElement {
+): HTMLDivElement {
+  const wrapper = document.createElement('div');
   const button = document.createElement('button');
   button.type = 'button';
   button.title = place.name;
@@ -90,7 +91,8 @@ function placeElement(
     event.stopPropagation();
     onPress(place.id);
   });
-  return button;
+  wrapper.appendChild(button);
+  return wrapper;
 }
 
 export function MapCanvas({
