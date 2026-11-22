@@ -22,6 +22,13 @@ const textPairs: Pair[] = [
   ['onDanger', 'danger'],
   ['danger', 'surface'],
   ['danger', 'fill'],
+  ['accentText', 'surface'],
+  ['accentText', 'background'],
+  ['accentText', 'accentSoft'],
+  ['savingsText', 'surface'],
+  ['savingsText', 'savingsSoft'],
+  ['surgeText', 'surface'],
+  ['surgeText', 'surgeSoft'],
 ];
 
 const schemes: ColorScheme[] = ['light', 'dark'];

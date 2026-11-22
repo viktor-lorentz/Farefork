@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: '100%',
-    fontFamily: fontFamilies.medium,
+    fontFamily: fontFamilies.system,
     fontSize: 17,
     outlineWidth: 0,
   },

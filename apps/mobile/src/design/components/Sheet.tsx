@@ -58,7 +58,7 @@ export function Sheet({
       enablePanDownToClose={enablePanDownToClose}
       topInset={topInset}
       bottomInset={bottomInset}
-      style={[styles.container, { boxShadow: elevation.sheet }]}
+      style={[styles.container, { boxShadow: elevation.raised }]}
       backgroundStyle={[styles.background, { backgroundColor: colors.surface }]}
       handleStyle={styles.handle}
       handleIndicatorStyle={[styles.indicator, { backgroundColor: colors.borderStrong }]}

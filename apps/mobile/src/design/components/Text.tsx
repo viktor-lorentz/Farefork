@@ -43,12 +43,12 @@ export function Text({
       style={[
         {
           fontFamily: spec.fontFamily,
+          fontWeight: spec.fontWeight,
           fontSize: spec.fontSize,
           lineHeight: spec.lineHeight,
           letterSpacing: spec.letterSpacing,
           color: colors[toneColor[tone]],
         },
-        spec.uppercase && styles.uppercase,
         (tabular ?? spec.tabular) && styles.tabular,
         strikethrough && styles.strikethrough,
         align !== undefined && { textAlign: align },
@@ -59,7 +59,6 @@ export function Text({
 }
 
 const styles = StyleSheet.create({
-  uppercase: { textTransform: 'uppercase' },
   tabular: { fontVariant: ['tabular-nums'] },
   strikethrough: { textDecorationLine: 'line-through' },
 });

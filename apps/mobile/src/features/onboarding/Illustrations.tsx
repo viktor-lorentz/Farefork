@@ -13,7 +13,7 @@ function Stage({ children }: { children: React.ReactNode }) {
       accessibilityElementsHidden
       style={[
         styles.stage,
-        { backgroundColor: colors.surfaceRaised, boxShadow: elevation.overlay },
+        { backgroundColor: colors.surfaceRaised, boxShadow: elevation.raised },
       ]}
       pointerEvents="none"
     >

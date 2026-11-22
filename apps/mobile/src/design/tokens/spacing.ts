@@ -13,7 +13,6 @@ export const space = {
 
 export const radius = {
   none: 0,
-  xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
@@ -42,6 +41,7 @@ export const breakpoints = {
 
 export const layout = {
   gutter: 16,
+  margin: 20,
   gutterWide: 32,
   panelWidth: 440,
   contentMaxWidth: 720,

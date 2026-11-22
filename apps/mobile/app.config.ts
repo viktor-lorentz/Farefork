@@ -7,10 +7,6 @@ import {
   BUNDLE_IDENTIFIER,
 } from '../../packages/shared/src/brand.ts';
 
-const fontFiles = ['Regular', 'Medium', 'Bold', 'Black'].map(
-  (face) => `./assets/fonts/Satoshi-${face}.otf`,
-);
-
 const easProjectId = process.env.EAS_PROJECT_ID ?? '61ed259b-e4a5-45ad-8313-5ec10f14d9f0';
 const googleServicesFile =
   process.env.GOOGLE_SERVICES_JSON ??
@@ -46,7 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
-    ['expo-font', { fonts: fontFiles }],
+    'expo-font',
     [
       'expo-splash-screen',
       {

@@ -3,8 +3,9 @@ import { Easing } from 'react-native-reanimated';
 export const duration = {
   instant: 90,
   fast: 150,
-  base: 220,
-  slow: 320,
+  base: 250,
+  slow: 350,
+  scene: 900,
 } as const;
 
 export const easing = {
@@ -14,8 +15,9 @@ export const easing = {
 } as const;
 
 export const springs = {
-  snappy: { damping: 26, stiffness: 320, mass: 1 },
-  gentle: { damping: 30, stiffness: 190, mass: 1 },
+  snappy: { damping: 24, stiffness: 340, mass: 0.9 },
+  gentle: { damping: 22, stiffness: 190, mass: 1 },
+  bouncy: { damping: 14, stiffness: 260, mass: 0.9 },
 } as const;
 
 export const pressScale = 0.97;

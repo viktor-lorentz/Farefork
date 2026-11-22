@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@expo-google-fonts/material-symbols": "^0.4.54",
     "@expo-google-fonts/young-serif": "^0.4.0",
     "@expo/metro-runtime": "~58.0.17",
     "@gorhom/bottom-sheet": "^5.2.14",
@@ -36,7 +37,6 @@
     "expo-symbols": "~58.0.5",
     "expo-system-ui": "~58.0.7",
     "maplibre-gl": "^6.19.0",
-    "phosphor-react-native": "^3.0.6",
     "qrcode-generator": "^2.0.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
