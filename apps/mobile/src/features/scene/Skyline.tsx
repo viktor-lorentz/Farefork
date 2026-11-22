@@ -109,7 +109,7 @@ export function Skyline({ phase, scrollY, style }: SkylineProps) {
             <Stop offset="1" stopColor={palette.bottom} />
           </LinearGradient>
         </Defs>
-        <Rect x="0" y="0" width={SKYLINE_WIDTH} height={SKYLINE_HEIGHT} fill="url(#sky)" />
+        <Rect width={SKYLINE_WIDTH} height={SKYLINE_HEIGHT} fill="url(#sky)" />
         <Path d={stars} fill={palette.window} opacity={starOpacity[phase]} />
       </Layer>
       <Animated.View style={[StyleSheet.absoluteFill, farStyle]}>

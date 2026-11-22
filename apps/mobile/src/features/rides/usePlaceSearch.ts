@@ -1,6 +1,7 @@
 import { type LatLng, placeSearchResponseSchema } from '@repo/shared';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
+import { dedupePlaces } from './placeText';
 import { useDebouncedValue } from './useDebouncedValue';
 
 export const MIN_QUERY_LENGTH = 2;
@@ -28,6 +29,6 @@ export function usePlaceSearch(text: string, near: LatLng | null) {
     ...result,
     enabled,
     settling: text.trim() !== query,
-    places: enabled ? (result.data?.places ?? []) : [],
+    places: enabled ? dedupePlaces(result.data?.places ?? []) : [],
   };
 }

@@ -13,10 +13,11 @@ import { iconSize, radius, space } from '../tokens/spacing';
 import { Divider } from './Divider';
 import { Text } from './Text';
 
-const LEADING_SIZE = 40;
+const LEADING_SIZE = space.xxl;
 
 export type ListRowProps = {
   title: string;
+  titleContent?: ReactNode;
   subtitle?: string;
   leading?: ReactNode;
   trailing?: ReactNode;
@@ -35,6 +36,7 @@ export type ListRowProps = {
 
 export function ListRow({
   title,
+  titleContent,
   subtitle,
   leading,
   trailing,
@@ -58,7 +60,7 @@ export function ListRow({
       {leading !== undefined ? <View style={styles.leading}>{leading}</View> : null}
       <View style={styles.body}>
         <Text variant="bodyStrong" tone={destructive ? 'danger' : 'primary'} numberOfLines={1}>
-          {title}
+          {titleContent ?? title}
         </Text>
         {subtitle !== undefined ? (
           <Text variant="caption" tone="secondary" numberOfLines={2}>
@@ -153,7 +155,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
-    minHeight: 64,
+    minHeight: space.huge,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
   },
@@ -164,7 +166,6 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    gap: 2,
   },
   value: {
     maxWidth: '40%',

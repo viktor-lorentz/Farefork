@@ -4,16 +4,16 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withTiming,
+  withSpring,
 } from 'react-native-reanimated';
 import { haptics } from '@/lib/haptics';
 import type { Icon } from '../icons';
 import { useTheme } from '../theme';
-import { duration, easing } from '../tokens/motion';
-import { radius, space } from '../tokens/spacing';
+import { springs } from '../tokens/motion';
+import { controlHeight, iconSize, radius, space } from '../tokens/spacing';
 import { Text } from './Text';
 
-const PADDING = 4;
+const PADDING = space.xxs;
 
 export type SegmentOption<T extends string> = {
   value: T;
@@ -49,9 +49,7 @@ export function SegmentedControl<T extends string>({
   useEffect(() => {
     const target = selectedIndex * segmentWidth;
     offset.set(
-      reducedMotion
-        ? target
-        : withTiming(target, { duration: duration.base, easing: easing.standard }),
+      reducedMotion ? target : withSpring(target, springs.snappy),
     );
   }, [selectedIndex, segmentWidth, reducedMotion, offset]);
 
@@ -63,7 +61,7 @@ export function SegmentedControl<T extends string>({
     setWidth(event.nativeEvent.layout.width);
   };
 
-  const height = size === 'lg' ? 48 : 40;
+  const height = size === 'lg' ? controlHeight.md : controlHeight.sm + space.xs;
 
   return (
     <View
@@ -100,11 +98,12 @@ export function SegmentedControl<T extends string>({
                 onChange(option.value);
               }
             }}
+            hitSlop={space.xxs}
             style={styles.segment}
           >
             {Glyph ? (
               <Glyph
-                size={18}
+                size={iconSize.sm}
                 color={selected ? colors.textPrimary : colors.textSecondary}
                 weight={selected ? 'fill' : 'regular'}
               />

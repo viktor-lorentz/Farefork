@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 import { haptics } from '@/lib/haptics';
 import type { Icon } from '../icons';
 import { useTheme } from '../theme';
-import { controlHeight, radius, space } from '../tokens/spacing';
+import { controlHeight, iconSize, radius, space } from '../tokens/spacing';
 import { PressableScale } from './PressableScale';
 import { Text } from './Text';
 
@@ -36,17 +36,21 @@ export function Chip({
       accessibilityLabel={count !== undefined ? `${label}, ${count}` : label}
       accessibilityState={isToggle ? { checked: selected, disabled } : { disabled }}
       disabled={disabled}
+      hitSlop={space.xxs}
       onPress={() => {
         haptics.selection();
         onPress?.();
       }}
       style={[
         styles.base,
-        { backgroundColor: selected ? colors.primary : colors.fill },
+        {
+          backgroundColor: selected ? colors.primary : colors.surface,
+          borderColor: selected ? colors.primary : colors.border,
+        },
         disabled && styles.disabled,
       ]}
     >
-      {Glyph ? <Glyph size={16} color={foreground} weight={selected ? 'bold' : 'regular'} /> : null}
+      {Glyph ? <Glyph size={iconSize.sm} color={foreground} weight={selected ? 'bold' : 'regular'} /> : null}
       <Text variant="label" style={{ color: foreground }} numberOfLines={1}>
         {label}
       </Text>
@@ -63,10 +67,11 @@ const styles = StyleSheet.create({
   base: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    height: controlHeight.sm,
+    gap: space.xs,
+    minHeight: controlHeight.sm,
     paddingHorizontal: space.sm,
-    borderRadius: radius.sm,
+    borderRadius: radius.round,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   disabled: {
     opacity: 0.4,

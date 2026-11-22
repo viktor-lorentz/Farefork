@@ -10,9 +10,11 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { duration, easing, pressScale } from '../tokens/motion';
+import { useTheme } from '../theme';
+import { duration, easing, pressScale, springs } from '../tokens/motion';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -20,6 +22,7 @@ export type PressableScaleProps = Omit<PressableProps, 'style' | 'children'> & {
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
   scaleTo?: number;
+  ripple?: boolean;
 };
 
 export function PressableScale({
@@ -29,8 +32,10 @@ export function PressableScale({
   onPressIn,
   onPressOut,
   disabled,
+  ripple = true,
   ...rest
 }: PressableScaleProps) {
+  const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -43,7 +48,7 @@ export function PressableScale({
   };
 
   const handlePressOut = (event: GestureResponderEvent) => {
-    scale.set(withTiming(1, { duration: duration.fast, easing: easing.decelerate }));
+    scale.set(reducedMotion ? 1 : withSpring(1, springs.snappy));
     onPressOut?.(event);
   };
 
@@ -51,6 +56,7 @@ export function PressableScale({
     <AnimatedPressable
       {...rest}
       disabled={disabled}
+      android_ripple={ripple && process.env.EXPO_OS === 'android' ? { color: colors.pressed, foreground: true } : undefined}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={[style, animatedStyle]}

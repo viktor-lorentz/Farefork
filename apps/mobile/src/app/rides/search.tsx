@@ -9,24 +9,24 @@ import {
   ListRowIcon,
   Screen,
   ScreenHeader,
-  SearchField,
   SectionHeader,
   Text,
 } from '@/design/components';
 import {
-  ArrowsDownUpIcon,
-  CircleIcon,
   ClockCounterClockwiseIcon,
+  HeartIcon,
   MapPinIcon,
   NavigationArrowIcon,
-  SquareIcon,
   WarningCircleIcon,
   XIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { space } from '@/design/tokens';
+import { useFavorites } from '@/features/account/queries';
 import { defaultCenter } from '@/features/map/types';
 import { currentLocationPlace, locateDevice } from '@/features/rides/location';
+import { highlightSegments } from '@/features/rides/placeText';
+import { TripFieldsCard, type TripField } from '@/features/rides/TripFieldsCard';
 import { MIN_QUERY_LENGTH, usePlaceSearch } from '@/features/rides/usePlaceSearch';
 import { useResultsView } from '@/features/rides/useResultsView';
 import { haptics } from '@/lib/haptics';
@@ -34,7 +34,7 @@ import { useDeviceLocation } from '@/stores/location';
 import { usePreferences } from '@/stores/preferences';
 import { isCurrentLocation, useTrip } from '@/stores/trip';
 
-type Field = 'pickup' | 'dropoff';
+type Field = TripField;
 type LocateState = 'idle' | 'locating' | 'denied' | 'unavailable';
 
 type FieldState = {
@@ -44,6 +44,22 @@ type FieldState = {
 
 function initialField(place: Place | null): FieldState {
   return { place, text: place?.name ?? '' };
+}
+
+function HighlightedTitle({ text, query }: { text: string; query: string }) {
+  return (
+    <>
+      {highlightSegments(text, query).map((segment, index) => (
+        <Text
+          key={index}
+          variant={segment.match ? 'bodyStrong' : 'body'}
+          tone={segment.match ? 'primary' : 'secondary'}
+        >
+          {segment.text}
+        </Text>
+      ))}
+    </>
+  );
 }
 
 export default function RideSearchScreen() {
@@ -67,7 +83,12 @@ export default function RideSearchScreen() {
   useEffect(() => {
     latestDropoff.current = dropoff.place;
   });
-  const [focused, setFocused] = useState<Field>('dropoff');
+  const [initialFocus] = useState<Field>(() =>
+    dropoff.place && !pickup.place ? 'pickup' : 'dropoff',
+  );
+  const [focused, setFocused] = useState<Field>(initialFocus);
+  const favorites = useFavorites();
+  const savedRoutes = (favorites.data ?? []).flatMap((row) => (row.kind === 'route' ? [row] : []));
   const [locate, setLocate] = useState<LocateState>('idle');
   const pickupRef = useRef<ComponentRef<typeof TextInput>>(null);
   const dropoffRef = useRef<ComponentRef<typeof TextInput>>(null);
@@ -151,18 +172,6 @@ export default function RideSearchScreen() {
     setDropoff(pickup);
   };
 
-  const clearButton = (field: Field, state: FieldState) =>
-    state.text.length > 0 && focused === field ? (
-      <IconButton
-        icon={XIcon}
-        size={36}
-        accessibilityLabel={field === 'pickup' ? 'Clear pickup' : 'Clear destination'}
-        onPress={() => {
-          clearField(field);
-        }}
-      />
-    ) : undefined;
-
   const showSuggestions = active.place !== null || active.text.trim().length < MIN_QUERY_LENGTH;
   const recentChoices = recents.filter(
     (place) => place.id !== pickup.place?.id && place.id !== dropoff.place?.id,
@@ -172,51 +181,18 @@ export default function RideSearchScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Plan your ride" />
       <Screen padTop={false} contentStyle={styles.content}>
-        <View style={styles.fieldsRow}>
-          <View style={styles.fields}>
-            <SearchField
-              ref={pickupRef}
-              icon={CircleIcon}
-              value={pickup.text}
-              onChangeText={(text) => {
-                editField('pickup', text);
-              }}
-              onFocus={() => {
-                setFocused('pickup');
-              }}
-              placeholder="Pickup location"
-              size="md"
-              returnKeyType="search"
-              autoCorrect={false}
-              trailing={clearButton('pickup', pickup)}
-              accessibilityLabel="Pickup"
-            />
-            <SearchField
-              ref={dropoffRef}
-              icon={SquareIcon}
-              value={dropoff.text}
-              onChangeText={(text) => {
-                editField('dropoff', text);
-              }}
-              onFocus={() => {
-                setFocused('dropoff');
-              }}
-              placeholder="Where to?"
-              autoFocus
-              size="md"
-              returnKeyType="search"
-              autoCorrect={false}
-              trailing={clearButton('dropoff', dropoff)}
-              accessibilityLabel="Destination"
-            />
-          </View>
-          <IconButton
-            icon={ArrowsDownUpIcon}
-            accessibilityLabel="Swap pickup and destination"
-            onPress={swap}
-            size={44}
-          />
-        </View>
+        <TripFieldsCard
+          pickupText={pickup.text}
+          dropoffText={dropoff.text}
+          focused={focused}
+          autoFocus={initialFocus}
+          pickupRef={pickupRef}
+          dropoffRef={dropoffRef}
+          onChange={editField}
+          onFocus={setFocused}
+          onClear={clearField}
+          onSwap={swap}
+        />
 
         {showSuggestions ? (
           <View>
@@ -237,11 +213,35 @@ export default function RideSearchScreen() {
                   locate === 'locating' ? <ActivityIndicator color={colors.textPrimary} /> : null
                 }
                 disabled={locate === 'locating'}
-                divider={recentChoices.length > 0}
                 onPress={() => {
                   void pickCurrentLocation('pickup');
                 }}
               />
+            ) : null}
+            {savedRoutes.length > 0 ? (
+              <>
+                <SectionHeader title="Saved" style={styles.sectionHeader} />
+                {savedRoutes.map((row, index) => (
+                  <ListRow
+                    key={row.id}
+                    title={row.title}
+                    subtitle={row.subtitle ?? undefined}
+                    leading={<ListRowIcon icon={HeartIcon} />}
+                    divider={index < savedRoutes.length - 1}
+                    onPress={() => {
+                      const { pickup: savedPickup, dropoff: savedDropoff } = row.payload;
+                      if (savedPickup) {
+                        setPickup({ place: savedPickup, text: savedPickup.name });
+                        setDropoff({ place: savedDropoff, text: savedDropoff.name });
+                        haptics.selection();
+                        finish(savedPickup, savedDropoff);
+                        return;
+                      }
+                      choose('dropoff', savedDropoff);
+                    }}
+                  />
+                ))}
+              </>
             ) : null}
             {recentChoices.length > 0 ? (
               <>
@@ -289,6 +289,7 @@ export default function RideSearchScreen() {
               <ListRow
                 key={place.id}
                 title={place.name}
+                titleContent={<HighlightedTitle text={place.name} query={active.text} />}
                 subtitle={place.address || undefined}
                 leading={<ListRowIcon icon={MapPinIcon} />}
                 divider={index < search.places.length - 1}
@@ -323,15 +324,6 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: space.lg,
-  },
-  fieldsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs,
-  },
-  fields: {
-    flex: 1,
-    gap: space.xs,
   },
   sectionHeader: {
     marginTop: space.sm,
