@@ -11,7 +11,7 @@ const fontFiles = ['Regular', 'Medium', 'Bold', 'Black'].map(
   (face) => `./assets/fonts/Satoshi-${face}.otf`,
 );
 
-const easProjectId = process.env.EAS_PROJECT_ID;
+const easProjectId = process.env.EAS_PROJECT_ID ?? '61ed259b-e4a5-45ad-8313-5ec10f14d9f0';
 const googleServicesFile =
   process.env.GOOGLE_SERVICES_JSON ??
   (existsSync('./google-services.json') ? './google-services.json' : undefined);
