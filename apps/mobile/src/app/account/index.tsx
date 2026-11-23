@@ -21,7 +21,7 @@ import { useSession } from '@/stores/session';
 export default function AccountScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const email = useSession((state) => state.session?.user.email ?? null);
+  const email = useSession((state) => state.email);
   const status = useSession((state) => state.status);
   const summary = useSavingsSummary();
   const [confirmDelete, setConfirmDelete] = useState(false);

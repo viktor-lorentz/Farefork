@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/expo';
+import { tokenCache } from '@clerk/expo/token-cache';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
@@ -13,7 +15,8 @@ import { listenForAlertTaps } from '@/features/alerts/push';
 import { ThemeProvider, useTheme } from '@/design/theme';
 import { queryClient } from '@/lib/queryClient';
 import { usePreferences, usePreferencesHydrated } from '@/stores/preferences';
-import { startSessionSync } from '@/stores/session';
+import { ClerkSessionBridge } from '@/features/account/ClerkSessionBridge';
+import { clerkPublishableKey } from '@/stores/session';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -80,8 +83,6 @@ export default function RootLayout() {
   const hydrated = usePreferencesHydrated();
   const ready = (fontsLoaded || fontError !== null) && hydrated;
 
-  useEffect(() => startSessionSync(), []);
-
   useEffect(() => {
     if (ready) {
       void SplashScreen.hideAsync();
@@ -92,7 +93,7 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
+  const app = (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
@@ -102,6 +103,17 @@ export default function RootLayout() {
         </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
+  );
+
+  if (!clerkPublishableKey) {
+    return app;
+  }
+
+  return (
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
+      <ClerkSessionBridge />
+      {app}
+    </ClerkProvider>
   );
 }
 

@@ -62,7 +62,7 @@ export default function ProfileScreen() {
   const [pushNote, setPushNote] = useState('Notifications when a ride hits your price');
   const resetOnboarding = usePreferences((state) => state.resetOnboarding);
   const sessionStatus = useSession((state) => state.status);
-  const email = useSession((state) => state.session?.user.email ?? null);
+  const email = useSession((state) => state.email);
 
   return (
     <Screen>

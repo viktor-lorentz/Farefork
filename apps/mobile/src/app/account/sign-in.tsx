@@ -1,12 +1,20 @@
+import { useSignIn, useSignUp, useSSO } from '@clerk/expo';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Button, Screen, ScreenHeader, SearchField, Text } from '@/design/components';
 import { EnvelopeIcon, WarningCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
-import { codeSchema, emailSchema, sendCode, verifyCode } from '@/features/account/auth';
+import {
+  authMessage,
+  codeSchema,
+  emailSchema,
+  errorCode,
+  unavailableMessage,
+} from '@/features/account/auth';
 import { haptics } from '@/lib/haptics';
+import { useSession } from '@/stores/session';
 
 const RESEND_SECONDS = 60;
 
@@ -27,8 +35,30 @@ function ErrorNote({ message }: { message: string }) {
 }
 
 export default function SignInScreen() {
+  const { colors } = useTheme();
+  const status = useSession((state) => state.status);
+  if (status === 'unavailable') {
+    return (
+      <View style={[styles.root, { backgroundColor: colors.background }]}>
+        <ScreenHeader title="Sign in" large />
+        <Screen padTop={false} contentStyle={styles.content}>
+          <ErrorNote message={unavailableMessage} />
+        </Screen>
+      </View>
+    );
+  }
+  return <ClerkSignIn />;
+}
+
+type Outcome = { ok: true } | { ok: false; message: string };
+
+function ClerkSignIn() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { signIn } = useSignIn();
+  const { signUp } = useSignUp();
+  const { startSSOFlow } = useSSO();
+  const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -53,10 +83,80 @@ export default function SignInScreen() {
   const trimmedCode = code.replace(/\s/g, '');
   const codeValid = codeSchema.safeParse(trimmedCode).success;
 
+  const finish = () => {
+    haptics.success();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
+  const sendCode = async (): Promise<Outcome> => {
+    const sent = await signIn.emailCode.sendCode({ emailAddress: trimmedEmail });
+    if (!sent.error) {
+      setMode('signIn');
+      return { ok: true };
+    }
+    if (errorCode(sent.error) !== 'form_identifier_not_found') {
+      return { ok: false, message: authMessage(sent.error) };
+    }
+    const created = await signUp.create({ emailAddress: trimmedEmail });
+    if (created.error) {
+      return { ok: false, message: authMessage(created.error) };
+    }
+    const mailed = await signUp.verifications.sendEmailCode();
+    if (mailed.error) {
+      return { ok: false, message: authMessage(mailed.error) };
+    }
+    setMode('signUp');
+    return { ok: true };
+  };
+
+  const verifyCode = async (): Promise<Outcome> => {
+    if (mode === 'signIn') {
+      const verified = await signIn.emailCode.verifyCode({ code: trimmedCode });
+      if (verified.error) {
+        return { ok: false, message: authMessage(verified.error) };
+      }
+      if (signIn.status !== 'complete') {
+        return { ok: false, message: 'This account needs another sign-in step. Try again.' };
+      }
+      const done = await signIn.finalize();
+      return done.error ? { ok: false, message: authMessage(done.error) } : { ok: true };
+    }
+    const verified = await signUp.verifications.verifyEmailCode({ code: trimmedCode });
+    if (verified.error) {
+      return { ok: false, message: authMessage(verified.error) };
+    }
+    if (signUp.status !== 'complete') {
+      return { ok: false, message: 'Something went wrong. Try again.' };
+    }
+    const done = await signUp.finalize();
+    return done.error ? { ok: false, message: authMessage(done.error) } : { ok: true };
+  };
+
+  const continueWithGoogle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy: 'oauth_google' });
+      setBusy(false);
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        finish();
+      }
+    } catch (ssoError) {
+      setBusy(false);
+      haptics.warning();
+      setError(authMessage(ssoError));
+    }
+  };
+
   const requestCode = async () => {
     setBusy(true);
     setError(null);
-    const result = await sendCode(trimmedEmail);
+    const result = await sendCode();
     setBusy(false);
     if (!result.ok) {
       haptics.warning();
@@ -71,19 +171,14 @@ export default function SignInScreen() {
   const submitCode = async () => {
     setBusy(true);
     setError(null);
-    const result = await verifyCode(trimmedEmail, trimmedCode);
+    const result = await verifyCode();
     setBusy(false);
     if (!result.ok) {
       haptics.warning();
       setError(result.message);
       return;
     }
-    haptics.success();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/');
-    }
+    finish();
   };
 
   return (
@@ -130,6 +225,17 @@ export default function SignInScreen() {
                 void requestCode();
               }}
             />
+            {Platform.OS !== 'web' ? (
+              <Button
+                label="Continue with Google"
+                variant="secondary"
+                fullWidth
+                disabled={busy}
+                onPress={() => {
+                  void continueWithGoogle();
+                }}
+              />
+            ) : null}
           </>
         ) : (
           <>
@@ -193,6 +299,7 @@ export default function SignInScreen() {
             </View>
           </>
         )}
+        <View nativeID="clerk-captcha" />
       </Screen>
     </View>
   );

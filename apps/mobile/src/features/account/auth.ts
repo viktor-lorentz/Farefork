@@ -1,4 +1,4 @@
-import { AuthError } from '@supabase/supabase-js';
+import { isClerkAPIResponseError, isClerkRuntimeError } from '@clerk/expo';
 import { z } from 'zod';
 import { queryClient } from '@/lib/queryClient';
 import { supabase } from '@/lib/supabase';
@@ -8,65 +8,72 @@ export const codeSchema = z.string().regex(/^\d{6,10}$/);
 
 export type AuthResult = { ok: true } | { ok: false; message: string };
 
-function message(error: unknown): string {
-  if (error instanceof AuthError) {
-    if (error.status === 429 || error.code === 'over_email_send_rate_limit') {
+export const unavailableMessage = 'Accounts aren’t set up in this build.';
+
+type AccountActions = {
+  signOut: () => Promise<void>;
+  deleteUser: () => Promise<void>;
+};
+
+let actions: AccountActions | null = null;
+
+export function registerAccountActions(next: AccountActions | null): void {
+  actions = next;
+}
+
+export function errorCode(error: unknown): string | null {
+  if (isClerkAPIResponseError(error)) {
+    return error.errors[0]?.code ?? null;
+  }
+  if (isClerkRuntimeError(error)) {
+    return error.code;
+  }
+  return null;
+}
+
+export function authMessage(error: unknown): string {
+  if (isClerkAPIResponseError(error)) {
+    const first = error.errors[0];
+    if (error.status === 429 || first?.code === 'too_many_requests') {
       return 'Too many codes requested. Wait a minute, then try again.';
     }
-    if (error.code === 'otp_expired' || error.code === 'invalid_credentials') {
+    if (
+      first?.code === 'form_code_incorrect' ||
+      first?.code === 'verification_expired' ||
+      first?.code === 'verification_failed'
+    ) {
       return 'That code didn’t work or has expired. Check the latest email, or send a new code.';
     }
-    if (error.status === 0 || error.name === 'AuthRetryableFetchError') {
-      return 'Can’t reach the sign-in service. Check your connection.';
-    }
-    return error.message;
+    return first?.longMessage ?? first?.message ?? 'Something went wrong. Try again.';
+  }
+  if (isClerkRuntimeError(error) && error.code === 'network_error') {
+    return 'Can’t reach the sign-in service. Check your connection.';
   }
   return 'Something went wrong. Try again.';
 }
 
-export async function sendCode(email: string): Promise<AuthResult> {
-  if (!supabase) {
-    return { ok: false, message: 'Accounts aren’t set up in this build.' };
-  }
-  try {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    return error ? { ok: false, message: message(error) } : { ok: true };
-  } catch (error) {
-    return { ok: false, message: message(error) };
-  }
-}
-
-export async function verifyCode(email: string, token: string): Promise<AuthResult> {
-  if (!supabase) {
-    return { ok: false, message: 'Accounts aren’t set up in this build.' };
-  }
-  try {
-    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-    return error ? { ok: false, message: message(error) } : { ok: true };
-  } catch (error) {
-    return { ok: false, message: message(error) };
-  }
-}
-
 export async function signOut(): Promise<void> {
-  if (!supabase) {
+  if (!actions) {
     return;
   }
-  await supabase.auth.signOut();
+  await actions.signOut();
   queryClient.removeQueries({ queryKey: ['account'] });
 }
 
 export async function deleteAccount(): Promise<AuthResult> {
-  if (!supabase) {
-    return { ok: false, message: 'Accounts aren’t set up in this build.' };
+  if (!actions || !supabase) {
+    return { ok: false, message: unavailableMessage };
   }
   const { error } = await supabase.rpc('delete_my_account');
   if (error) {
     return { ok: false, message: error.message };
   }
-  await signOut();
+  try {
+    await actions.deleteUser();
+  } catch (deleteError) {
+    await signOut();
+    return { ok: false, message: authMessage(deleteError) };
+  }
+  queryClient.removeQueries({ queryKey: ['account'] });
   return { ok: true };
 }
