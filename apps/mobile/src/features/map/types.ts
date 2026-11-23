@@ -22,6 +22,7 @@ export type MapPlace = {
   cuisine: Cuisine;
   latitude: number;
   longitude: number;
+  detail?: string;
 };
 
 export type MapCanvasProps = {
@@ -32,12 +33,15 @@ export type MapCanvasProps = {
   trip?: MapTrip | null;
   places?: readonly MapPlace[];
   onPlacePress?: (id: string) => void;
+  selectedPlaceId?: string | null;
+  onMapPress?: () => void;
   style?: StyleProp<ViewStyle>;
 };
 
 export const defaultCenter: LatLng = { latitude: 37.7793, longitude: -122.4193 };
 export const defaultZoom = 13.2;
 export const placesZoom = 14.8;
+export const placeFocusZoom = 15.6;
 export const fitPadding = 56;
 const minVisible = 80;
 

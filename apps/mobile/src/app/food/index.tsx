@@ -6,6 +6,7 @@ import {
   Button,
   Chip,
   EmptyState,
+  IconButton,
   ListRow,
   ListRowIcon,
   Screen,
@@ -17,6 +18,7 @@ import {
 import {
   ForkKnifeIcon,
   MagnifyingGlassIcon,
+  MapIcon,
   MapPinIcon,
   ShoppingBagIcon,
   WarningCircleIcon,
@@ -66,7 +68,20 @@ export default function RestaurantsScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Food delivery" />
+      <ScreenHeader
+        title="Food delivery"
+        trailing={
+          address ? (
+            <IconButton
+              icon={MapIcon}
+              accessibilityLabel="Show restaurants on a map"
+              onPress={() => {
+                router.push('/food/map');
+              }}
+            />
+          ) : null
+        }
+      />
       <Screen padTop={false} contentStyle={styles.content}>
         <ListRow
           flush

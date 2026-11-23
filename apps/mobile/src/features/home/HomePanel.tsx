@@ -15,11 +15,11 @@ import {
   CarIcon,
   ForkKnifeIcon,
   HouseIcon,
+  MapIcon,
   MapPinIcon,
   PlusIcon,
   SealCheckIcon,
   ShoppingBagIcon,
-  StorefrontIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { iconSize, space } from '@/design/tokens';
@@ -145,9 +145,13 @@ function FoodContent() {
         />
         <ListRow
           flush
-          title="True totals, before tip"
-          subtitle="Menu markup, fees and estimated tax on every app"
-          leading={<ListRowIcon icon={StorefrontIcon} />}
+          title="Restaurants on a map"
+          subtitle="Tap a pin, swipe through what’s close"
+          leading={<ListRowIcon icon={MapIcon} />}
+          chevron
+          onPress={() => {
+            router.push('/food/map');
+          }}
         />
       </View>
     </>

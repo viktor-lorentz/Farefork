@@ -62,6 +62,7 @@ export const InfoIcon = symbol('info.circle', 'info', 'info.circle.fill');
 export const LightningIcon = symbol('bolt', 'bolt', 'bolt.fill');
 export const MagnifyingGlassIcon = symbol('magnifyingglass', 'search');
 export const MapPinIcon = symbol('mappin.and.ellipse', 'location_on');
+export const MapIcon = symbol('map', 'map', 'map.fill');
 export const MinusIcon = symbol('minus', 'remove');
 export const MonitorIcon = symbol('display', 'desktop_windows');
 export const MoonIcon = symbol('moon', 'dark_mode', 'moon.fill');

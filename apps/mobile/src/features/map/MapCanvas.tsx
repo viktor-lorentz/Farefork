@@ -20,6 +20,7 @@ import {
   fitPadding,
   type MapCanvasProps,
   type MapPlace,
+  placeFocusZoom,
   resolveInsets,
 } from './types';
 
@@ -48,14 +49,22 @@ function PlaceMarker({
   fill,
   ring,
   icon,
+  selected,
 }: {
   place: MapPlace;
   fill: string;
   ring: string;
   icon: string;
+  selected: boolean;
 }) {
   return (
-    <View style={[styles.place, { backgroundColor: fill, borderColor: ring }]}>
+    <View
+      style={[
+        styles.place,
+        selected && styles.placeSelected,
+        { backgroundColor: fill, borderColor: ring },
+      ]}
+    >
       <Svg
         width={iconSize.sm}
         height={iconSize.sm}
@@ -75,6 +84,8 @@ export function MapCanvas({
   trip,
   places,
   onPlacePress,
+  selectedPlaceId = null,
+  onMapPress,
   style,
 }: MapCanvasProps) {
   const shownPlaces = trip ? [] : (places ?? []).slice(0, MAX_NATIVE_PLACES);
@@ -88,6 +99,24 @@ export function MapCanvas({
   const delta = zoomToDelta(zoom);
   const padding = resolveInsets(insets);
   const firstCenter = useRef(true);
+  const selectedPlace = shownPlaces.find((place) => place.id === selectedPlaceId);
+  const selectedLatitude = selectedPlace?.latitude;
+  const selectedLongitude = selectedPlace?.longitude;
+  useEffect(() => {
+    if (selectedLatitude === undefined || selectedLongitude === undefined) {
+      return;
+    }
+    const focus = zoomToDelta(Math.max(zoom, placeFocusZoom));
+    mapRef.current?.animateToRegion(
+      {
+        latitude: selectedLatitude,
+        longitude: selectedLongitude,
+        latitudeDelta: focus,
+        longitudeDelta: focus,
+      },
+      reducedMotion ? 0 : duration.slow,
+    );
+  }, [selectedLatitude, selectedLongitude, zoom, reducedMotion]);
 
   useEffect(() => {
     if (!trip) {
@@ -154,6 +183,11 @@ export function MapCanvas({
           pitchEnabled={false}
           rotateEnabled={false}
           mapPadding={padding}
+          onPress={(event) => {
+            if (event.nativeEvent.action !== 'marker-press') {
+              onMapPress?.();
+            }
+          }}
           accessibilityLabel={trip ? 'Map showing your route' : 'Map'}
         >
           {trip ? (
@@ -196,25 +230,31 @@ export function MapCanvas({
               </Marker>
             </>
           ) : null}
-          {shownPlaces.map((place) => (
-            <Marker
-              key={`${place.id}-${scheme}`}
-              coordinate={{ latitude: place.latitude, longitude: place.longitude }}
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={false}
-              accessibilityLabel={`${place.name}, ${cuisineLabels[place.cuisine]}`}
-              onPress={() => {
-                onPlacePress?.(place.id);
-              }}
-            >
-              <PlaceMarker
-                place={place}
-                fill={colors.surface}
-                ring={colors.border}
-                icon={colors.textPrimary}
-              />
-            </Marker>
-          ))}
+          {shownPlaces.map((place) => {
+            const selected = place.id === selectedPlaceId;
+            return (
+              <Marker
+                key={`${place.id}-${scheme}-${selected ? 'on' : 'off'}`}
+                zIndex={selected ? 1 : 0}
+                coordinate={{ latitude: place.latitude, longitude: place.longitude }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+                accessibilityLabel={`${place.name}, ${cuisineLabels[place.cuisine]}`}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  onPlacePress?.(place.id);
+                }}
+              >
+                <PlaceMarker
+                  place={place}
+                  selected={selected}
+                  fill={selected ? colors.accent : colors.surface}
+                  ring={selected ? colors.accent : colors.border}
+                  icon={selected ? colors.onAccent : colors.textPrimary}
+                />
+              </Marker>
+            );
+          })}
         </MapView>
       </Animated.View>
     </View>
@@ -229,6 +269,10 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  placeSelected: {
+    width: space.xxl,
+    height: space.xxl,
   },
   pickup: {
     width: space.md + space.xxs / 2,

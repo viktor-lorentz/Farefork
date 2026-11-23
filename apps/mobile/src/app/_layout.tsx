@@ -60,6 +60,7 @@ function RootNavigator() {
           <Stack.Screen name="food/index" />
           <Stack.Screen name="food/[id]" />
           <Stack.Screen name="food/compare" />
+          <Stack.Screen name="food/map" />
           <Stack.Screen name="food/address" options={{ animation: 'slide_from_bottom' }} />
           <Stack.Screen name="profile/memberships" />
           <Stack.Screen name="account/index" />

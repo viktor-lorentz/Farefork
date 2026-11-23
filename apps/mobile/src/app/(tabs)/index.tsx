@@ -11,6 +11,7 @@ import { layout, space } from '@/design/tokens';
 import { HomeIdle } from '@/features/home/HomeIdle';
 import { MapCanvas } from '@/features/map/MapCanvas';
 import { defaultCenter, defaultZoom, type MapTrip, placesZoom } from '@/features/map/types';
+import { restaurantMeta } from '@/features/food/format';
 import { useRestaurants } from '@/features/food/queries';
 import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
 import { useVertical } from '@/features/home/useVertical';
@@ -61,7 +62,13 @@ export default function HomeScreen() {
   const foodCenter = deliveryAddress ?? center;
   const nearbyRestaurants = useRestaurants(foodMode ? foodCenter : null, '', null);
   const places = useMemo(
-    () => (foodMode ? (nearbyRestaurants.data?.restaurants ?? []) : []),
+    () =>
+      foodMode
+        ? (nearbyRestaurants.data?.restaurants ?? []).map((restaurant) => ({
+            ...restaurant,
+            detail: restaurantMeta(restaurant),
+          }))
+        : [],
     [foodMode, nearbyRestaurants.data],
   );
   const mapCenter = foodMode ? foodCenter : center;

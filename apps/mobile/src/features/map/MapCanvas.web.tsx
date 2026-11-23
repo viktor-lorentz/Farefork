@@ -10,7 +10,8 @@ import { useEffect, useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useTheme } from '@/design/theme';
-import { iconSize, radius, space } from '@/design/tokens';
+import { iconSize, radius, space, typeScale } from '@/design/tokens';
+import { fontFamilies } from '@/design/tokens/typography';
 import { duration } from '@/design/tokens/motion';
 import { useDeviceLocation } from '@/stores/location';
 import { CUISINE_ICON_VIEWBOX, cuisineIconPaths } from './cuisineIcons';
@@ -22,6 +23,7 @@ import {
   type MapInsets,
   type MapPlace,
   type MapTrip,
+  placeFocusZoom,
   resolveInsets,
 } from './types';
 import { TRIP_SOURCE, tripGeoJSON, webMapStyle } from './webMapStyle';
@@ -54,19 +56,69 @@ function fitTrip(map: MapLibreMap, trip: MapTrip, insets: MapInsets, animate: bo
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-type MarkerColors = { fill: string; ring: string; icon: string; shadow: string };
+type MarkerColors = {
+  fill: string;
+  ring: string;
+  icon: string;
+  shadow: string;
+  selectedFill: string;
+  selectedIcon: string;
+  tipFill: string;
+  tipText: string;
+  tipMuted: string;
+};
 const MARKER = space.xl;
+const MARKER_SELECTED = space.xxl;
+
+function tooltipElement(place: MapPlace, colors: MarkerColors): HTMLDivElement {
+  const tip = document.createElement('div');
+  tip.setAttribute('role', 'tooltip');
+  Object.assign(tip.style, {
+    position: 'absolute',
+    bottom: `calc(100% + ${space.xs}px)`,
+    left: '50%',
+    transform: `translate(-50%, ${space.xxs}px)`,
+    padding: `${space.xs}px ${space.sm}px`,
+    borderRadius: `${radius.md}px`,
+    background: colors.tipFill,
+    boxShadow: colors.shadow,
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+    opacity: '0',
+    transition: `opacity ${duration.fast}ms ease-out, transform ${duration.fast}ms ease-out`,
+    font: `600 ${typeScale.label.fontSize}px/${typeScale.label.lineHeight}px ${fontFamilies.system ?? 'system-ui'}`,
+    color: colors.tipText,
+    textAlign: 'left',
+  });
+  const name = document.createElement('div');
+  name.textContent = place.name;
+  tip.appendChild(name);
+  const detail = document.createElement('div');
+  detail.textContent = place.detail ?? cuisineLabels[place.cuisine];
+  Object.assign(detail.style, {
+    font: `400 ${typeScale.caption.fontSize}px/${typeScale.caption.lineHeight}px ${fontFamilies.system ?? 'system-ui'}`,
+    color: colors.tipMuted,
+    fontVariantNumeric: 'tabular-nums',
+  });
+  tip.appendChild(detail);
+  return tip;
+}
+
+type PlaceHandle = { element: HTMLDivElement; setSelected: (selected: boolean) => void };
 
 function placeElement(
   place: MapPlace,
   colors: MarkerColors,
   onPress: (id: string) => void,
-): HTMLDivElement {
+): PlaceHandle {
   const wrapper = document.createElement('div');
+  Object.assign(wrapper.style, { cursor: 'pointer' });
   const button = document.createElement('button');
   button.type = 'button';
-  button.title = place.name;
-  button.setAttribute('aria-label', `${place.name}, ${cuisineLabels[place.cuisine]}`);
+  button.setAttribute(
+    'aria-label',
+    `${place.name}, ${place.detail ?? cuisineLabels[place.cuisine]}`,
+  );
   Object.assign(button.style, {
     width: `${MARKER}px`,
     height: `${MARKER}px`,
@@ -79,7 +131,7 @@ function placeElement(
     justifyContent: 'center',
     cursor: 'pointer',
     boxShadow: colors.shadow,
-    transition: `transform ${duration.fast}ms ease-out`,
+    transition: `transform ${duration.fast}ms ease-out, width ${duration.fast}ms ease-out, height ${duration.fast}ms ease-out`,
   });
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${CUISINE_ICON_VIEWBOX} ${CUISINE_ICON_VIEWBOX}`);
@@ -91,18 +143,48 @@ function placeElement(
   path.setAttribute('fill', colors.icon);
   svg.appendChild(path);
   button.appendChild(svg);
+  const tip = tooltipElement(place, colors);
+  const showTip = (visible: boolean) => {
+    tip.style.opacity = visible ? '1' : '0';
+    tip.style.transform = visible ? 'translate(-50%, 0)' : `translate(-50%, ${space.xxs}px)`;
+    wrapper.style.zIndex = visible ? '2' : '';
+    button.style.transform = visible ? 'scale(1.1)' : 'scale(1)';
+  };
   button.addEventListener('mouseenter', () => {
-    button.style.transform = 'scale(1.15)';
+    showTip(true);
   });
   button.addEventListener('mouseleave', () => {
-    button.style.transform = 'scale(1)';
+    showTip(false);
   });
-  button.addEventListener('click', (event) => {
+  button.addEventListener('focus', () => {
+    showTip(true);
+  });
+  button.addEventListener('blur', () => {
+    showTip(false);
+  });
+  wrapper.addEventListener('click', (event) => {
     event.stopPropagation();
     onPress(place.id);
   });
   wrapper.appendChild(button);
-  return wrapper;
+  wrapper.appendChild(tip);
+  return {
+    element: wrapper,
+    setSelected: (selected) => {
+      const size = selected ? MARKER_SELECTED : MARKER;
+      button.style.width = `${size}px`;
+      button.style.height = `${size}px`;
+      button.style.background = selected ? colors.selectedFill : colors.fill;
+      button.style.borderColor = selected ? colors.selectedFill : colors.ring;
+      path.setAttribute('fill', selected ? colors.selectedIcon : colors.icon);
+      button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+      if (selected) {
+        wrapper.style.zIndex = '1';
+      } else if (tip.style.opacity !== '1') {
+        wrapper.style.zIndex = '';
+      }
+    },
+  };
 }
 
 export function MapCanvas({
@@ -112,11 +194,16 @@ export function MapCanvas({
   trip,
   places,
   onPlacePress,
+  selectedPlaceId = null,
+  onMapPress,
   showsUserLocation = false,
   style,
 }: MapCanvasProps) {
   const { colors, scheme, elevation } = useTheme();
   const onPlacePressRef = useRef(onPlacePress);
+  const onMapPressRef = useRef(onMapPress);
+  const handlesRef = useRef(new Map<string, PlaceHandle>());
+  const selectedRef = useRef(selectedPlaceId);
   const lastKnown = useDeviceLocation((state) => state.lastKnown);
   const user = showsUserLocation ? lastKnown : null;
   const userRef = useRef(user);
@@ -131,6 +218,8 @@ export function MapCanvas({
   useEffect(() => {
     tripRef.current = trip;
     onPlacePressRef.current = onPlacePress;
+    onMapPressRef.current = onMapPress;
+    selectedRef.current = selectedPlaceId;
     paddingRef.current = padding;
     userRef.current = user;
   });
@@ -151,6 +240,13 @@ export function MapCanvas({
       touchPitch: false,
     });
     map.touchZoomRotate.disableRotation();
+    map.on('click', (event) => {
+      const target = event.originalEvent.target;
+      if (target instanceof Element && target.closest('.maplibregl-marker')) {
+        return;
+      }
+      onMapPressRef.current?.();
+    });
     mapRef.current = map;
     const canvas = map.getCanvasContainer();
     canvas.style.opacity = '0';
@@ -254,25 +350,61 @@ export function MapCanvas({
     if (!map) {
       return;
     }
-    const markerColors = {
+    const markerColors: MarkerColors = {
       fill: colors.surface,
       ring: colors.border,
       icon: colors.textPrimary,
       shadow: elevation.raised,
+      selectedFill: colors.accent,
+      selectedIcon: colors.onAccent,
+      tipFill: colors.surfaceRaised,
+      tipText: colors.textPrimary,
+      tipMuted: colors.textSecondary,
     };
-    const markers = (trip ? [] : (places ?? [])).map((place) =>
-      new MapLibreMarker({
-        element: placeElement(place, markerColors, (id) => {
-          onPlacePressRef.current?.(id);
-        }),
-      })
+    const handles = handlesRef.current;
+    const markers = (trip ? [] : (places ?? [])).map((place) => {
+      const handle = placeElement(place, markerColors, (id) => {
+        onPlacePressRef.current?.(id);
+      });
+      handle.setSelected(place.id === selectedRef.current);
+      handles.set(place.id, handle);
+      return new MapLibreMarker({ element: handle.element })
         .setLngLat([place.longitude, place.latitude])
-        .addTo(map),
-    );
+        .addTo(map);
+    });
     return () => {
       markers.forEach((marker) => marker.remove());
+      handles.clear();
     };
-  }, [places, trip, colors.surface, colors.border, colors.textPrimary, elevation.raised]);
+  }, [
+    places,
+    trip,
+    colors.surface,
+    colors.border,
+    colors.textPrimary,
+    colors.accent,
+    colors.onAccent,
+    colors.surfaceRaised,
+    colors.textSecondary,
+    elevation.raised,
+  ]);
+
+  useEffect(() => {
+    handlesRef.current.forEach((handle, id) => {
+      handle.setSelected(id === selectedPlaceId);
+    });
+    const map = mapRef.current;
+    const place = places?.find((entry) => entry.id === selectedPlaceId);
+    if (!map || !place || tripRef.current) {
+      return;
+    }
+    map.easeTo({
+      center: [place.longitude, place.latitude],
+      zoom: Math.max(map.getZoom(), placeFocusZoom),
+      padding: paddingRef.current,
+      duration: reducedMotion ? 0 : duration.slow,
+    });
+  }, [selectedPlaceId, places, reducedMotion]);
 
   return (
     <View
