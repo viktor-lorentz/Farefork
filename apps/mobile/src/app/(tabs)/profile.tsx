@@ -73,6 +73,7 @@ export default function ProfileScreen() {
       {sessionStatus !== 'unavailable' ? (
         <View style={styles.accountGroup}>
           <ListRow
+            flush
             title={sessionStatus === 'signedIn' ? (email ?? 'Account') : 'Sign in'}
             subtitle={
               sessionStatus === 'signedIn'
@@ -91,6 +92,7 @@ export default function ProfileScreen() {
       <SectionHeader title="Settings" style={styles.section} />
       <View>
         <ListRow
+          flush
           title="Memberships"
           subtitle={membershipCount > 0 ? `${membershipCount} active` : 'None added'}
           leading={<ListRowIcon icon={SealCheckIcon} />}
@@ -101,6 +103,7 @@ export default function ProfileScreen() {
           divider
         />
         <ListRow
+          flush
           title="Price alerts"
           subtitle={isWeb ? 'Hits show in Alerts. Notifications need the phone app.' : pushNote}
           leading={<ListRowIcon icon={BellIcon} />}
@@ -147,6 +150,7 @@ export default function ProfileScreen() {
       <View>
         {__DEV__ ? (
           <ListRow
+            flush
             title="Component gallery"
             chevron
             onPress={() => {
@@ -155,9 +159,10 @@ export default function ProfileScreen() {
             divider
           />
         ) : null}
-        <ListRow title="Replay onboarding" onPress={resetOnboarding} divider />
-        <ListRow title="Version" value={Constants.expoConfig?.version ?? '0.0.0'} divider />
+        <ListRow flush title="Replay onboarding" onPress={resetOnboarding} divider />
+        <ListRow flush title="Version" value={Constants.expoConfig?.version ?? '0.0.0'} divider />
         <ListRow
+          flush
           title="Privacy policy"
           trailing={
             <ArrowSquareOutIcon size={iconSize.sm} color={colors.textSecondary} weight="bold" />
