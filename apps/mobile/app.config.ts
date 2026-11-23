@@ -62,6 +62,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
     ['expo-notifications', { color: '#FFD400', defaultChannel: 'price-alerts' }],
+    [
+      'expo-build-properties',
+      {
+        android: {
+          enableMinifyInReleaseBuilds: false,
+          enableShrinkResourcesInReleaseBuilds: false,
+        },
+      },
+    ],
   ],
   extra: {
     ...config.extra,
