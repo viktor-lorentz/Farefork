@@ -36,8 +36,8 @@ export function HomeSearchPill({ vertical }: { vertical: Vertical }) {
         }}
         style={styles.pill}
       >
-        <View style={[styles.icon, { backgroundColor: colors.accent }]}>
-          <MagnifyingGlassIcon size={iconSize.md} color={colors.onAccent} weight="bold" />
+        <View style={styles.icon}>
+          <MagnifyingGlassIcon size={iconSize.md} color={colors.textSecondary} weight="bold" />
         </View>
         <Text variant="titleS" numberOfLines={1} style={styles.label}>
           {label}

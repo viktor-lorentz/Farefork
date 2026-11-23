@@ -8,7 +8,6 @@ import {
 } from '@repo/shared';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   Button,
   Divider,
@@ -34,7 +33,6 @@ import {
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { controlHeight, iconSize, space } from '@/design/tokens';
-import { duration } from '@/design/tokens/motion';
 import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
 import { FavoriteButton } from '@/features/account/FavoriteButton';
@@ -57,8 +55,6 @@ import { useResultsView } from './useResultsView';
 import { useRideQuotes } from './useRideQuotes';
 import { useVisibleQuotes } from './useVisibleQuotes';
 import { WinnerCard } from './WinnerCard';
-
-const CASCADE_STEP_MS = 40;
 
 const sortOptions: readonly SegmentOption<QuoteSort>[] = [
   { value: 'price', label: 'Cheapest' },
@@ -274,10 +270,7 @@ export function RideResults() {
           {others.length > 0 ? (
             <View accessibilityLabel={`${others.length} more ride options`}>
               {others.map((quote, index) => (
-                <Animated.View
-                  key={quote.id}
-                  entering={FadeInDown.duration(duration.base).delay(index * CASCADE_STEP_MS)}
-                >
+                <View key={quote.id}>
                   {index > 0 ? <Divider inset={QUOTE_LOGO_SIZE + space.sm * 2} /> : null}
                   <QuoteCard
                     logo={
@@ -300,7 +293,7 @@ export function RideResults() {
                       choose(quote);
                     }}
                   />
-                </Animated.View>
+                </View>
               ))}
             </View>
           ) : null}

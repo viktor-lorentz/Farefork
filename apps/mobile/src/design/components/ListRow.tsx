@@ -128,14 +128,11 @@ export function ListRow({
   );
 }
 
-export function ListRowIcon({ icon: Glyph, accent = false }: { icon: Icon; accent?: boolean }) {
+export function ListRowIcon({ icon: Glyph }: { icon: Icon }) {
   const { colors } = useTheme();
   return (
-    <View
-      style={[styles.iconTile, { backgroundColor: accent ? colors.accent : colors.fill }]}
-      importantForAccessibility="no-hide-descendants"
-    >
-      <Glyph size={iconSize.md} color={accent ? colors.onAccent : colors.textPrimary} />
+    <View style={styles.iconTile} importantForAccessibility="no-hide-descendants">
+      <Glyph size={iconSize.md} color={colors.textSecondary} />
     </View>
   );
 }

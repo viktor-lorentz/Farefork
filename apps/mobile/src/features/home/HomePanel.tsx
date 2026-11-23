@@ -1,4 +1,10 @@
-import { deliveryProviderIds, rideProviderIds, type ProviderId, type Vertical } from '@repo/shared';
+import {
+  deliveryProviderIds,
+  providerName,
+  rideProviderIds,
+  type ProviderId,
+  type Vertical,
+} from '@repo/shared';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -23,7 +29,6 @@ import {
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { iconSize, space } from '@/design/tokens';
-import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { usePreferences } from '@/stores/preferences';
 import { useTrip } from '@/stores/trip';
 import { cartCount } from '@/features/food/cart';
@@ -36,13 +41,19 @@ const verticalOptions: readonly SegmentOption<Vertical>[] = [
   { value: 'food', label: 'Food', icon: ForkKnifeIcon },
 ];
 
-function ProviderStrip({ ids }: { ids: readonly ProviderId[] }) {
+function listNames(ids: readonly ProviderId[]): string {
+  const names = ids.map(providerName);
+  if (names.length < 2) {
+    return names.join('');
+  }
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}
+
+function CompareLine({ ids }: { ids: readonly ProviderId[] }) {
   return (
-    <View style={styles.strip}>
-      {ids.map((id) => (
-        <ProviderLogo key={id} providerId={id} size={32} />
-      ))}
-    </View>
+    <Text variant="caption" tone="secondary" style={styles.compareLine}>
+      Prices from {listNames(ids)}
+    </Text>
   );
 }
 
@@ -52,12 +63,7 @@ function RidesContent() {
   const recents = useTrip((state) => state.recents).slice(0, 3);
   return (
     <>
-      <View style={styles.compareRow}>
-        <Text variant="caption" tone="secondary">
-          Comparing
-        </Text>
-        <ProviderStrip ids={rideProviderIds} />
-      </View>
+      <CompareLine ids={rideProviderIds} />
       {recents.length > 0 ? (
         <View>
           <SectionHeader title="Recent" />
@@ -112,12 +118,7 @@ function FoodContent() {
   const count = cartCount(cart);
   return (
     <>
-      <View style={styles.compareRow}>
-        <Text variant="caption" tone="secondary">
-          Comparing
-        </Text>
-        <ProviderStrip ids={deliveryProviderIds} />
-      </View>
+      <CompareLine ids={deliveryProviderIds} />
       <View>
         {cart && count > 0 ? (
           <ListRow
@@ -171,7 +172,6 @@ export function HomePanel() {
         value={vertical}
         onChange={setVertical}
         accessibilityLabel="Compare rides or food"
-        size="lg"
       />
       {vertical === 'rides' ? <RidesContent /> : <FoodContent />}
       <ListRow
@@ -196,14 +196,7 @@ const styles = StyleSheet.create({
   panel: {
     gap: space.md,
   },
-  compareRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.sm,
-  },
-  strip: {
-    flexDirection: 'row',
-    gap: space.xs,
+  compareLine: {
+    marginTop: -space.xs,
   },
 });

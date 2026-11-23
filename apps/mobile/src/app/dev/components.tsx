@@ -207,7 +207,7 @@ export default function ComponentGallery() {
             />
             <ListRow
               title="Price alerts"
-              leading={<ListRowIcon icon={LightningIcon} accent />}
+              leading={<ListRowIcon icon={LightningIcon} />}
               trailing={
                 <Toggle
                   value={toggle}
