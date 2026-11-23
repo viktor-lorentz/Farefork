@@ -1,12 +1,15 @@
 import { formatUsd } from '@repo/shared';
 import { useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { LightningIcon, type Icon } from '../icons';
 import { useTheme } from '../theme';
-import { radius, space } from '../tokens/spacing';
+import { controlHeight, iconSize, radius, space } from '../tokens/spacing';
 import { Badge } from './Badge';
+import { PressableScale } from './PressableScale';
 import { Skeleton } from './Skeleton';
 import { Text } from './Text';
+
+export const QUOTE_LOGO_SIZE = space.xxl;
 
 export type QuoteCardNote = {
   icon?: Icon;
@@ -61,7 +64,7 @@ export function QuoteCard({
     .join(', ');
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
@@ -74,10 +77,10 @@ export function QuoteCard({
       onHoverOut={() => {
         setHovered(false);
       }}
-      style={({ pressed }) => [
-        styles.card,
-        { borderColor: selected ? colors.primary : 'transparent' },
-        (pressed || hovered) && { backgroundColor: colors.pressed },
+      style={[
+        styles.row,
+        selected && { backgroundColor: colors.fill },
+        hovered && !selected && { backgroundColor: colors.pressed },
       ]}
     >
       <View style={styles.logo}>{logo}</View>
@@ -87,9 +90,12 @@ export function QuoteCard({
             {title}
           </Text>
           {meta !== undefined ? (
-            <Text variant="caption" tone="secondary" numberOfLines={1}>
+            <Text variant="caption" tone="tertiary" numberOfLines={1}>
               {meta}
             </Text>
+          ) : null}
+          {surgeLabel !== undefined ? (
+            <Badge label={surgeLabel} tone="surge" icon={LightningIcon} />
           ) : null}
         </View>
         {detail !== undefined ? (
@@ -97,19 +103,14 @@ export function QuoteCard({
             {detail}
           </Text>
         ) : null}
-        {surgeLabel !== undefined || note !== undefined ? (
-          <View style={styles.noteRow}>
-            {surgeLabel !== undefined ? (
-              <Badge label={surgeLabel} tone="danger" icon={LightningIcon} />
+        {note !== undefined ? (
+          <View style={styles.note}>
+            {NoteIcon ? (
+              <NoteIcon size={iconSize.xs} color={colors.textSecondary} weight="fill" />
             ) : null}
-            {note !== undefined ? (
-              <View style={styles.note}>
-                {NoteIcon ? <NoteIcon size={14} color={colors.textPrimary} weight="fill" /> : null}
-                <Text variant="caption" numberOfLines={1}>
-                  {note.text}
-                </Text>
-              </View>
-            ) : null}
+            <Text variant="caption" tone="secondary" numberOfLines={1} style={styles.shrink}>
+              {note.text}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -124,20 +125,20 @@ export function QuoteCard({
         ) : null}
         {bestPrice ? <Badge label="Best price" tone="accent" /> : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
 export function QuoteCardSkeleton() {
   return (
-    <View style={styles.card} accessibilityLabel="Loading price" accessible>
-      <Skeleton width={40} height={40} radius={10} />
+    <View style={styles.row} accessibilityLabel="Loading price" accessible>
+      <Skeleton width={QUOTE_LOGO_SIZE} height={QUOTE_LOGO_SIZE} radius={radius.md} />
       <View style={styles.body}>
-        <Skeleton width="55%" height={14} />
-        <Skeleton width="80%" height={12} />
+        <Skeleton width="55%" height={space.md - space.xxs / 2} />
+        <Skeleton width="80%" height={space.sm} />
       </View>
       <View style={styles.priceColumn}>
-        <Skeleton width={64} height={18} />
+        <Skeleton width={space.huge} height={space.md + space.xxs / 2} />
       </View>
     </View>
   );
@@ -152,7 +153,7 @@ export type QuoteCardUnavailableProps = {
 export function QuoteCardUnavailable({ logo, title, reason }: QuoteCardUnavailableProps) {
   return (
     <View
-      style={[styles.card, styles.unavailable]}
+      style={[styles.row, styles.unavailable]}
       accessible
       accessibilityLabel={`${title}, unavailable. ${reason}`}
     >
@@ -170,40 +171,30 @@ export function QuoteCardUnavailable({ logo, title, reason }: QuoteCardUnavailab
 }
 
 const styles = StyleSheet.create({
-  card: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.sm,
     paddingHorizontal: space.sm,
-    paddingVertical: space.sm,
+    paddingVertical: space.sm - space.xxs,
     borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: 'transparent',
-    minHeight: 76,
+    borderCurve: 'continuous',
+    minHeight: controlHeight.lg + space.xs,
   },
   logo: {
-    alignSelf: 'flex-start',
-    paddingTop: 2,
+    alignSelf: 'center',
   },
   body: {
     flex: 1,
-    gap: 3,
+    gap: space.xxs / 2,
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: space.xs,
+    alignItems: 'center',
+    gap: space.xs - space.xxs / 2,
   },
   shrink: {
     flexShrink: 1,
-  },
-  noteRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    columnGap: space.sm,
-    rowGap: space.xxs,
-    marginTop: 2,
   },
   note: {
     flexDirection: 'row',
@@ -212,11 +203,9 @@ const styles = StyleSheet.create({
   },
   priceColumn: {
     alignItems: 'flex-end',
-    alignSelf: 'flex-start',
-    gap: space.xxs,
-    paddingTop: 2,
+    gap: space.xxs / 2,
   },
   unavailable: {
-    opacity: 0.55,
+    opacity: 0.6,
   },
 });

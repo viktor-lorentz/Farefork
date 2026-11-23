@@ -81,12 +81,20 @@ export const TagIcon = symbol('tag', 'sell', 'tag.fill');
 export const TimerIcon = symbol('timer', 'timer');
 export const UserIcon = symbol('person', 'person', 'person.fill');
 export const UsersIcon = symbol('person.2', 'group', 'person.2.fill');
-export const WarningCircleIcon = symbol('exclamationmark.circle', 'error', 'exclamationmark.circle.fill');
+export const WarningCircleIcon = symbol(
+  'exclamationmark.circle',
+  'error',
+  'exclamationmark.circle.fill',
+);
 export const EnvelopeIcon = symbol('envelope', 'mail', 'envelope.fill');
 export const PiggyBankIcon = symbol('banknote', 'savings', 'banknote.fill');
 export const SignOutIcon = symbol('rectangle.portrait.and.arrow.right', 'logout');
 export const TrashIcon = symbol('trash', 'delete', 'trash.fill');
-export const UserCircleIcon = symbol('person.crop.circle', 'account_circle', 'person.crop.circle.fill');
+export const UserCircleIcon = symbol(
+  'person.crop.circle',
+  'account_circle',
+  'person.crop.circle.fill',
+);
 export const XIcon = symbol('xmark', 'close');
 export const XCircleIcon = symbol('xmark.circle.fill', 'cancel');
 export const LocationFillIcon = symbol('location.fill', 'near_me');

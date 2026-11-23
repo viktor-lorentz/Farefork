@@ -27,6 +27,7 @@ export const controlHeight = {
 } as const;
 
 export const iconSize = {
+  xs: 12,
   sm: 16,
   md: 20,
   lg: 24,
@@ -47,6 +48,10 @@ export const layout = {
   contentMaxWidth: 720,
   tabBarHeight: 56,
   topBarHeight: 64,
+  sheetPeek: 380,
+  sheetResultsRatio: 0.8,
+  sheetMaxRatio: 0.9,
+  mapSheetOverlap: 40,
 } as const;
 
 export type SpaceToken = keyof typeof space;

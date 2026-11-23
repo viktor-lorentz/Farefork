@@ -4,7 +4,16 @@ import type { ColorTokens } from '../tokens/colors';
 import { typeScale, type TypeVariant } from '../tokens/typography';
 
 export type TextTone =
-  'primary' | 'secondary' | 'tertiary' | 'disabled' | 'onPrimary' | 'onAccent' | 'danger';
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'disabled'
+  | 'onPrimary'
+  | 'onAccent'
+  | 'danger'
+  | 'accent'
+  | 'savings'
+  | 'surge';
 
 const toneColor: Record<TextTone, keyof ColorTokens> = {
   primary: 'textPrimary',
@@ -14,6 +23,9 @@ const toneColor: Record<TextTone, keyof ColorTokens> = {
   onPrimary: 'onPrimary',
   onAccent: 'onAccent',
   danger: 'danger',
+  accent: 'accentText',
+  savings: 'savingsText',
+  surge: 'surgeText',
 };
 
 export type TextProps = NativeTextProps & {

@@ -54,3 +54,21 @@ export function providerSpreadCents(quotes: readonly RideQuote[]): number {
   const prices = [...cheapestByProvider.values()];
   return Math.max(...prices) - Math.min(...prices);
 }
+
+export type RivalSavings = { providerId: RideQuote['providerId']; cents: number };
+
+export function savingsVersusRival(
+  winner: RideQuote,
+  quotes: readonly RideQuote[],
+): RivalSavings | null {
+  const rival = sortQuotes(
+    quotes.filter(
+      (quote) => quote.rideClass === winner.rideClass && quote.providerId !== winner.providerId,
+    ),
+    'price',
+  )[0];
+  if (!rival || rival.priceCents <= winner.priceCents) {
+    return null;
+  }
+  return { providerId: rival.providerId, cents: rival.priceCents - winner.priceCents };
+}

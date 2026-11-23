@@ -1,7 +1,7 @@
 import { decodePolyline, type LatLng } from '@repo/shared';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton, Sheet, type SheetHandle, SheetScrollView } from '@/design/components';
 import { CrosshairIcon } from '@/design/icons';
@@ -15,20 +15,23 @@ import { useRestaurants } from '@/features/food/queries';
 import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
 import { useVertical } from '@/features/home/useVertical';
 import { locateDevice } from '@/features/rides/location';
-import { RideBookingBar, RideResults } from '@/features/rides/RideResults';
+import { BOOKING_BAR_SPACE, RideBookingBar } from '@/features/rides/RideBookingBar';
+import { RideResults } from '@/features/rides/RideResults';
 import { useRideQuotes } from '@/features/rides/useRideQuotes';
 import { haptics } from '@/lib/haptics';
 import { useDeviceLocation } from '@/stores/location';
 import { useTrip } from '@/stores/trip';
 
-const SHEET_PEEK = 380;
-const SHEET_RESULTS = 0.68;
-const BOOKING_BAR_HEIGHT = 81;
+function useTripQuotes() {
+  const pickup = useTrip((state) => state.pickup);
+  const dropoff = useTrip((state) => state.dropoff);
+  return useRideQuotes(pickup, dropoff);
+}
 
 function useMapTrip(): MapTrip | null {
   const pickup = useTrip((state) => state.pickup);
   const dropoff = useTrip((state) => state.dropoff);
-  const { data } = useRideQuotes(pickup, dropoff);
+  const { data } = useTripQuotes();
   const polyline = data?.route.polyline;
   return useMemo(() => {
     if (!pickup || !dropoff) {
@@ -47,6 +50,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const trip = useMapTrip();
+  const quotes = useTripQuotes();
   const router = useRouter();
   const [center, setCenter] = useState<LatLng>(
     () => useDeviceLocation.getState().lastKnown ?? defaultCenter,
@@ -95,7 +99,17 @@ export default function HomeScreen() {
   const { height } = useWindowDimensions();
   const sheetRef = useRef<SheetHandle>(null);
   const hasTrip = trip !== null;
-  const resultsHeight = Math.max(SHEET_PEEK, Math.round(height * SHEET_RESULTS));
+  const resultsHeight = Math.max(layout.sheetPeek, Math.round(height * layout.sheetResultsRatio));
+  const refresh = trip ? (
+    <RefreshControl
+      refreshing={quotes.isRefetching}
+      tintColor={colors.textTertiary}
+      onRefresh={() => {
+        haptics.light();
+        void quotes.refetch();
+      }}
+    />
+  ) : undefined;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -127,10 +141,12 @@ export default function HomeScreen() {
         <View
           style={[
             styles.desktopPanel,
-            { borderLeftColor: colors.border, backgroundColor: colors.background },
+            { borderLeftColor: colors.border, backgroundColor: colors.surface },
           ]}
         >
-          <ScrollView contentContainerStyle={styles.desktopPanelContent}>{panel}</ScrollView>
+          <ScrollView contentContainerStyle={styles.desktopPanelContent} refreshControl={refresh}>
+            {panel}
+          </ScrollView>
           {trip ? <RideBookingBar /> : null}
         </View>
       </View>
@@ -145,7 +161,10 @@ export default function HomeScreen() {
         trip={trip}
         places={places}
         onPlacePress={openPlace}
-        insets={{ top: insets.top, bottom: (hasTrip ? resultsHeight : SHEET_PEEK) - 40 }}
+        insets={{
+          top: insets.top,
+          bottom: (hasTrip ? resultsHeight : layout.sheetPeek) - layout.mapSheetOverlap,
+        }}
         showsUserLocation
       />
       {trip ? null : (
@@ -153,14 +172,15 @@ export default function HomeScreen() {
       )}
       <Sheet
         ref={sheetRef}
-        snapPoints={[SHEET_PEEK, resultsHeight, '88%']}
+        snapPoints={[layout.sheetPeek, resultsHeight, `${layout.sheetMaxRatio * 100}%`]}
         topInset={insets.top}
         footer={trip ? <RideBookingBar /> : undefined}
       >
         <SheetScrollView
+          refreshControl={refresh}
           contentContainerStyle={[
             styles.sheetContent,
-            trip ? { paddingBottom: BOOKING_BAR_HEIGHT + space.lg } : null,
+            trip ? { paddingBottom: BOOKING_BAR_SPACE + insets.bottom + space.lg } : null,
           ]}
         >
           {panel}

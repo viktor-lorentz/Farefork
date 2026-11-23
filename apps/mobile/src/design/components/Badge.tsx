@@ -2,10 +2,11 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import type { Icon } from '../icons';
 import { useTheme } from '../theme';
 import type { ColorTokens } from '../tokens/colors';
-import { radius, space } from '../tokens/spacing';
+import { iconSize, radius, space } from '../tokens/spacing';
 import { Text } from './Text';
 
-export type BadgeTone = 'accent' | 'neutral' | 'inverse' | 'outline' | 'danger';
+export type BadgeTone =
+  'accent' | 'neutral' | 'inverse' | 'outline' | 'danger' | 'surge' | 'savings';
 
 type ToneSpec = {
   background: keyof ColorTokens | null;
@@ -13,12 +14,16 @@ type ToneSpec = {
   border: keyof ColorTokens | null;
 };
 
+const surge: ToneSpec = { background: 'surgeSoft', foreground: 'surgeText', border: null };
+
 const tones: Record<BadgeTone, ToneSpec> = {
   accent: { background: 'accent', foreground: 'onAccent', border: null },
   neutral: { background: 'fill', foreground: 'textPrimary', border: null },
   inverse: { background: 'primary', foreground: 'onPrimary', border: null },
   outline: { background: null, foreground: 'textPrimary', border: 'borderStrong' },
-  danger: { background: null, foreground: 'danger', border: null },
+  danger: surge,
+  surge,
+  savings: { background: 'savingsSoft', foreground: 'savingsText', border: null },
 };
 
 export type BadgeProps = {
@@ -39,13 +44,15 @@ export function Badge({ label, tone = 'neutral', icon: Glyph, style }: BadgeProp
       style={[
         styles.base,
         spec.background !== null && { backgroundColor: colors[spec.background] },
-        spec.border !== null && { borderWidth: 1, borderColor: colors[spec.border] },
-        tone === 'danger' && styles.bare,
+        spec.border !== null && {
+          borderWidth: StyleSheet.hairlineWidth,
+          borderColor: colors[spec.border],
+        },
         style,
       ]}
     >
-      {Glyph ? <Glyph size={12} color={foreground} weight="fill" /> : null}
-      <Text variant="captionStrong" style={[styles.label, { color: foreground }]} numberOfLines={1}>
+      {Glyph ? <Glyph size={iconSize.xs} color={foreground} weight="fill" /> : null}
+      <Text variant="micro" style={{ color: foreground }} numberOfLines={1}>
         {label}
       </Text>
     </View>
@@ -58,15 +65,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'flex-start',
     gap: space.xxs,
-    minHeight: 22,
-    paddingHorizontal: 6,
+    paddingHorizontal: space.xs - space.xxs / 2,
+    paddingVertical: space.xxs,
     borderRadius: radius.sm,
-  },
-  bare: {
-    paddingHorizontal: 0,
-  },
-  label: {
-    fontSize: 12,
-    lineHeight: 16,
+    borderCurve: 'continuous',
   },
 });

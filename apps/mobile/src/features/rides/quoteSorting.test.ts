@@ -6,6 +6,7 @@ import {
   fastestQuoteId,
   filterQuotes,
   providerSpreadCents,
+  savingsVersusRival,
   sortQuotes,
 } from './quoteSorting';
 
@@ -86,5 +87,11 @@ describe('quote helpers', () => {
   it('measures the spread between the cheapest option on each app', () => {
     expect(providerSpreadCents(filterQuotes(quotes, 'economy'))).toBe(150);
     expect(providerSpreadCents([quotes[0]!])).toBe(0);
+  });
+
+  it('compares the winner with the cheapest rival app in the same class', () => {
+    expect(savingsVersusRival(quotes[1]!, quotes)).toEqual({ providerId: 'uber', cents: 150 });
+    expect(savingsVersusRival(quotes[0]!, quotes)).toBeNull();
+    expect(savingsVersusRival(quotes[3]!, quotes)).toBeNull();
   });
 });

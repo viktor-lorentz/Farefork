@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { IconButton, Text } from '@/design/components';
 import { XIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { radius, space } from '@/design/tokens';
+import { controlHeight, radius, space } from '@/design/tokens';
 
 export type TripSummaryProps = {
   pickup: Place;
@@ -55,12 +55,18 @@ export function TripSummary({ pickup, dropoff, onEdit, onClear, trailing }: Trip
         <Stop kind="dropoff" place={dropoff} />
       </Pressable>
       {trailing}
-      <IconButton icon={XIcon} accessibilityLabel="Clear trip" onPress={onClear} size={44} />
+      <IconButton
+        icon={XIcon}
+        accessibilityLabel="Clear trip"
+        onPress={onClear}
+        size={controlHeight.md}
+      />
     </View>
   );
 }
 
-const MARKER_COLUMN = 20;
+const MARKER_COLUMN = space.md + space.xxs;
+const MARKER = space.sm - space.xxs / 2;
 
 const styles = StyleSheet.create({
   container: {
@@ -70,7 +76,8 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    borderCurve: 'continuous',
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
   },
@@ -87,24 +94,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   pickupDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 3,
+    width: MARKER,
+    height: MARKER,
+    borderRadius: radius.round,
+    borderWidth: space.xxs - 1,
   },
   dropoffDot: {
-    width: 11,
-    height: 11,
-    borderRadius: 2,
+    width: MARKER,
+    height: MARKER,
+    borderRadius: space.xxs / 2,
   },
   connector: {
     width: MARKER_COLUMN,
     alignItems: 'center',
-    paddingVertical: 2,
+    paddingVertical: space.xxs / 2,
   },
   connectorLine: {
-    width: 2,
-    height: 10,
-    borderRadius: 1,
+    width: StyleSheet.hairlineWidth * 2,
+    height: space.sm - space.xxs / 2,
   },
 });

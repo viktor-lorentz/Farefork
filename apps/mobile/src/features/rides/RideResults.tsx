@@ -3,18 +3,18 @@ import {
   formatMinutes,
   formatUsd,
   providerName,
-  rideClasses,
   rideClassLabels,
   type RideQuote,
-  type RideQuotesResponse,
 } from '@repo/shared';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import {
   Button,
-  Chip,
+  Divider,
   EmptyState,
   IconButton,
+  QUOTE_LOGO_SIZE,
   QuoteCard,
   QuoteCardSkeleton,
   QuoteCardUnavailable,
@@ -25,7 +25,6 @@ import {
 } from '@/design/components';
 import {
   ArrowsClockwiseIcon,
-  ArrowSquareOutIcon,
   BellRingingIcon,
   CarIcon,
   InfoIcon,
@@ -34,28 +33,32 @@ import {
   WarningCircleIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { layout, space } from '@/design/tokens';
+import { controlHeight, iconSize, space } from '@/design/tokens';
+import { duration } from '@/design/tokens/motion';
 import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
+import { FavoriteButton } from '@/features/account/FavoriteButton';
+import { routeFavorite } from '@/features/account/favorites';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
+import { CarLoader } from '@/features/scene/CarLoader';
 import { isCurrentLocation, useTrip } from '@/stores/trip';
-import { bookingLabel, canBookHere, openBooking } from './openBooking';
+import { ClassChips } from './ClassChips';
 import {
   arrivalMinutes,
-  cheapestQuoteId,
   classesPresent,
-  filterQuotes,
   providerSpreadCents,
-  sortQuotes,
+  savingsVersusRival,
+  type ClassFilter,
   type QuoteSort,
 } from './quoteSorting';
 import { TripSummary } from './TripSummary';
-import { FavoriteButton } from '@/features/account/FavoriteButton';
-import { routeFavorite } from '@/features/account/favorites';
-import { rememberHandoff } from '@/features/account/queries';
-import { rideHandoff } from '@/features/account/savings';
+import { UpdatedAgo } from './UpdatedAgo';
 import { useResultsView } from './useResultsView';
 import { useRideQuotes } from './useRideQuotes';
+import { useVisibleQuotes } from './useVisibleQuotes';
+import { WinnerCard } from './WinnerCard';
+
+const CASCADE_STEP_MS = 40;
 
 const sortOptions: readonly SegmentOption<QuoteSort>[] = [
   { value: 'price', label: 'Cheapest' },
@@ -85,18 +88,45 @@ function quoteNote(quote: RideQuote): QuoteCardNote | undefined {
   return undefined;
 }
 
+function surgeLabel(quote: RideQuote): string | undefined {
+  return quote.surgeMultiplier > 1 ? `Busy ${quote.surgeMultiplier.toFixed(1)}×` : undefined;
+}
+
+function quoteDetail(quote: RideQuote, generatedAt: Date): string {
+  return `${quote.pickupEtaMinutes} min away · arrive ${clockTime(generatedAt, arrivalMinutes(quote))}`;
+}
+
+function winnerChip(
+  winner: RideQuote,
+  bestId: string | null,
+  sort: QuoteSort,
+  filter: ClassFilter,
+) {
+  if (sort === 'time') {
+    return 'Fastest';
+  }
+  if (winner.id === bestId || filter === 'all') {
+    return 'Best price';
+  }
+  return `Cheapest ${rideClassLabels[filter]}`;
+}
+
 function errorCopy(error: Error): { title: string; body: string; retry: boolean } {
   if (error instanceof ApiError && error.status === 422) {
     return { title: 'Can’t price this trip', body: error.message, retry: false };
   }
   if (error instanceof ApiError && error.status === null) {
     return {
-      title: 'Can’t reach the server',
-      body: 'Check your connection, and that the API is running on your computer.',
+      title: 'You’re offline',
+      body: 'Farefork can’t reach the price server. Check your connection and try again.',
       retry: true,
     };
   }
-  return { title: 'Prices didn’t load', body: 'Something went wrong. Try again.', retry: true };
+  return {
+    title: 'Prices didn’t load',
+    body: 'Something went wrong on our end. Try again.',
+    retry: true,
+  };
 }
 
 function QuoteError({ error, onRetry }: { error: Error; onRetry: () => void }) {
@@ -111,72 +141,13 @@ function QuoteError({ error, onRetry }: { error: Error; onRetry: () => void }) {
   );
 }
 
-export type VisibleQuotes = {
-  data: RideQuotesResponse | undefined;
-  visible: RideQuote[];
-  selected: RideQuote | null;
-  bestId: string | null;
-};
-
-export function useVisibleQuotes(): VisibleQuotes {
-  const pickup = useTrip((state) => state.pickup);
-  const dropoff = useTrip((state) => state.dropoff);
-  const { data } = useRideQuotes(pickup, dropoff);
-  const sort = useResultsView((state) => state.sort);
-  const filter = useResultsView((state) => state.filter);
-  const selectedId = useResultsView((state) => state.selectedId);
-  const all = data?.quotes ?? [];
-  const visible = sortQuotes(filterQuotes(all, filter), sort);
-  const bestId = cheapestQuoteId(all);
-  const selected =
-    visible.find((quote) => quote.id === selectedId) ??
-    visible.find((quote) => quote.id === cheapestQuoteId(visible)) ??
-    null;
-  return { data, visible, selected, bestId };
-}
-
-export function RideBookingBar() {
-  const { selected, data } = useVisibleQuotes();
-  const pickup = useTrip((state) => state.pickup);
-  const dropoff = useTrip((state) => state.dropoff);
-  const { colors } = useTheme();
-  if (!selected) {
-    return null;
-  }
-  if (!canBookHere(selected)) {
-    return (
-      <View style={[styles.bookingBar, { borderTopColor: colors.border }]}>
-        <Button
-          label={`Book ${providerName(selected.bookVia)} in its phone app`}
-          fullWidth
-          disabled
-        />
-        <Text variant="caption" tone="secondary" style={styles.appOnly}>
-          {providerName(selected.bookVia)} doesn’t take ride requests on the web. Open Farefork on
-          your phone to book with your route filled in.
-        </Text>
-      </View>
-    );
-  }
+function LoadingQuotes() {
   return (
-    <View style={[styles.bookingBar, { borderTopColor: colors.border }]}>
-      <Button
-        label={`${bookingLabel(selected)} · ${formatUsd(selected.priceCents)} before tip`}
-        trailingIcon={ArrowSquareOutIcon}
-        fullWidth
-        haptic={false}
-        accessibilityHint={`Opens ${providerName(selected.bookVia)} with your pickup and destination filled in`}
-        onPress={() => {
-          void openBooking(selected).then((opened) => {
-            if (opened && data && pickup && dropoff) {
-              rememberHandoff(
-                rideHandoff(selected, data.quotes, { from: pickup.name, to: dropoff.name }),
-                providerName(selected.bookVia),
-              );
-            }
-          });
-        }}
-      />
+    <View accessibilityLabel="Comparing prices" accessibilityLiveRegion="polite">
+      <CarLoader label="Comparing prices across apps" />
+      <QuoteCardSkeleton />
+      <QuoteCardSkeleton />
+      <QuoteCardSkeleton />
     </View>
   );
 }
@@ -206,6 +177,11 @@ export function RideResults() {
     data && data.quotes.length > 0
       ? Math.min(...data.quotes.map((quote) => quote.priceCents))
       : null;
+  const [winner, ...others] = visible;
+  const choose = (quote: RideQuote) => {
+    haptics.selection();
+    select(quote.id);
+  };
 
   return (
     <View style={styles.container}>
@@ -225,15 +201,18 @@ export function RideResults() {
 
       {data ? (
         <View style={styles.routeRow}>
-          <Text variant="caption" tone="secondary" tabular>
-            {formatMiles(data.route.distanceMeters)} ·{' '}
-            {formatMinutes(data.route.durationSeconds / 60)} drive
-            {data.route.source === 'estimate' ? ' (estimated)' : ''}
-          </Text>
+          <View style={styles.routeText}>
+            <Text variant="caption" tone="secondary" tabular numberOfLines={1}>
+              {formatMiles(data.route.distanceMeters)} ·{' '}
+              {formatMinutes(data.route.durationSeconds / 60)} drive
+              {data.route.source === 'estimate' ? ' (estimated)' : ''} · prices before tip
+            </Text>
+            <UpdatedAgo since={generatedAt} />
+          </View>
           <IconButton
             icon={ArrowsClockwiseIcon}
             accessibilityLabel="Refresh prices"
-            size={36}
+            size={controlHeight.md}
             disabled={query.isFetching}
             onPress={() => {
               haptics.light();
@@ -251,38 +230,11 @@ export function RideResults() {
       />
 
       {present.size > 1 ? (
-        <View style={styles.chips} accessibilityRole="radiogroup">
-          <Chip
-            label="All"
-            role="radio"
-            selected={filter === 'all'}
-            onPress={() => {
-              setFilter('all');
-            }}
-          />
-          {rideClasses
-            .filter((rideClass) => present.has(rideClass))
-            .map((rideClass) => (
-              <Chip
-                key={rideClass}
-                label={rideClassLabels[rideClass]}
-                role="radio"
-                selected={filter === rideClass}
-                onPress={() => {
-                  setFilter(rideClass);
-                }}
-              />
-            ))}
-        </View>
+        <ClassChips present={present} value={filter} onChange={setFilter} />
       ) : null}
 
       {query.isPending ? (
-        <View accessibilityLabel="Loading prices" accessibilityLiveRegion="polite">
-          <QuoteCardSkeleton />
-          <QuoteCardSkeleton />
-          <QuoteCardSkeleton />
-          <QuoteCardSkeleton />
-        </View>
+        <LoadingQuotes />
       ) : query.isError && !data ? (
         <QuoteError
           error={query.error}
@@ -292,6 +244,76 @@ export function RideResults() {
         />
       ) : data ? (
         <>
+          {winner !== undefined ? (
+            <WinnerCard
+              key={winner.id}
+              quote={winner}
+              chip={winnerChip(winner, bestId, sort, filter)}
+              detail={quoteDetail(winner, generatedAt)}
+              savings={savingsVersusRival(winner, data.quotes)}
+              surgeLabel={surgeLabel(winner)}
+              note={quoteNote(winner)}
+              selected={winner.id === selected?.id}
+              onPress={() => {
+                choose(winner);
+              }}
+            />
+          ) : (
+            <EmptyState
+              icon={CarIcon}
+              title="No rides in this class"
+              body="Nothing’s available in this class right now. Try another ride type."
+              action={{
+                label: 'Show all rides',
+                onPress: () => {
+                  setFilter('all');
+                },
+              }}
+            />
+          )}
+          {others.length > 0 ? (
+            <View accessibilityLabel={`${others.length} more ride options`}>
+              {others.map((quote, index) => (
+                <Animated.View
+                  key={quote.id}
+                  entering={FadeInDown.duration(duration.base).delay(index * CASCADE_STEP_MS)}
+                >
+                  {index > 0 ? <Divider inset={QUOTE_LOGO_SIZE + space.sm * 2} /> : null}
+                  <QuoteCard
+                    logo={
+                      <ProviderLogo
+                        providerId={quote.providerId}
+                        size={QUOTE_LOGO_SIZE}
+                        decorative
+                      />
+                    }
+                    title={quote.productName}
+                    meta={`${quote.seats} seats`}
+                    detail={quoteDetail(quote, generatedAt)}
+                    priceCents={quote.priceCents}
+                    originalPriceCents={quote.standardPriceCents}
+                    surgeLabel={surgeLabel(quote)}
+                    note={quoteNote(quote)}
+                    selected={quote.id === selected?.id}
+                    accessibilityHint={`Select ${providerName(quote.providerId)} ${quote.productName}`}
+                    onPress={() => {
+                      choose(quote);
+                    }}
+                  />
+                </Animated.View>
+              ))}
+            </View>
+          ) : null}
+          {data.unavailable.map((entry) => (
+            <QuoteCardUnavailable
+              key={entry.providerId}
+              logo={
+                <ProviderLogo providerId={entry.providerId} size={QUOTE_LOGO_SIZE} decorative />
+              }
+              title={providerName(entry.providerId)}
+              reason={entry.reason}
+            />
+          ))}
           {spread > 0 ? (
             <Text variant="caption" tone="secondary">
               Economy rides differ by up to{' '}
@@ -301,59 +323,12 @@ export function RideResults() {
               between apps for this trip.
             </Text>
           ) : null}
-          {visible.length > 0 ? (
-            <View accessibilityLabel={`${visible.length} ride options`}>
-              {visible.map((quote) => (
-                <QuoteCard
-                  key={quote.id}
-                  logo={<ProviderLogo providerId={quote.providerId} size={40} decorative />}
-                  title={quote.productName}
-                  meta={`${quote.seats} seats`}
-                  detail={`${quote.pickupEtaMinutes} min away · arrive ${clockTime(generatedAt, arrivalMinutes(quote))}`}
-                  priceCents={quote.priceCents}
-                  originalPriceCents={quote.standardPriceCents}
-                  bestPrice={quote.id === bestId}
-                  surgeLabel={
-                    quote.surgeMultiplier > 1
-                      ? `Busy, ${quote.surgeMultiplier.toFixed(1)}×`
-                      : undefined
-                  }
-                  note={quoteNote(quote)}
-                  selected={quote.id === selected?.id}
-                  accessibilityHint={`Select ${providerName(quote.providerId)} ${quote.productName}`}
-                  onPress={() => {
-                    haptics.selection();
-                    select(quote.id);
-                  }}
-                />
-              ))}
-            </View>
-          ) : (
-            <EmptyState
-              icon={CarIcon}
-              title="No rides in this class"
-              body="Try another ride type."
-              action={{
-                label: 'Show all',
-                onPress: () => {
-                  setFilter('all');
-                },
-              }}
-            />
-          )}
-          {data.unavailable.map((entry) => (
-            <QuoteCardUnavailable
-              key={entry.providerId}
-              logo={<ProviderLogo providerId={entry.providerId} size={40} decorative />}
-              title={providerName(entry.providerId)}
-              reason={entry.reason}
-            />
-          ))}
           {cheapestCents !== null ? (
             <Button
               label="Alert me when it drops"
               variant="secondary"
               leadingIcon={BellRingingIcon}
+              fullWidth
               onPress={() => {
                 router.push({
                   pathname: '/alerts/new',
@@ -363,10 +338,10 @@ export function RideResults() {
             />
           ) : null}
           <View style={styles.footnote}>
-            <InfoIcon size={16} color={colors.textSecondary} weight="bold" />
-            <Text variant="caption" tone="secondary" style={styles.footnoteText}>
-              Simulated prices before tip, updated {clockTime(generatedAt, 0)}. The app you book in
-              sets the final price, and opens with your pickup and destination filled in.
+            <InfoIcon size={iconSize.sm} color={colors.textTertiary} weight="bold" />
+            <Text variant="caption" tone="tertiary" style={styles.footnoteText}>
+              Simulated prices before tip. The app you book in sets the final price, and opens with
+              your pickup and destination filled in.
             </Text>
           </View>
         </>
@@ -382,14 +357,12 @@ const styles = StyleSheet.create({
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: -space.xs,
-    marginBottom: -space.xs,
+    gap: space.sm,
+    marginVertical: -space.xs,
   },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: space.xs,
+  routeText: {
+    flex: 1,
+    gap: space.xxs / 2,
   },
   footnote: {
     flexDirection: 'row',
@@ -399,15 +372,5 @@ const styles = StyleSheet.create({
   },
   footnoteText: {
     flex: 1,
-  },
-  appOnly: {
-    textAlign: 'center',
-    marginTop: space.xs,
-  },
-  bookingBar: {
-    paddingHorizontal: layout.gutter,
-    paddingTop: space.sm,
-    paddingBottom: space.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
 });

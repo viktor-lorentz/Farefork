@@ -4,9 +4,9 @@ import BottomSheet, {
   type BottomSheetProps,
 } from '@gorhom/bottom-sheet';
 import { useCallback, type ReactNode, type Ref } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
-import { radius } from '../tokens/spacing';
+import { radius, space } from '../tokens/spacing';
 
 export {
   BottomSheetFlatList as SheetFlatList,
@@ -41,12 +41,8 @@ export function Sheet({
 }: SheetProps) {
   const { colors, elevation } = useTheme();
   const renderFooter = useCallback(
-    (props: BottomSheetFooterProps) => (
-      <BottomSheetFooter {...props}>
-        <View style={{ backgroundColor: colors.surface }}>{footer}</View>
-      </BottomSheetFooter>
-    ),
-    [footer, colors.surface],
+    (props: BottomSheetFooterProps) => <BottomSheetFooter {...props}>{footer}</BottomSheetFooter>,
+    [footer],
   );
   return (
     <BottomSheet
@@ -80,12 +76,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl,
   },
   handle: {
-    paddingTop: 10,
-    paddingBottom: 6,
+    paddingTop: space.sm,
+    paddingBottom: space.xxs,
   },
   indicator: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
+    width: space.xl + space.xxs,
+    height: space.xxs,
+    borderRadius: radius.round,
   },
 });
