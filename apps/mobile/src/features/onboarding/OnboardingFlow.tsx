@@ -198,7 +198,7 @@ export function OnboardingFlow() {
     <View style={[styles.root, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <View style={styles.top}>
         <View style={styles.topRow}>
-          <Wordmark size={20} />
+          <Wordmark />
           {!isLast ? (
             <Button
               label="Skip"

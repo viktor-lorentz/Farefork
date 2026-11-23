@@ -1,14 +1,14 @@
 import { decodePolyline, type LatLng } from '@repo/shared';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { IconButton, Sheet, type SheetHandle, SheetScrollView } from '@/design/components';
+import { IconButton, Sheet, SheetScrollView } from '@/design/components';
 import { CrosshairIcon } from '@/design/icons';
 import { useIsDesktopLayout } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { layout, space } from '@/design/tokens';
-import { HomePanel } from '@/features/home/HomePanel';
+import { HomeIdle } from '@/features/home/HomeIdle';
 import { MapCanvas } from '@/features/map/MapCanvas';
 import { defaultCenter, defaultZoom, type MapTrip, placesZoom } from '@/features/map/types';
 import { useRestaurants } from '@/features/food/queries';
@@ -97,8 +97,6 @@ export default function HomeScreen() {
     />
   );
   const { height } = useWindowDimensions();
-  const sheetRef = useRef<SheetHandle>(null);
-  const hasTrip = trip !== null;
   const resultsHeight = Math.max(layout.sheetPeek, Math.round(height * layout.sheetResultsRatio));
   const refresh = trip ? (
     <RefreshControl
@@ -110,17 +108,6 @@ export default function HomeScreen() {
       }}
     />
   ) : undefined;
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      sheetRef.current?.snapToIndex(hasTrip ? 1 : 0);
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, [hasTrip]);
-
-  const panel = trip ? <RideResults /> : <HomePanel />;
 
   if (desktop) {
     return (
@@ -144,13 +131,26 @@ export default function HomeScreen() {
             { borderLeftColor: colors.border, backgroundColor: colors.surface },
           ]}
         >
-          <ScrollView contentContainerStyle={styles.desktopPanelContent} refreshControl={refresh}>
-            {panel}
-          </ScrollView>
-          {trip ? <RideBookingBar /> : null}
+          {trip ? (
+            <>
+              <ScrollView
+                contentContainerStyle={styles.desktopPanelContent}
+                refreshControl={refresh}
+              >
+                <RideResults />
+              </ScrollView>
+              <RideBookingBar />
+            </>
+          ) : (
+            <HomeIdle variant="panel" />
+          )}
         </View>
       </View>
     );
+  }
+
+  if (!trip) {
+    return <HomeIdle />;
   }
 
   return (
@@ -163,27 +163,24 @@ export default function HomeScreen() {
         onPlacePress={openPlace}
         insets={{
           top: insets.top,
-          bottom: (hasTrip ? resultsHeight : layout.sheetPeek) - layout.mapSheetOverlap,
+          bottom: resultsHeight - layout.mapSheetOverlap,
         }}
         showsUserLocation
       />
-      {trip ? null : (
-        <View style={[styles.mapControls, { top: insets.top + space.sm }]}>{locateButton}</View>
-      )}
       <Sheet
-        ref={sheetRef}
+        index={1}
         snapPoints={[layout.sheetPeek, resultsHeight, `${layout.sheetMaxRatio * 100}%`]}
         topInset={insets.top}
-        footer={trip ? <RideBookingBar /> : undefined}
+        footer={<RideBookingBar />}
       >
         <SheetScrollView
           refreshControl={refresh}
           contentContainerStyle={[
             styles.sheetContent,
-            trip ? { paddingBottom: BOOKING_BAR_SPACE + insets.bottom + space.lg } : null,
+            { paddingBottom: BOOKING_BAR_SPACE + insets.bottom + space.lg },
           ]}
         >
-          {panel}
+          <RideResults />
         </SheetScrollView>
       </Sheet>
     </View>

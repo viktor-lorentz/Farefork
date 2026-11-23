@@ -2,27 +2,35 @@ import { APP_NAME } from '@repo/shared/brand';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '@/design/components';
 import { useTheme } from '@/design/theme';
+import { space, typeScale } from '@/design/tokens';
 
-export function Wordmark({ size = 22 }: { size?: number }) {
+type WordmarkVariant = 'brand' | 'brandM' | 'brandS';
+
+export type WordmarkProps = {
+  variant?: WordmarkVariant;
+  color?: string;
+};
+
+export function Wordmark({ variant = 'brandS', color }: WordmarkProps) {
   const { colors } = useTheme();
-  const dot = Math.round(size * 0.28);
+  const size = typeScale[variant].fontSize;
+  const dot = Math.round(size * 0.24);
   return (
     <View style={styles.row} accessible accessibilityRole="header" accessibilityLabel={APP_NAME}>
-      <Text
-        variant="titleM"
-        style={{ fontSize: size, lineHeight: size * 1.15, letterSpacing: size * -0.04 }}
-      >
+      <Text variant={variant} style={color !== undefined ? { color } : null}>
         {APP_NAME.toLowerCase()}
       </Text>
       <View
-        style={{
-          width: dot,
-          height: dot,
-          borderRadius: dot / 2,
-          backgroundColor: colors.accent,
-          marginLeft: 2,
-          marginBottom: size * 0.16,
-        }}
+        style={[
+          styles.dot,
+          {
+            width: dot,
+            height: dot,
+            borderRadius: dot / 2,
+            backgroundColor: colors.accent,
+            marginBottom: Math.round(size * 0.22),
+          },
+        ]}
       />
     </View>
   );
@@ -32,5 +40,8 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'flex-end',
+  },
+  dot: {
+    marginLeft: space.xxs / 2,
   },
 });

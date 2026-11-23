@@ -4,7 +4,6 @@ import { StyleSheet, View } from 'react-native';
 import {
   ListRow,
   ListRowIcon,
-  SearchButton,
   SectionHeader,
   SegmentedControl,
   Text,
@@ -16,7 +15,6 @@ import {
   CarIcon,
   ForkKnifeIcon,
   HouseIcon,
-  MagnifyingGlassIcon,
   MapPinIcon,
   PlusIcon,
   SealCheckIcon,
@@ -24,7 +22,7 @@ import {
   StorefrontIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { space } from '@/design/tokens';
+import { iconSize, space } from '@/design/tokens';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { usePreferences } from '@/stores/preferences';
 import { useTrip } from '@/stores/trip';
@@ -54,13 +52,6 @@ function RidesContent() {
   const recents = useTrip((state) => state.recents).slice(0, 3);
   return (
     <>
-      <SearchButton
-        label="Where to?"
-        accessibilityHint="Search for a destination to compare ride prices"
-        onPress={() => {
-          router.push('/rides/search');
-        }}
-      />
       <View style={styles.compareRow}>
         <Text variant="caption" tone="secondary">
           Comparing
@@ -93,7 +84,7 @@ function RidesContent() {
           title="Add home"
           subtitle="One tap to price a ride home"
           leading={<ListRowIcon icon={HouseIcon} />}
-          trailing={<PlusIcon size={20} weight="bold" color={colors.textPrimary} />}
+          trailing={<PlusIcon size={iconSize.md} weight="bold" color={colors.textPrimary} />}
           onPress={() => {
             router.push('/rides/search');
           }}
@@ -104,7 +95,7 @@ function RidesContent() {
           title="Add work"
           subtitle="Save your commute"
           leading={<ListRowIcon icon={BriefcaseIcon} />}
-          trailing={<PlusIcon size={20} weight="bold" color={colors.textPrimary} />}
+          trailing={<PlusIcon size={iconSize.md} weight="bold" color={colors.textPrimary} />}
           onPress={() => {
             router.push('/rides/search');
           }}
@@ -121,14 +112,6 @@ function FoodContent() {
   const count = cartCount(cart);
   return (
     <>
-      <SearchButton
-        label="Search restaurants"
-        icon={MagnifyingGlassIcon}
-        accessibilityHint="Find a restaurant and compare delivery totals"
-        onPress={() => {
-          router.push('/food');
-        }}
-      />
       <View style={styles.compareRow}>
         <Text variant="caption" tone="secondary">
           Comparing

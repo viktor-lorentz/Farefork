@@ -53,3 +53,8 @@ export const skyPalettes: Record<SkyPhase, SkyPalette> = {
     ink: 'light',
   },
 };
+
+export const skyInk: Record<SkyPalette['ink'], { primary: string; secondary: string }> = {
+  dark: { primary: '#0E1424', secondary: 'rgba(14, 20, 36, 0.72)' },
+  light: { primary: '#F7F7F5', secondary: 'rgba(247, 247, 245, 0.78)' },
+};

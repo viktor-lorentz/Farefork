@@ -34,6 +34,7 @@ const starOpacity: Record<SkyPhase, number> = { day: 0, golden: 0, dusk: 0.35, n
 export type SkylineProps = {
   phase: SkyPhase;
   scrollY?: SharedValue<number>;
+  cityHeight?: number;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -44,13 +45,13 @@ function useParallax(scrollY: SharedValue<number> | undefined, factor: number) {
   });
 }
 
-function Layer({ children }: { children: React.ReactNode }) {
+function Layer({ children, fill = false }: { children: React.ReactNode; fill?: boolean }) {
   return (
     <Svg
       width="100%"
       height="100%"
       viewBox={viewBox}
-      preserveAspectRatio="xMidYMax slice"
+      preserveAspectRatio={fill ? 'none' : 'xMidYMax slice'}
       style={StyleSheet.absoluteFill}
     >
       {children}
@@ -81,7 +82,7 @@ function useFlicker(enabled: boolean) {
   return useAnimatedStyle(() => ({ opacity: opacity.value }));
 }
 
-export function Skyline({ phase, scrollY, style }: SkylineProps) {
+export function Skyline({ phase, scrollY, cityHeight, style }: SkylineProps) {
   const palette = skyPalettes[phase];
   const near = useMemo(
     () => litWindowPaths(geometry.near.windows, palette.windowsLit),
@@ -102,7 +103,7 @@ export function Skyline({ phase, scrollY, style }: SkylineProps) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
     >
-      <Layer>
+      <Layer fill>
         <Defs>
           <LinearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={palette.top} />
@@ -112,28 +113,34 @@ export function Skyline({ phase, scrollY, style }: SkylineProps) {
         <Rect width={SKYLINE_WIDTH} height={SKYLINE_HEIGHT} fill="url(#sky)" />
         <Path d={stars} fill={palette.window} opacity={starOpacity[phase]} />
       </Layer>
-      <Animated.View style={[StyleSheet.absoluteFill, farStyle]}>
-        <Layer>
-          <Path d={geometry.far.silhouette} fill={palette.far} />
-        </Layer>
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, midStyle]}>
-        <Layer>
-          <Path d={geometry.mid.silhouette} fill={palette.mid} />
-          <Path d={mid.steady + mid.flicker} fill={palette.window} opacity={0.55} />
-        </Layer>
-      </Animated.View>
-      <Animated.View style={[StyleSheet.absoluteFill, nearStyle]}>
-        <Layer>
-          <Path d={geometry.near.silhouette} fill={palette.near} />
-          <Path d={near.steady} fill={palette.window} />
-        </Layer>
-        <Animated.View style={[StyleSheet.absoluteFill, flickerStyle]}>
+      <View
+        style={
+          cityHeight !== undefined ? [styles.city, { height: cityHeight }] : StyleSheet.absoluteFill
+        }
+      >
+        <Animated.View style={[StyleSheet.absoluteFill, farStyle]}>
           <Layer>
-            <Path d={near.flicker} fill={palette.window} />
+            <Path d={geometry.far.silhouette} fill={palette.far} />
           </Layer>
         </Animated.View>
-      </Animated.View>
+        <Animated.View style={[StyleSheet.absoluteFill, midStyle]}>
+          <Layer>
+            <Path d={geometry.mid.silhouette} fill={palette.mid} />
+            <Path d={mid.steady + mid.flicker} fill={palette.window} opacity={0.55} />
+          </Layer>
+        </Animated.View>
+        <Animated.View style={[StyleSheet.absoluteFill, nearStyle]}>
+          <Layer>
+            <Path d={geometry.near.silhouette} fill={palette.near} />
+            <Path d={near.steady} fill={palette.window} />
+          </Layer>
+          <Animated.View style={[StyleSheet.absoluteFill, flickerStyle]}>
+            <Layer>
+              <Path d={near.flicker} fill={palette.window} />
+            </Layer>
+          </Animated.View>
+        </Animated.View>
+      </View>
     </View>
   );
 }
@@ -141,5 +148,11 @@ export function Skyline({ phase, scrollY, style }: SkylineProps) {
 const styles = StyleSheet.create({
   root: {
     overflow: 'hidden',
+  },
+  city: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });

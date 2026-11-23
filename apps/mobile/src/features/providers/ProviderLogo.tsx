@@ -13,7 +13,7 @@ export type ProviderLogoProps = {
 };
 
 export function ProviderLogo({ providerId, size = 40, decorative = false }: ProviderLogoProps) {
-  const { colors, scheme } = useTheme();
+  const { colors } = useTheme();
   const mark = logoMarks[providerId];
   const [minX, minY, width, height] = mark.viewBox;
   const maxWidth = size * (width / height > 3.2 ? 0.84 : 0.74);
@@ -33,8 +33,8 @@ export function ProviderLogo({ providerId, size = 40, decorative = false }: Prov
           width: size,
           height: size,
           borderRadius: Math.round(size * 0.24),
-          backgroundColor: darkPlate ? '#000000' : colors.logoPlate,
-          borderColor: darkPlate && scheme === 'dark' ? '#2A2A2A' : colors.logoPlateBorder,
+          backgroundColor: darkPlate ? colors.logoPlateBlack : colors.logoPlate,
+          borderColor: darkPlate ? colors.logoPlateBlackBorder : colors.logoPlateBorder,
         },
       ]}
     >

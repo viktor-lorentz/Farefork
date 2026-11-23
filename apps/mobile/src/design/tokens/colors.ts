@@ -43,6 +43,8 @@ export type ColorTokens = {
   logoPlate: string;
   logoPlateDark: string;
   logoPlateBorder: string;
+  logoPlateBlack: string;
+  logoPlateBlackBorder: string;
   onSky: string;
   onSkySecondary: string;
   white: string;
@@ -83,6 +85,8 @@ export const lightColors: ColorTokens = {
   logoPlate: '#FFFFFF',
   logoPlateDark: brandColors.ink,
   logoPlateBorder: '#E0E1DD',
+  logoPlateBlack: '#000000',
+  logoPlateBlackBorder: '#E0E1DD',
   onSky: brandColors.ink,
   onSkySecondary: 'rgba(14, 20, 36, 0.72)',
   white: '#FFFFFF',
@@ -123,6 +127,8 @@ export const darkColors: ColorTokens = {
   logoPlate: '#FFFFFF',
   logoPlateDark: brandColors.ink,
   logoPlateBorder: '#2C354B',
+  logoPlateBlack: '#000000',
+  logoPlateBlackBorder: '#2A2A2A',
   onSky: '#F1F2F5',
   onSkySecondary: 'rgba(241, 242, 245, 0.76)',
   white: '#FFFFFF',
