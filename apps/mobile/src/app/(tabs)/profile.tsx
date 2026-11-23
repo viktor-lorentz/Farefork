@@ -4,11 +4,12 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Linking, StyleSheet, View } from 'react-native';
 import {
+  ListGroup,
+  listGroupIconInset,
   ListRow,
   ListRowIcon,
   PageTitle,
   Screen,
-  SectionHeader,
   SegmentedControl,
   Text,
   Toggle,
@@ -70,129 +71,133 @@ export default function ProfileScreen() {
         <PageTitle title="Profile" />
       </View>
 
-      {sessionStatus !== 'unavailable' ? (
-        <View style={styles.accountGroup}>
+      <View style={styles.groups}>
+        {sessionStatus !== 'unavailable' ? (
+          <ListGroup>
+            <ListRow
+              title={sessionStatus === 'signedIn' ? (email ?? 'Account') : 'Sign in'}
+              subtitle={
+                sessionStatus === 'signedIn'
+                  ? 'Savings, history and account'
+                  : 'Save favorites and track what you save'
+              }
+              leading={<ListRowIcon icon={UserCircleIcon} />}
+              chevron
+              onPress={() => {
+                router.push(sessionStatus === 'signedIn' ? '/account' : '/account/sign-in');
+              }}
+            />
+          </ListGroup>
+        ) : null}
+
+        <ListGroup title="Settings" inset={listGroupIconInset}>
           <ListRow
-            flush
-            title={sessionStatus === 'signedIn' ? (email ?? 'Account') : 'Sign in'}
-            subtitle={
-              sessionStatus === 'signedIn'
-                ? 'Savings, history and account'
-                : 'Save favorites and track what you save'
-            }
-            leading={<ListRowIcon icon={UserCircleIcon} />}
+            title="Memberships"
+            subtitle={membershipCount > 0 ? `${membershipCount} active` : 'None added'}
+            leading={<ListRowIcon icon={SealCheckIcon} />}
             chevron
             onPress={() => {
-              router.push(sessionStatus === 'signedIn' ? '/account' : '/account/sign-in');
+              router.push('/profile/memberships');
             }}
+          />
+          <ListRow
+            title="Price alerts"
+            subtitle={isWeb ? 'Hits show in Alerts. Notifications need the phone app.' : pushNote}
+            leading={<ListRowIcon icon={BellIcon} />}
+            chevron={isWeb}
+            onPress={
+              isWeb
+                ? () => {
+                    router.navigate('/alerts');
+                  }
+                : undefined
+            }
+            trailing={
+              isWeb ? undefined : (
+                <Toggle
+                  value={notificationPermission === 'granted'}
+                  accessibilityLabel="Price alert notifications"
+                  onValueChange={(value) => {
+                    if (!value) {
+                      setNotificationPermission('denied');
+                      setPushNote('Off on this phone');
+                      void unregisterPushNotifications();
+                      return;
+                    }
+                    void registerForPushNotifications().then((result) => {
+                      setNotificationPermission(result === 'registered' ? 'granted' : 'denied');
+                      setPushNote(pushResultNote[result]);
+                    });
+                  }}
+                />
+              )
+            }
+          />
+        </ListGroup>
+
+        <View style={styles.appearance}>
+          <Text
+            variant="label"
+            tone="secondary"
+            accessibilityRole="header"
+            style={styles.appearanceTitle}
+          >
+            Appearance
+          </Text>
+          <SegmentedControl
+            options={themeOptions}
+            value={themePreference}
+            onChange={setThemePreference}
+            accessibilityLabel="Appearance"
           />
         </View>
-      ) : null}
 
-      <SectionHeader title="Settings" style={styles.section} />
-      <View>
-        <ListRow
-          flush
-          title="Memberships"
-          subtitle={membershipCount > 0 ? `${membershipCount} active` : 'None added'}
-          leading={<ListRowIcon icon={SealCheckIcon} />}
-          chevron
-          onPress={() => {
-            router.push('/profile/memberships');
-          }}
-          divider
-        />
-        <ListRow
-          flush
-          title="Price alerts"
-          subtitle={isWeb ? 'Hits show in Alerts. Notifications need the phone app.' : pushNote}
-          leading={<ListRowIcon icon={BellIcon} />}
-          chevron={isWeb}
-          onPress={
-            isWeb
-              ? () => {
-                  router.navigate('/alerts');
-                }
-              : undefined
-          }
-          trailing={
-            isWeb ? undefined : (
-              <Toggle
-                value={notificationPermission === 'granted'}
-                accessibilityLabel="Price alert notifications"
-                onValueChange={(value) => {
-                  if (!value) {
-                    setNotificationPermission('denied');
-                    setPushNote('Off on this phone');
-                    void unregisterPushNotifications();
-                    return;
-                  }
-                  void registerForPushNotifications().then((result) => {
-                    setNotificationPermission(result === 'registered' ? 'granted' : 'denied');
-                    setPushNote(pushResultNote[result]);
-                  });
-                }}
-              />
-            )
-          }
-        />
-      </View>
-
-      <SectionHeader title="Appearance" style={styles.section} />
-      <SegmentedControl
-        options={themeOptions}
-        value={themePreference}
-        onChange={setThemePreference}
-        accessibilityLabel="Appearance"
-      />
-
-      <SectionHeader title="More" style={styles.section} />
-      <View>
-        {__DEV__ ? (
+        <ListGroup title="More">
+          {__DEV__ ? (
+            <ListRow
+              title="Component gallery"
+              chevron
+              onPress={() => {
+                router.push('/dev/components');
+              }}
+            />
+          ) : null}
+          <ListRow title="Replay onboarding" onPress={resetOnboarding} />
+          <ListRow title="Version" value={Constants.expoConfig?.version ?? '0.0.0'} />
           <ListRow
-            flush
-            title="Component gallery"
-            chevron
+            title="Privacy policy"
+            trailing={
+              <ArrowSquareOutIcon size={iconSize.sm} color={colors.textSecondary} weight="bold" />
+            }
+            accessibilityHint="Opens in your browser"
             onPress={() => {
-              router.push('/dev/components');
+              void Linking.openURL(PRIVACY_URL);
             }}
-            divider
           />
-        ) : null}
-        <ListRow flush title="Replay onboarding" onPress={resetOnboarding} divider />
-        <ListRow flush title="Version" value={Constants.expoConfig?.version ?? '0.0.0'} divider />
-        <ListRow
-          flush
-          title="Privacy policy"
-          trailing={
-            <ArrowSquareOutIcon size={iconSize.sm} color={colors.textSecondary} weight="bold" />
-          }
-          accessibilityHint="Opens in your browser"
-          onPress={() => {
-            void Linking.openURL(PRIVACY_URL);
-          }}
-        />
+        </ListGroup>
+        <Text variant="caption" tone="tertiary" style={styles.footnote}>
+          Prices in this build are simulated. {APP_NAME} is not affiliated with Uber, Lyft, Waymo,
+          DoorDash, Grubhub or Postmates.
+        </Text>
       </View>
-      <Text variant="caption" tone="tertiary" style={styles.footnote}>
-        Prices in this build are simulated. {APP_NAME} is not affiliated with Uber, Lyft, Waymo,
-        DoorDash, Grubhub or Postmates.
-      </Text>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  accountGroup: {
-    marginBottom: space.xs,
-  },
   title: {
     marginBottom: space.md,
   },
-  section: {
-    marginTop: space.lg,
-    marginBottom: space.xxs,
+  groups: {
+    gap: space.lg,
+  },
+  appearance: {
+    gap: space.xs,
+  },
+  appearanceTitle: {
+    paddingHorizontal: space.md,
   },
   footnote: {
-    marginTop: space.lg,
+    paddingHorizontal: space.md,
   },
 });

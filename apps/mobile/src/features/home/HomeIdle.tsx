@@ -23,7 +23,7 @@ export function HomeIdle({ variant = 'screen' }: { variant?: 'screen' | 'panel' 
     <Animated.ScrollView
       onScroll={onScroll}
       scrollEventThrottle={16}
-      style={{ backgroundColor: panel ? colors.surface : colors.background }}
+      style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >

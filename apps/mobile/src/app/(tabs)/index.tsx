@@ -5,10 +5,12 @@ import { RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } fro
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { IconButton, Sheet, SheetScrollView } from '@/design/components';
 import { CrosshairIcon } from '@/design/icons';
-import { useIsDesktopLayout } from '@/design/layout';
+import { useIsDesktopLayout, useTabBarClearance } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { layout, space } from '@/design/tokens';
 import { HomeIdle } from '@/features/home/HomeIdle';
+import { HomePanel } from '@/features/home/HomePanel';
+import { HomeSearchPill } from '@/features/home/HomeSearchPill';
 import { MapCanvas } from '@/features/map/MapCanvas';
 import { defaultCenter, defaultZoom, type MapTrip, placesZoom } from '@/features/map/types';
 import { restaurantMeta } from '@/features/food/format';
@@ -50,6 +52,7 @@ export default function HomeScreen() {
   const desktop = useIsDesktopLayout();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const clearance = useTabBarClearance();
   const trip = useMapTrip();
   const quotes = useTripQuotes();
   const router = useRouter();
@@ -135,7 +138,10 @@ export default function HomeScreen() {
         <View
           style={[
             styles.desktopPanel,
-            { borderLeftColor: colors.border, backgroundColor: colors.surface },
+            {
+              borderLeftColor: colors.border,
+              backgroundColor: trip ? colors.surface : colors.background,
+            },
           ]}
         >
           {trip ? (
@@ -157,7 +163,41 @@ export default function HomeScreen() {
   }
 
   if (!trip) {
-    return <HomeIdle />;
+    return (
+      <View style={[styles.mobile, { backgroundColor: colors.background }]}>
+        <MapCanvas
+          center={mapCenter}
+          zoom={mapZoom}
+          trip={null}
+          places={places}
+          onPlacePress={openPlace}
+          insets={{ top: insets.top, bottom: layout.sheetPeek - layout.mapSheetOverlap }}
+          showsUserLocation
+        />
+        <View pointerEvents="box-none" style={[styles.mapTop, { top: insets.top + space.sm }]}>
+          <HomeSearchPill vertical={vertical} />
+          <View pointerEvents="box-none" style={styles.mapTopControls}>
+            {locateButton}
+          </View>
+        </View>
+        <Sheet
+          index={0}
+          snapPoints={[layout.sheetPeek, `${layout.sheetMaxRatio * 100}%`]}
+          topInset={insets.top}
+          tone="background"
+          accessibilityLabel="Home"
+        >
+          <SheetScrollView
+            contentContainerStyle={[
+              styles.sheetContent,
+              { paddingBottom: clearance + insets.bottom + space.lg },
+            ]}
+          >
+            <HomePanel />
+          </SheetScrollView>
+        </Sheet>
+      </View>
+    );
   }
 
   return (
@@ -184,7 +224,7 @@ export default function HomeScreen() {
           refreshControl={refresh}
           contentContainerStyle={[
             styles.sheetContent,
-            { paddingBottom: BOOKING_BAR_SPACE + insets.bottom + space.lg },
+            { paddingBottom: BOOKING_BAR_SPACE + Math.max(insets.bottom, clearance) + space.lg },
           ]}
         >
           <RideResults />
@@ -197,6 +237,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   mobile: {
     flex: 1,
+  },
+  mapTop: {
+    position: 'absolute',
+    left: layout.gutter,
+    right: layout.gutter,
+    gap: space.sm,
+  },
+  mapTopControls: {
+    alignItems: 'flex-end',
   },
   mapControls: {
     position: 'absolute',

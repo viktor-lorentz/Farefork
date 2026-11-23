@@ -8,7 +8,9 @@ import { useTheme } from '../theme';
 const liquidGlass =
   process.env.EXPO_OS === 'ios' && isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
 
-const blurAvailable = process.env.EXPO_OS === 'ios';
+const blurAvailable = process.env.EXPO_OS === 'ios' || process.env.EXPO_OS === 'web';
+
+const webBlur = process.env.EXPO_OS === 'web';
 
 export type AdaptiveGlassProps = {
   children?: ReactNode;
@@ -49,8 +51,19 @@ export function AdaptiveGlass({
         testID={testID}
         pointerEvents={pointerEvents}
         intensity={80}
-        tint={scheme === 'dark' ? 'systemChromeMaterialDark' : 'systemChromeMaterialLight'}
-        style={[styles.clip, { boxShadow: elevation.raised }, style]}
+        tint={
+          webBlur
+            ? scheme
+            : scheme === 'dark'
+              ? 'systemChromeMaterialDark'
+              : 'systemChromeMaterialLight'
+        }
+        style={[
+          styles.clip,
+          { boxShadow: elevation.raised },
+          webBlur && [styles.hairline, { borderColor: colors.border }],
+          style,
+        ]}
       >
         {children}
       </BlurView>
@@ -62,7 +75,7 @@ export function AdaptiveGlass({
       testID={testID}
       pointerEvents={pointerEvents}
       style={[
-        styles.solid,
+        styles.hairline,
         {
           backgroundColor: reduceTransparency ? colors.surface : colors.glassFallback,
           borderColor: colors.border,
@@ -80,7 +93,7 @@ const styles = StyleSheet.create({
   clip: {
     overflow: 'hidden',
   },
-  solid: {
+  hairline: {
     borderWidth: StyleSheet.hairlineWidth,
   },
 });

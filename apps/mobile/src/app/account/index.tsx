@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   Button,
+  ListGroup,
+  listGroupIconInset,
   ListRow,
   ListRowIcon,
   Screen,
@@ -12,7 +14,7 @@ import {
 } from '@/design/components';
 import { ReceiptIcon, SignOutIcon, TrashIcon, UserCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { radius, space } from '@/design/tokens';
+import { space } from '@/design/tokens';
 import { deleteAccount, signOut } from '@/features/account/auth';
 import { useSavingsSummary } from '@/features/account/queries';
 import { SavingsCard } from '@/features/account/SavingsCard';
@@ -52,27 +54,25 @@ export default function AccountScreen() {
     <View style={[styles.root, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Account" large />
       <Screen padTop={false} contentStyle={styles.content}>
-        <ListRow
-          flush
-          title={email ?? 'Signed in'}
-          subtitle="Signed in with an email code"
-          leading={<ListRowIcon icon={UserCircleIcon} />}
-        />
+        <ListGroup>
+          <ListRow
+            title={email ?? 'Signed in'}
+            subtitle="Signed in with an email code"
+            leading={<ListRowIcon icon={UserCircleIcon} />}
+          />
+        </ListGroup>
         <SavingsCard summary={summary.isError ? undefined : summary.data} />
         {summary.isError ? (
           <Text variant="caption" tone="secondary">
             {summary.error.message}
           </Text>
         ) : null}
-        <View
-          style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}
-        >
+        <ListGroup inset={listGroupIconInset}>
           <ListRow
             title="History"
             subtitle="Rides and orders you booked through Farefork"
             leading={<ListRowIcon icon={ReceiptIcon} />}
             chevron
-            divider
             onPress={() => {
               router.push('/account/history');
             }}
@@ -86,7 +86,7 @@ export default function AccountScreen() {
               });
             }}
           />
-        </View>
+        </ListGroup>
 
         <SectionHeader title="Delete account" style={styles.section} />
         <Text variant="caption" tone="secondary">
@@ -147,10 +147,5 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   content: { gap: space.md },
   section: { marginTop: space.md },
-  group: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
-  },
   confirm: { gap: space.xs },
 });

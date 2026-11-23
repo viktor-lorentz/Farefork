@@ -4,6 +4,7 @@ export * from './Chip';
 export * from './Divider';
 export * from './EmptyState';
 export * from './IconButton';
+export * from './ListGroup';
 export * from './ListRow';
 export * from './PressableScale';
 export * from './QuoteCard';

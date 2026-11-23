@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 're
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { layout, space } from '../tokens/spacing';
-import { useBreakpoint } from '../layout';
+import { useBreakpoint, useTabBarClearance } from '../layout';
 
 export type ScreenProps = {
   children: ReactNode;
@@ -25,13 +25,15 @@ export function Screen({
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const breakpoint = useBreakpoint();
+  const clearance = useTabBarClearance();
   const gutter = breakpoint === 'compact' ? layout.gutter : layout.gutterWide;
   const inner: StyleProp<ViewStyle> = [
     styles.inner,
     {
       paddingHorizontal: gutter,
       paddingTop: (padTop ? insets.top : 0) + space.md,
-      paddingBottom: (padBottom ? insets.bottom : 0) + space.xxxl,
+      paddingBottom:
+        clearance > 0 ? clearance + space.lg : (padBottom ? insets.bottom : 0) + space.xxxl,
       maxWidth,
     },
     contentStyle,

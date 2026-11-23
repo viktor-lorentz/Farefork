@@ -5,6 +5,8 @@ import { iconSize, layout, space } from '../tokens/spacing';
 import { Button } from './Button';
 import { Text } from './Text';
 
+const BADGE_SIZE = space.huge;
+
 export type EmptyStateProps = {
   icon: Icon;
   title: string;
@@ -16,20 +18,23 @@ export type EmptyStateProps = {
 export function EmptyState({ icon: Glyph, title, body, action, style }: EmptyStateProps) {
   const { colors } = useTheme();
   return (
-    <View style={[styles.container, { borderColor: colors.border }, style]}>
-      <View style={styles.titleRow}>
-        <Glyph size={iconSize.md} color={colors.textSecondary} weight="bold" />
-        <Text variant="bodyStrong" accessibilityRole="header" style={styles.title}>
+    <View style={[styles.container, style]}>
+      <View
+        style={[styles.badge, { backgroundColor: colors.fill }]}
+        importantForAccessibility="no-hide-descendants"
+      >
+        <Glyph size={iconSize.xl} color={colors.textSecondary} />
+      </View>
+      <View style={styles.copy}>
+        <Text variant="titleS" accessibilityRole="header" style={styles.center}>
           {title}
         </Text>
+        <Text variant="body" tone="secondary" style={styles.center}>
+          {body}
+        </Text>
       </View>
-      <Text variant="body" tone="secondary">
-        {body}
-      </Text>
       {action ? (
-        <View style={styles.action}>
-          <Button label={action.label} onPress={action.onPress} variant="secondary" size="md" />
-        </View>
+        <Button label={action.label} onPress={action.onPress} variant="primary" size="md" />
       ) : null}
     </View>
   );
@@ -37,21 +42,25 @@ export function EmptyState({ icon: Glyph, title, body, action, style }: EmptySta
 
 const styles = StyleSheet.create({
   container: {
-    gap: space.xs,
-    paddingTop: space.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    maxWidth: layout.panelWidth,
-  },
-  titleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: space.xs,
+    alignSelf: 'center',
+    gap: space.md,
+    paddingVertical: space.xxl,
+    paddingHorizontal: space.lg,
+    maxWidth: layout.panelWidth,
+    width: '100%',
   },
-  title: {
-    flex: 1,
+  badge: {
+    width: BADGE_SIZE,
+    height: BADGE_SIZE,
+    borderRadius: BADGE_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  action: {
-    alignItems: 'flex-start',
-    paddingTop: space.xs,
+  copy: {
+    gap: space.xxs,
+  },
+  center: {
+    textAlign: 'center',
   },
 });

@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdaptiveGlass, Button, Text } from '@/design/components';
 import { ArrowSquareOutIcon, CaretRightIcon, PhoneIcon } from '@/design/icons';
-import { useIsDesktopLayout } from '@/design/layout';
+import { useIsDesktopLayout, useTabBarClearance } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { controlHeight, iconSize, layout, radius, space } from '@/design/tokens';
 import { rememberHandoff } from '@/features/account/queries';
@@ -48,13 +48,19 @@ export function RideBookingBar() {
   const pickup = useTrip((state) => state.pickup);
   const dropoff = useTrip((state) => state.dropoff);
   const insets = useSafeAreaInsets();
+  const clearance = useTabBarClearance();
   const { colors } = useTheme();
   if (!selected) {
     return null;
   }
   const bookable = canBookHere(selected);
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, space.sm) }]}>
+    <View
+      style={[
+        styles.wrap,
+        { paddingBottom: clearance > 0 ? clearance + space.xs : Math.max(insets.bottom, space.sm) },
+      ]}
+    >
       <AdaptiveGlass interactive style={styles.bar}>
         {bookable ? (
           <Button

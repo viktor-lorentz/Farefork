@@ -131,7 +131,10 @@ export function ListRow({
 export function ListRowIcon({ icon: Glyph }: { icon: Icon }) {
   const { colors } = useTheme();
   return (
-    <View style={styles.iconTile} importantForAccessibility="no-hide-descendants">
+    <View
+      style={[styles.iconTile, { backgroundColor: colors.fill }]}
+      importantForAccessibility="no-hide-descendants"
+    >
       <Glyph size={iconSize.md} color={colors.textSecondary} />
     </View>
   );
@@ -177,6 +180,7 @@ const styles = StyleSheet.create({
     width: LEADING_SIZE,
     height: LEADING_SIZE,
     borderRadius: radius.md,
+    borderCurve: 'continuous',
     alignItems: 'center',
     justifyContent: 'center',
   },

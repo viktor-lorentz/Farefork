@@ -25,6 +25,8 @@ export type SheetProps = {
   bottomInset?: number;
   children: ReactNode;
   footer?: ReactNode;
+  tone?: 'surface' | 'background';
+  accessibilityLabel?: string;
   ref?: Ref<BottomSheet>;
 };
 
@@ -37,6 +39,8 @@ export function Sheet({
   bottomInset = 0,
   children,
   footer,
+  tone = 'surface',
+  accessibilityLabel = 'Results sheet',
   ref,
 }: SheetProps) {
   const { colors, elevation } = useTheme();
@@ -55,11 +59,11 @@ export function Sheet({
       topInset={topInset}
       bottomInset={bottomInset}
       style={[styles.container, { boxShadow: elevation.raised }]}
-      backgroundStyle={[styles.background, { backgroundColor: colors.surface }]}
+      backgroundStyle={[styles.background, { backgroundColor: colors[tone] }]}
       handleStyle={styles.handle}
       handleIndicatorStyle={[styles.indicator, { backgroundColor: colors.borderStrong }]}
       footerComponent={footer !== undefined && footer !== null ? renderFooter : undefined}
-      accessibilityLabel="Results sheet"
+      accessibilityLabel={accessibilityLabel}
     >
       {children}
     </BottomSheet>

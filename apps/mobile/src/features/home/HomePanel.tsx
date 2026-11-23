@@ -8,9 +8,10 @@ import {
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import {
+  ListGroup,
   ListRow,
   ListRowIcon,
-  SectionHeader,
+  listGroupIconInset,
   SegmentedControl,
   Text,
   type SegmentOption,
@@ -49,64 +50,49 @@ function listNames(ids: readonly ProviderId[]): string {
   return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
 }
 
-function CompareLine({ ids }: { ids: readonly ProviderId[] }) {
-  return (
-    <Text variant="caption" tone="secondary" style={styles.compareLine}>
-      Prices from {listNames(ids)}
-    </Text>
-  );
-}
-
 function RidesContent() {
   const router = useRouter();
   const { colors } = useTheme();
   const recents = useTrip((state) => state.recents).slice(0, 3);
+  const add = <PlusIcon size={iconSize.md} weight="bold" color={colors.textSecondary} />;
   return (
     <>
-      <CompareLine ids={rideProviderIds} />
       {recents.length > 0 ? (
-        <View>
-          <SectionHeader title="Recent" />
-          {recents.map((place, index) => (
+        <ListGroup title="Recent" inset={listGroupIconInset}>
+          {recents.map((place) => (
             <ListRow
               key={place.id}
-              flush
               title={place.name}
               subtitle={place.address || undefined}
               leading={<ListRowIcon icon={ClockCounterClockwiseIcon} />}
               accessibilityHint="Compare rides to this place"
-              divider={index < recents.length - 1}
               onPress={() => {
                 router.push({ pathname: '/rides/search', params: { recent: place.id } });
               }}
             />
           ))}
-        </View>
+        </ListGroup>
       ) : null}
-      <View>
-        <SectionHeader title="Saved places" />
+      <ListGroup title="Saved places" inset={listGroupIconInset}>
         <ListRow
-          flush
           title="Add home"
           subtitle="One tap to price a ride home"
           leading={<ListRowIcon icon={HouseIcon} />}
-          trailing={<PlusIcon size={iconSize.md} weight="bold" color={colors.textPrimary} />}
+          trailing={add}
           onPress={() => {
             router.push('/rides/search');
           }}
-          divider
         />
         <ListRow
-          flush
           title="Add work"
           subtitle="Save your commute"
           leading={<ListRowIcon icon={BriefcaseIcon} />}
-          trailing={<PlusIcon size={iconSize.md} weight="bold" color={colors.textPrimary} />}
+          trailing={add}
           onPress={() => {
             router.push('/rides/search');
           }}
         />
-      </View>
+      </ListGroup>
     </>
   );
 }
@@ -117,45 +103,37 @@ function FoodContent() {
   const cart = useFood((state) => state.cart);
   const count = cartCount(cart);
   return (
-    <>
-      <CompareLine ids={deliveryProviderIds} />
-      <View>
-        {cart && count > 0 ? (
-          <ListRow
-            flush
-            title={`Your cart from ${cart.restaurantName}`}
-            subtitle={`${count} ${count === 1 ? 'item' : 'items'}. Compare totals before tip`}
-            leading={<ListRowIcon icon={ShoppingBagIcon} />}
-            chevron
-            divider
-            onPress={() => {
-              router.push('/food/compare');
-            }}
-          />
-        ) : null}
+    <ListGroup inset={listGroupIconInset}>
+      {cart && count > 0 ? (
         <ListRow
-          flush
-          title={address ? address.name : 'Set a delivery address'}
-          subtitle={address ? 'Deliver to' : 'Prices depend on where the food goes'}
-          leading={<ListRowIcon icon={MapPinIcon} />}
-          chevron
-          divider
-          onPress={() => {
-            router.push('/food/address');
-          }}
-        />
-        <ListRow
-          flush
-          title="Restaurants on a map"
-          subtitle="Tap a pin, swipe through what’s close"
-          leading={<ListRowIcon icon={MapIcon} />}
+          title={`Your cart from ${cart.restaurantName}`}
+          subtitle={`${count} ${count === 1 ? 'item' : 'items'}, compare totals before tip`}
+          leading={<ListRowIcon icon={ShoppingBagIcon} />}
           chevron
           onPress={() => {
-            router.push('/food/map');
+            router.push('/food/compare');
           }}
         />
-      </View>
-    </>
+      ) : null}
+      <ListRow
+        title={address ? address.name : 'Set a delivery address'}
+        subtitle={address ? 'Deliver to' : 'Prices depend on where the food goes'}
+        leading={<ListRowIcon icon={MapPinIcon} />}
+        chevron
+        onPress={() => {
+          router.push('/food/address');
+        }}
+      />
+      <ListRow
+        title="Restaurants on a map"
+        subtitle="Tap a pin to see what’s close"
+        leading={<ListRowIcon icon={MapIcon} />}
+        chevron
+        onPress={() => {
+          router.push('/food/map');
+        }}
+      />
+    </ListGroup>
   );
 }
 
@@ -164,39 +142,49 @@ export function HomePanel() {
   const setVertical = useVertical((state) => state.setVertical);
   const membershipCount = usePreferences((state) => state.membershipIds.length);
   const router = useRouter();
+  const ids = vertical === 'rides' ? rideProviderIds : deliveryProviderIds;
 
   return (
     <View style={styles.panel}>
-      <SegmentedControl
-        options={verticalOptions}
-        value={vertical}
-        onChange={setVertical}
-        accessibilityLabel="Compare rides or food"
-      />
+      <View style={styles.switcher}>
+        <SegmentedControl
+          options={verticalOptions}
+          value={vertical}
+          onChange={setVertical}
+          accessibilityLabel="Compare rides or food"
+        />
+        <Text variant="caption" tone="secondary" style={styles.compareLine}>
+          Comparing {listNames(ids)}
+        </Text>
+      </View>
       {vertical === 'rides' ? <RidesContent /> : <FoodContent />}
-      <ListRow
-        flush
-        title="Your memberships"
-        subtitle={
-          membershipCount > 0
-            ? `${membershipCount} active, applied to every quote`
-            : 'Add Uber One, DashPass and more for accurate totals'
-        }
-        leading={<ListRowIcon icon={SealCheckIcon} />}
-        chevron
-        onPress={() => {
-          router.push('/profile/memberships');
-        }}
-      />
+      <ListGroup>
+        <ListRow
+          title="Memberships"
+          subtitle={
+            membershipCount > 0
+              ? `${membershipCount} active, applied to every quote`
+              : 'Add Uber One or DashPass for accurate totals'
+          }
+          leading={<ListRowIcon icon={SealCheckIcon} />}
+          chevron
+          onPress={() => {
+            router.push('/profile/memberships');
+          }}
+        />
+      </ListGroup>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   panel: {
-    gap: space.md,
+    gap: space.lg,
+  },
+  switcher: {
+    gap: space.xs,
   },
   compareLine: {
-    marginTop: -space.xs,
+    paddingHorizontal: space.xxs,
   },
 });
