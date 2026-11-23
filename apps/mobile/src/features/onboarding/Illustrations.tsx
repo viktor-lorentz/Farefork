@@ -11,10 +11,7 @@ function Stage({ children }: { children: React.ReactNode }) {
     <View
       importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden
-      style={[
-        styles.stage,
-        { backgroundColor: colors.surfaceRaised, boxShadow: elevation.raised },
-      ]}
+      style={[styles.stage, { backgroundColor: colors.surfaceRaised, boxShadow: elevation.raised }]}
       pointerEvents="none"
     >
       {children}

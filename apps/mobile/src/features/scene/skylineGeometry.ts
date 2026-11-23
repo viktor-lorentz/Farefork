@@ -14,9 +14,33 @@ type LayerSpec = {
 };
 
 const layerSpecs: Record<LayerName, LayerSpec> = {
-  far: { seed: 11, minHeight: 72, maxHeight: 150, minWidth: 18, maxWidth: 40, maxGap: 4, windowSize: null },
-  mid: { seed: 29, minHeight: 46, maxHeight: 112, minWidth: 22, maxWidth: 46, maxGap: 8, windowSize: 2 },
-  near: { seed: 53, minHeight: 22, maxHeight: 78, minWidth: 28, maxWidth: 58, maxGap: 10, windowSize: 3 },
+  far: {
+    seed: 11,
+    minHeight: 72,
+    maxHeight: 150,
+    minWidth: 18,
+    maxWidth: 40,
+    maxGap: 4,
+    windowSize: null,
+  },
+  mid: {
+    seed: 29,
+    minHeight: 46,
+    maxHeight: 112,
+    minWidth: 22,
+    maxWidth: 46,
+    maxGap: 8,
+    windowSize: 2,
+  },
+  near: {
+    seed: 53,
+    minHeight: 22,
+    maxHeight: 78,
+    minWidth: 28,
+    maxWidth: 58,
+    maxGap: 10,
+    windowSize: 3,
+  },
 };
 
 type Window = { x: number; y: number; size: number; chance: number; flicker: boolean };

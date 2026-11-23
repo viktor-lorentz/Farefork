@@ -56,7 +56,11 @@ export function PressableScale({
     <AnimatedPressable
       {...rest}
       disabled={disabled}
-      android_ripple={ripple && process.env.EXPO_OS === 'android' ? { color: colors.pressed, foreground: true } : undefined}
+      android_ripple={
+        ripple && process.env.EXPO_OS === 'android'
+          ? { color: colors.pressed, foreground: true }
+          : undefined
+      }
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={[style, animatedStyle]}

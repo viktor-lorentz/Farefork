@@ -48,9 +48,7 @@ export function SegmentedControl<T extends string>({
 
   useEffect(() => {
     const target = selectedIndex * segmentWidth;
-    offset.set(
-      reducedMotion ? target : withSpring(target, springs.snappy),
-    );
+    offset.set(reducedMotion ? target : withSpring(target, springs.snappy));
   }, [selectedIndex, segmentWidth, reducedMotion, offset]);
 
   const indicatorStyle = useAnimatedStyle(() => ({

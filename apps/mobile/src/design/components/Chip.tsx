@@ -50,7 +50,9 @@ export function Chip({
         disabled && styles.disabled,
       ]}
     >
-      {Glyph ? <Glyph size={iconSize.sm} color={foreground} weight={selected ? 'bold' : 'regular'} /> : null}
+      {Glyph ? (
+        <Glyph size={iconSize.sm} color={foreground} weight={selected ? 'bold' : 'regular'} />
+      ) : null}
       <Text variant="label" style={{ color: foreground }} numberOfLines={1}>
         {label}
       </Text>
