@@ -2,10 +2,11 @@ import { APP_NAME } from '@repo/shared/brand';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Platform, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import {
   ListRow,
   ListRowIcon,
+  PageTitle,
   Screen,
   SectionHeader,
   SegmentedControl,
@@ -14,19 +15,16 @@ import {
   type SegmentOption,
 } from '@/design/components';
 import {
-  ArrowsDownUpIcon,
+  ArrowSquareOutIcon,
   BellIcon,
-  CodeIcon,
-  InfoIcon,
   MonitorIcon,
   MoonIcon,
-  ArrowSquareOutIcon,
   SealCheckIcon,
   SunIcon,
   UserCircleIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { radius, space } from '@/design/tokens';
+import { iconSize, space } from '@/design/tokens';
 import { usePreferences, type ThemePreference } from '@/stores/preferences';
 import { useSession } from '@/stores/session';
 import {
@@ -34,6 +32,8 @@ import {
   registerForPushNotifications,
   unregisterPushNotifications,
 } from '@/features/alerts/push';
+
+const isWeb = process.env.EXPO_OS === 'web';
 
 const PRIVACY_URL = 'https://github.com/viktor-lorentz/Farefork/blob/main/PRIVACY.md';
 
@@ -66,18 +66,12 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <Text variant="titleXL" accessibilityRole="header" style={styles.title}>
-        Profile
-      </Text>
+      <View style={styles.title}>
+        <PageTitle title="Profile" />
+      </View>
 
       {sessionStatus !== 'unavailable' ? (
-        <View
-          style={[
-            styles.group,
-            styles.accountGroup,
-            { backgroundColor: colors.surface, borderColor: colors.border },
-          ]}
-        >
+        <View style={styles.accountGroup}>
           <ListRow
             title={sessionStatus === 'signedIn' ? (email ?? 'Account') : 'Sign in'}
             subtitle={
@@ -94,7 +88,8 @@ export default function ProfileScreen() {
         </View>
       ) : null}
 
-      <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <SectionHeader title="Settings" style={styles.section} />
+      <View>
         <ListRow
           title="Memberships"
           subtitle={membershipCount > 0 ? `${membershipCount} active` : 'None added'}
@@ -107,22 +102,18 @@ export default function ProfileScreen() {
         />
         <ListRow
           title="Price alerts"
-          subtitle={
-            Platform.OS === 'web'
-              ? 'Hits show in Alerts. Notifications need the phone app.'
-              : pushNote
-          }
+          subtitle={isWeb ? 'Hits show in Alerts. Notifications need the phone app.' : pushNote}
           leading={<ListRowIcon icon={BellIcon} />}
-          chevron={Platform.OS === 'web'}
+          chevron={isWeb}
           onPress={
-            Platform.OS === 'web'
+            isWeb
               ? () => {
                   router.navigate('/alerts');
                 }
               : undefined
           }
           trailing={
-            Platform.OS === 'web' ? undefined : (
+            isWeb ? undefined : (
               <Toggle
                 value={notificationPermission === 'granted'}
                 accessibilityLabel="Price alert notifications"
@@ -153,33 +144,24 @@ export default function ProfileScreen() {
       />
 
       <SectionHeader title="More" style={styles.section} />
-      <View style={[styles.group, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <ListRow
-          title="Component gallery"
-          subtitle="Design system reference"
-          leading={<ListRowIcon icon={CodeIcon} />}
-          chevron
-          onPress={() => {
-            router.push('/dev/components');
-          }}
-          divider
-        />
-        <ListRow
-          title="Replay onboarding"
-          leading={<ListRowIcon icon={ArrowsDownUpIcon} />}
-          onPress={resetOnboarding}
-          divider
-        />
-        <ListRow
-          title={`About ${APP_NAME}`}
-          value={`v${Constants.expoConfig?.version ?? '0.0.0'}`}
-          leading={<ListRowIcon icon={InfoIcon} />}
-          divider
-        />
+      <View>
+        {__DEV__ ? (
+          <ListRow
+            title="Component gallery"
+            chevron
+            onPress={() => {
+              router.push('/dev/components');
+            }}
+            divider
+          />
+        ) : null}
+        <ListRow title="Replay onboarding" onPress={resetOnboarding} divider />
+        <ListRow title="Version" value={Constants.expoConfig?.version ?? '0.0.0'} divider />
         <ListRow
           title="Privacy policy"
-          leading={<ListRowIcon icon={SealCheckIcon} />}
-          trailing={<ArrowSquareOutIcon size={18} color={colors.textSecondary} weight="bold" />}
+          trailing={
+            <ArrowSquareOutIcon size={iconSize.sm} color={colors.textSecondary} weight="bold" />
+          }
           accessibilityHint="Opens in your browser"
           onPress={() => {
             void Linking.openURL(PRIVACY_URL);
@@ -196,19 +178,14 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   accountGroup: {
-    marginBottom: space.md,
-  },
-  title: {
-    marginBottom: space.lg,
-  },
-  section: {
-    marginTop: space.xl,
     marginBottom: space.xs,
   },
-  group: {
-    borderRadius: radius.lg,
-    borderWidth: StyleSheet.hairlineWidth,
-    overflow: 'hidden',
+  title: {
+    marginBottom: space.md,
+  },
+  section: {
+    marginTop: space.lg,
+    marginBottom: space.xxs,
   },
   footnote: {
     marginTop: space.lg,

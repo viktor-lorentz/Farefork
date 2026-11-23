@@ -20,7 +20,7 @@ import {
   XIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { space } from '@/design/tokens';
+import { controlHeight, space } from '@/design/tokens';
 import { defaultCenter } from '@/features/map/types';
 import { currentLocationPlace, locateDevice } from '@/features/rides/location';
 import { MIN_QUERY_LENGTH, usePlaceSearch } from '@/features/rides/usePlaceSearch';
@@ -78,7 +78,7 @@ export default function DeliveryAddressScreen() {
             text.length > 0 ? (
               <IconButton
                 icon={XIcon}
-                size={36}
+                size={controlHeight.sm}
                 accessibilityLabel="Clear address"
                 onPress={() => {
                   setText('');

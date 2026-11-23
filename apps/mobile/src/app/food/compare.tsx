@@ -13,7 +13,7 @@ import {
 } from '@/design/components';
 import { CaretRightIcon, InfoIcon, ShoppingBagIcon, WarningCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { radius, space } from '@/design/tokens';
+import { iconSize, radius, space } from '@/design/tokens';
 import { rememberHandoff } from '@/features/account/queries';
 import { foodHandoff } from '@/features/account/savings';
 import { BottomBar } from '@/features/food/BottomBar';
@@ -151,14 +151,14 @@ export default function FoodCompareScreen() {
               {data.unavailable.map((entry) => (
                 <QuoteCardUnavailable
                   key={entry.providerId}
-                  logo={<ProviderLogo providerId={entry.providerId} size={40} decorative />}
+                  logo={<ProviderLogo providerId={entry.providerId} size={space.xxl} decorative />}
                   title={providerName(entry.providerId)}
                   reason={entry.reason}
                 />
               ))}
             </View>
             <View style={[styles.notice, { backgroundColor: colors.fill }]}>
-              <InfoIcon size={16} color={colors.textPrimary} weight="bold" />
+              <InfoIcon size={iconSize.sm} color={colors.textPrimary} weight="bold" />
               <Text variant="caption" style={styles.flex}>
                 Totals include menu prices, fees and estimated tax, but not tip. Prices are
                 simulated. Delivery apps don’t accept a cart from outside, so add the same items

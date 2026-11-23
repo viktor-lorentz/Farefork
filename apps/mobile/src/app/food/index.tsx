@@ -24,7 +24,7 @@ import {
   WarningCircleIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { space } from '@/design/tokens';
+import { radius, space } from '@/design/tokens';
 import { BottomBar } from '@/features/food/BottomBar';
 import { cartCount } from '@/features/food/cart';
 import { useRestaurants } from '@/features/food/queries';
@@ -38,9 +38,9 @@ function RestaurantSkeletons() {
     <View style={styles.skeletons} accessibilityLabel="Loading restaurants">
       {[0, 1, 2].map((key) => (
         <View key={key} style={styles.skeletonCard}>
-          <Skeleton height={180} radius={16} />
-          <Skeleton width="50%" height={14} />
-          <Skeleton width="75%" height={12} />
+          <Skeleton height={space.huge * 3} radius={radius.lg} />
+          <Skeleton width="50%" height={space.md} />
+          <Skeleton width="75%" height={space.sm} />
         </View>
       ))}
     </View>

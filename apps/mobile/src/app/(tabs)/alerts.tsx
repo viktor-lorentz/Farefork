@@ -1,16 +1,17 @@
 import { alertStatus, type PriceAlertRow } from '@repo/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import {
   Badge,
   EmptyState,
   IconButton,
   ListRow,
   ListRowIcon,
+  PageTitle,
+  RowSkeleton,
   Screen,
   SectionHeader,
-  Skeleton,
   Text,
 } from '@/design/components';
 import {
@@ -20,7 +21,7 @@ import {
   TrashIcon,
   WarningCircleIcon,
 } from '@/design/icons';
-import { space } from '@/design/tokens';
+import { controlHeight, space } from '@/design/tokens';
 import { alertPlace, alertSubtitle } from '@/features/alerts/format';
 import { useAlerts, useDeleteAlert, useResumeAlert } from '@/features/alerts/queries';
 import { useSession } from '@/stores/session';
@@ -65,7 +66,7 @@ function AlertList({ title, rows }: { title: string; rows: PriceAlertRow[] }) {
                 {status !== 'watching' ? (
                   <IconButton
                     icon={ArrowsClockwiseIcon}
-                    size={36}
+                    size={controlHeight.sm}
                     accessibilityLabel={`Watch ${alert.title} again for 7 days`}
                     onPress={() => {
                       resume.mutate({ id: alert.id });
@@ -74,7 +75,7 @@ function AlertList({ title, rows }: { title: string; rows: PriceAlertRow[] }) {
                 ) : null}
                 <IconButton
                   icon={TrashIcon}
-                  size={36}
+                  size={controlHeight.sm}
                   accessibilityLabel={`Delete the alert for ${alert.title}`}
                   onPress={() => {
                     remove.mutate(alert.id);
@@ -87,6 +88,17 @@ function AlertList({ title, rows }: { title: string; rows: PriceAlertRow[] }) {
       })}
     </View>
   );
+}
+
+function alertsMeta(watching: number, hits: number): string | null {
+  if (watching === 0 && hits === 0) {
+    return null;
+  }
+  const parts = [`${watching} watching`];
+  if (hits > 0) {
+    parts.push(`${hits} ${hits === 1 ? 'hit' : 'hits'}`);
+  }
+  return parts.join(' · ');
 }
 
 export default function AlertsScreen() {
@@ -119,30 +131,20 @@ export default function AlertsScreen() {
 
   return (
     <Screen contentStyle={styles.content}>
-      <View style={styles.header}>
-        <Text variant="titleXL" accessibilityRole="header">
-          Alerts
-        </Text>
-        <Text variant="body" tone="secondary">
-          We check your routes every 15 minutes and tell you when a ride hits your price.
-        </Text>
-      </View>
+      <PageTitle title="Alerts" meta={alertsMeta(watching.length, hits.length)} />
       {status === 'unavailable' ? (
         <EmptyState
           icon={BellRingingIcon}
-          title="Accounts aren’t set up"
-          body="Add your Supabase URL and key to apps/mobile/.env to use price alerts."
+          title="Alerts are off in this build"
+          body="You can still compare prices. Alerts come back when accounts are switched on."
         />
       ) : status === 'loading' || (status === 'signedIn' && alerts.isPending) ? (
-        <View style={styles.loading}>
-          <Skeleton height={56} />
-          <Skeleton height={56} />
-        </View>
+        <RowSkeleton count={2} />
       ) : status === 'signedOut' ? (
         <EmptyState
           icon={BellRingingIcon}
           title="Sign in to set price alerts"
-          body="Pick a route and a price. We’ll watch every app and tell you when a ride gets there."
+          body="Pick a route and a price. Farefork checks every 15 minutes and pings you when a ride gets there."
           action={{
             label: 'Sign in',
             onPress: () => {
@@ -179,10 +181,10 @@ export default function AlertsScreen() {
           <AlertList title="Hit your price" rows={hits} />
           <AlertList title="Watching" rows={watching} />
           <AlertList title="Ended" rows={ended} />
-          <Text variant="caption" tone="secondary">
-            {Platform.OS === 'web'
+          <Text variant="caption" tone="tertiary">
+            {process.env.EXPO_OS === 'web'
               ? 'Hits show up here. The phone app also sends a notification.'
-              : 'Alerts end after 7 days or once they hit, so you don’t get repeat pings. Prices are simulated.'}
+              : 'Alerts end after 7 days or once they hit.'}
           </Text>
         </>
       )}
@@ -192,7 +194,5 @@ export default function AlertsScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: space.lg },
-  header: { gap: space.xxs },
-  loading: { gap: space.sm },
   actions: { flexDirection: 'row', alignItems: 'center', gap: space.xxs },
 });

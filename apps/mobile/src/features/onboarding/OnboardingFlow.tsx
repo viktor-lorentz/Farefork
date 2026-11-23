@@ -64,7 +64,7 @@ function PermissionArt({ icon: Glyph }: { icon: Icon }) {
   const { colors } = useTheme();
   return (
     <View style={[styles.permissionArt, { backgroundColor: colors.fill }]}>
-      <Glyph size={40} color={colors.textPrimary} weight="fill" />
+      <Glyph size={space.xxl} color={colors.textPrimary} weight="fill" />
     </View>
   );
 }
@@ -108,8 +108,8 @@ export function OnboardingFlow() {
       content = (
         <>
           <Headline
-            title="Every ride app. One screen."
-            body="Uber, Lyft and Waymo side by side, with the cheapest one called out."
+            title="Compare Uber, Lyft and Waymo before you book."
+            body="One trip, every price, sorted. Tap the one you want and finish booking in that app."
           />
           <CompareIllustration />
         </>
@@ -120,8 +120,8 @@ export function OnboardingFlow() {
       content = (
         <>
           <Headline
-            title="Food at the real total."
-            body="Delivery, service fees, tip and tax, added up before you open four apps."
+            title="See what delivery really costs."
+            body="Delivery and service fees plus tax, added up per app. Prices are before tip."
           />
           <TotalsIllustration />
         </>
@@ -132,8 +132,8 @@ export function OnboardingFlow() {
       content = (
         <>
           <Headline
-            title="Your perks, priced in."
-            body="Tell us which memberships you pay for and we’ll apply them to every quote."
+            title="Count the memberships you already pay for."
+            body="Uber One, DashPass and the rest change the price. We apply them to every quote."
           />
           <MembershipIllustration />
         </>
@@ -145,8 +145,8 @@ export function OnboardingFlow() {
         <>
           <PermissionArt icon={NavigationArrowIcon} />
           <Headline
-            title="Start from where you are."
-            body="Your location sets the pickup point. It stays on your device and is never sold."
+            title="Use your location for pickup."
+            body="It stays on your phone and is never sold. You can type an address instead."
           />
         </>
       );
@@ -165,8 +165,8 @@ export function OnboardingFlow() {
         <>
           <PermissionArt icon={BellRingingIcon} />
           <Headline
-            title="Know when prices drop."
-            body="Get one alert when a route you watch hits your price. No marketing pushes."
+            title="Get told when a price drops."
+            body="One notification when a route you watch hits your price. Nothing else."
           />
         </>
       );

@@ -57,11 +57,11 @@ export default function RestaurantScreen() {
       <Screen padTop={false} contentStyle={styles.content}>
         {query.isPending ? (
           <View style={styles.loading} accessibilityLabel="Loading menu">
-            <Skeleton width="70%" height={28} />
-            <Skeleton width="90%" height={14} />
-            <Skeleton height={64} />
-            <Skeleton height={64} />
-            <Skeleton height={64} />
+            <Skeleton width="70%" height={space.xl} />
+            <Skeleton width="90%" height={space.md} />
+            <Skeleton height={space.huge} />
+            <Skeleton height={space.huge} />
+            <Skeleton height={space.huge} />
           </View>
         ) : query.isError || !restaurant ? (
           <EmptyState

@@ -6,13 +6,13 @@ import {
   IconButton,
   ListRow,
   ListRowIcon,
+  PageTitle,
+  RowSkeleton,
   Screen,
   SectionHeader,
-  Skeleton,
-  Text,
 } from '@/design/components';
 import { ForkKnifeIcon, HeartIcon, MapPinIcon, TrashIcon, WarningCircleIcon } from '@/design/icons';
-import { space } from '@/design/tokens';
+import { controlHeight, space } from '@/design/tokens';
 import { useFavorites, useRemoveFavorite } from '@/features/account/queries';
 import { currentLocationPlace, locateDevice } from '@/features/rides/location';
 import { useDeviceLocation } from '@/stores/location';
@@ -69,7 +69,7 @@ function FavoriteList({ title, rows }: { title: string; rows: FavoriteRow[] }) {
           trailing={
             <IconButton
               icon={TrashIcon}
-              size={36}
+              size={controlHeight.sm}
               accessibilityLabel={`Remove ${row.title} from favorites`}
               onPress={() => {
                 remove.mutate(row.id);
@@ -82,6 +82,18 @@ function FavoriteList({ title, rows }: { title: string; rows: FavoriteRow[] }) {
   );
 }
 
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function favoritesMeta(routes: number, restaurants: number): string | null {
+  const parts = [
+    routes > 0 ? plural(routes, 'route') : null,
+    restaurants > 0 ? plural(restaurants, 'restaurant') : null,
+  ].filter((part) => part !== null);
+  return parts.length > 0 ? parts.join(' · ') : null;
+}
+
 export default function FavoritesScreen() {
   const router = useRouter();
   const status = useSession((state) => state.status);
@@ -92,30 +104,20 @@ export default function FavoritesScreen() {
 
   return (
     <Screen contentStyle={styles.content}>
-      <View style={styles.header}>
-        <Text variant="titleXL" accessibilityRole="header">
-          Favorites
-        </Text>
-        <Text variant="body" tone="secondary">
-          Routes and restaurants you price often.
-        </Text>
-      </View>
+      <PageTitle title="Favorites" meta={favoritesMeta(routes.length, restaurants.length)} />
       {status === 'unavailable' ? (
         <EmptyState
           icon={HeartIcon}
-          title="Accounts aren’t set up"
-          body="Add your Supabase URL and key to apps/mobile/.env to save favorites."
+          title="Saving is off in this build"
+          body="You can still compare prices. Favorites come back when accounts are switched on."
         />
       ) : status === 'loading' || (status === 'signedIn' && favorites.isPending) ? (
-        <View style={styles.loading}>
-          <Skeleton height={56} />
-          <Skeleton height={56} />
-        </View>
+        <RowSkeleton count={2} />
       ) : status === 'signedOut' ? (
         <EmptyState
           icon={HeartIcon}
           title="Sign in to save favorites"
-          body="Keep routes and restaurants here, synced across your devices, and re-check prices in one tap."
+          body="Saved routes and restaurants sync to every device you sign in on."
           action={{
             label: 'Sign in',
             onPress: () => {
@@ -139,7 +141,7 @@ export default function FavoritesScreen() {
         <EmptyState
           icon={HeartIcon}
           title="Nothing saved"
-          body="Tap the heart on any route or restaurant to keep it here and re-check prices in one tap."
+          body="Tap the heart on a route or restaurant to save it here."
           action={{
             label: 'Compare a ride',
             onPress: () => {
@@ -159,6 +161,4 @@ export default function FavoritesScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: space.lg },
-  header: { gap: space.xxs },
-  loading: { gap: space.sm },
 });

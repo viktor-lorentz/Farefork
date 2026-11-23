@@ -21,7 +21,7 @@ import {
   XIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { space } from '@/design/tokens';
+import { controlHeight, space } from '@/design/tokens';
 import { useFavorites } from '@/features/account/queries';
 import { defaultCenter } from '@/features/map/types';
 import { currentLocationPlace, locateDevice } from '@/features/rides/location';
@@ -255,7 +255,7 @@ export default function RideSearchScreen() {
                     trailing={
                       <IconButton
                         icon={XIcon}
-                        size={36}
+                        size={controlHeight.sm}
                         accessibilityLabel={`Remove ${place.name} from recents`}
                         onPress={() => {
                           removeRecent(place.id);
