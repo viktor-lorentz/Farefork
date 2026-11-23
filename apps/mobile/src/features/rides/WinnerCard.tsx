@@ -1,7 +1,7 @@
 import { formatUsd, providerName, type RideQuote } from '@repo/shared';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Badge, PressableScale, Text, type QuoteCardNote } from '@/design/components';
 import { LightningIcon, PiggyBankIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
@@ -22,11 +22,10 @@ export type WinnerCardProps = {
   onPress: () => void;
 };
 
-const entering = ZoomIn.springify()
+const entering = FadeInDown.springify()
   .damping(springs.bouncy.damping)
   .stiffness(springs.bouncy.stiffness)
-  .mass(springs.bouncy.mass)
-  .withInitialValues({ scale: 0.94 });
+  .mass(springs.bouncy.mass);
 
 export function WinnerCard({
   quote,
