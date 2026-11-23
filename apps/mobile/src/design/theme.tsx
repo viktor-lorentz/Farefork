@@ -49,6 +49,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   return <ThemeContext value={theme}>{children}</ThemeContext>;
 }
 
+export function SchemeThemeProvider({
+  scheme,
+  children,
+}: {
+  scheme: ColorScheme;
+  children: ReactNode;
+}) {
+  return <ThemeContext value={themes[scheme]}>{children}</ThemeContext>;
+}
+
 export function useTheme(): Theme {
   return use(ThemeContext);
 }

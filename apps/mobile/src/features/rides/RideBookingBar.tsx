@@ -3,14 +3,14 @@ import * as Linking from 'expo-linking';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AdaptiveGlass, Button, Text } from '@/design/components';
-import { ArrowSquareOutIcon, PhoneIcon } from '@/design/icons';
+import { ArrowSquareOutIcon, CaretRightIcon, PhoneIcon } from '@/design/icons';
 import { useIsDesktopLayout } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { controlHeight, iconSize, layout, radius, space } from '@/design/tokens';
 import { rememberHandoff } from '@/features/account/queries';
 import { rideHandoff } from '@/features/account/savings';
 import { useTrip } from '@/stores/trip';
-import { bookingLabel, canBookHere, openBooking } from './openBooking';
+import { bookingHint, bookingLabel, canBookHere, openBooking, opensInApp } from './openBooking';
 import { QrCode } from './QrCode';
 import { useVisibleQuotes } from './useVisibleQuotes';
 
@@ -48,6 +48,7 @@ export function RideBookingBar() {
   const pickup = useTrip((state) => state.pickup);
   const dropoff = useTrip((state) => state.dropoff);
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   if (!selected) {
     return null;
   }
@@ -58,12 +59,15 @@ export function RideBookingBar() {
         {bookable ? (
           <Button
             label={`${bookingLabel(selected)} · ${formatUsd(selected.priceCents)}`}
-            trailingIcon={ArrowSquareOutIcon}
+            trailingIcon={opensInApp(selected) ? CaretRightIcon : ArrowSquareOutIcon}
             fullWidth
             haptic={false}
-            accessibilityHint={`Opens ${providerName(selected.bookVia)} with your pickup and destination filled in. Price before tip.`}
+            accessibilityHint={bookingHint(selected)}
             onPress={() => {
-              void openBooking(selected).then((opened) => {
+              void openBooking(selected, {
+                toolbar: colors.background,
+                controls: colors.textPrimary,
+              }).then((opened) => {
                 if (opened && data && pickup && dropoff) {
                   rememberHandoff(
                     rideHandoff(selected, data.quotes, { from: pickup.name, to: dropoff.name }),

@@ -11,7 +11,7 @@ import {
   ScreenHeader,
   Text,
 } from '@/design/components';
-import { ArrowSquareOutIcon, InfoIcon, ShoppingBagIcon, WarningCircleIcon } from '@/design/icons';
+import { CaretRightIcon, InfoIcon, ShoppingBagIcon, WarningCircleIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { radius, space } from '@/design/tokens';
 import { rememberHandoff } from '@/features/account/queries';
@@ -24,7 +24,7 @@ import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
-import { openExternal } from '@/lib/openExternal';
+import { openInApp } from '@/lib/openInApp';
 import { useFood } from '@/stores/food';
 
 export default function FoodCompareScreen() {
@@ -162,7 +162,7 @@ export default function FoodCompareScreen() {
               <Text variant="caption" style={styles.flex}>
                 Totals include menu prices, fees and estimated tax, but not tip. Prices are
                 simulated. Delivery apps don’t accept a cart from outside, so add the same items
-                once the app opens.
+                once checkout opens.
               </Text>
             </View>
           </>
@@ -171,14 +171,17 @@ export default function FoodCompareScreen() {
       {selected ? (
         <BottomBar>
           <Button
-            label={`Open ${providerName(selected.providerId)} · ${formatUsd(selected.totalBeforeTipCents)} before tip`}
-            trailingIcon={ArrowSquareOutIcon}
+            label={`Order on ${providerName(selected.providerId)} · ${formatUsd(selected.totalBeforeTipCents)} before tip`}
+            trailingIcon={CaretRightIcon}
             fullWidth
             haptic={false}
-            accessibilityHint={`Opens ${providerName(selected.providerId)} at ${cart.restaurantName}`}
+            accessibilityHint={`Opens ${providerName(selected.providerId)} checkout for ${cart.restaurantName} inside Farefork. You sign in and pay on ${providerName(selected.providerId)}.`}
             onPress={() => {
               haptics.medium();
-              void openExternal(selected.orderUrl, selected.appUrl).then((opened) => {
+              void openInApp(selected.orderUrl, {
+                toolbar: colors.background,
+                controls: colors.textPrimary,
+              }).then((opened) => {
                 if (!opened) {
                   haptics.warning();
                   return;

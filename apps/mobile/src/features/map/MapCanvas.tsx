@@ -1,19 +1,18 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { cuisineLabels } from '@repo/shared';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '@/design/theme';
 import { iconSize, radius, space } from '@/design/tokens';
 import { duration } from '@/design/tokens/motion';
 import { CUISINE_ICON_VIEWBOX, cuisineIconPaths } from './cuisineIcons';
-import { googleMapStyle } from './googleMapStyle';
 import { mapPalettes } from './palette';
 import {
   defaultZoom,
@@ -28,12 +27,6 @@ const MAX_NATIVE_PLACES = 60;
 
 function zoomToDelta(zoom: number): number {
   return 360 / 2 ** zoom;
-}
-
-const isAndroid = Platform.OS === 'android';
-
-function devicePixels(value: number): number {
-  return isAndroid ? PixelRatio.getPixelSizeForLayoutSize(value) : value;
 }
 
 function PickupMarker({ ring, fill }: { ring: string; fill: string }) {
@@ -93,7 +86,6 @@ export function MapCanvas({
   const reducedMotion = useReducedMotion();
   const mapRef = useRef<MapView>(null);
   const palette = mapPalettes[scheme];
-  const customStyle = useMemo(() => googleMapStyle(palette), [palette]);
   const tiles = useSharedValue(0);
   const tilesStyle = useAnimatedStyle(() => ({ opacity: tiles.value }));
   const delta = zoomToDelta(zoom);
@@ -125,10 +117,10 @@ export function MapCanvas({
     const coordinates = trip.path.length > 1 ? [...trip.path] : [trip.pickup, trip.dropoff];
     mapRef.current?.fitToCoordinates(coordinates, {
       edgePadding: {
-        top: devicePixels(fitPadding),
-        right: devicePixels(fitPadding),
-        bottom: devicePixels(fitPadding),
-        left: devicePixels(fitPadding),
+        top: fitPadding,
+        right: fitPadding,
+        bottom: fitPadding,
+        left: fitPadding,
       },
       animated: !reducedMotion,
     });
@@ -161,18 +153,15 @@ export function MapCanvas({
           onMapLoaded={() => {
             tiles.set(reducedMotion ? 1 : withTiming(1, { duration: duration.slow }));
           }}
-          key={isAndroid ? scheme : 'map'}
           style={StyleSheet.absoluteFill}
-          provider={isAndroid ? PROVIDER_GOOGLE : undefined}
           initialRegion={{
             latitude: center.latitude,
             longitude: center.longitude,
             latitudeDelta: delta,
             longitudeDelta: delta,
           }}
-          mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+          mapType="mutedStandard"
           userInterfaceStyle={scheme}
-          customMapStyle={isAndroid ? customStyle : undefined}
           showsUserLocation={showsUserLocation}
           showsPointsOfInterests={false}
           showsBuildings={false}
