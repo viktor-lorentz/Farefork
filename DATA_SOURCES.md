@@ -1,6 +1,6 @@
 # Data sources and open questions
 
-This build uses **mock providers only**. It does not scrape, does not log into any third-party account, and does not call any provider API. Every price shown is simulated.
+This build uses **mock providers only**. It does not scrape, does not log into any third-party account, and does not call any provider API. Every price shown is an estimate.
 
 This document lists what a real integration would need, so you can make the legal and terms-of-service decisions. Nothing here is legal advice.
 
@@ -21,6 +21,8 @@ interface DeliveryProvider {
 Swapping a mock for a real source means writing one adapter. Screens and pricing code do not change.
 
 ## Rides
+
+Ride prices are **calibrated estimates**, not live quotes. Each product uses a fixed base, per-mile, per-minute and booking fee, tuned to match real Uber and Lyft prices seen in the apps for an 8.2 mile Los Angeles trip (USC to The Grove, November 2026). UberX came to $26.94 and Lyft Standard to $33.94 before a promo. Estimates leave out surge and promos, so they can differ from the app at busy times. The Waymo rate is a guess, because no Waymo price has been seen yet. Exact live prices need a partner API, such as Uber for Business / Guest Rides or Lyft Concierge.
 
 | Provider | Possible official path                                                                                                                                            | Open questions                                                                                                                                     |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -110,11 +112,11 @@ Search text, the pickup area (rounded to about 1 km) and trip coordinates go fro
 
 ### Deep links to verify
 
-| Provider | Link used                                                                                                   | To verify                                                                                                      |
-| -------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Uber     | `https://m.uber.com/ul/?action=setPickup&pickup[...]&dropoff[...]`                                          | Product preselection needs a per-city `product_id`, so it isn't sent. Check attribution rules.                 |
-| Lyft     | `lyft://ridetype?id=…` in the app, else `https://lyft.com/ride?id=<ride type>&pickup[...]&destination[...]` | The ride type IDs `lyft`, `lyft_plus` and `lyft_lux` come from older docs. Extra Comfort falls back to `lyft`. |
-| Waymo    | `https://waymo.com/`                                                                                        | No prefilled deep link is known. In Austin and Atlanta, Waymo trips open the Uber link instead.                |
+| Provider | Link used                                                                                                                                                   | To verify                                                                                                                                                           |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Uber     | `uber://?action=setPickup&pickup[...]&dropoff[nickname\|formatted_address\|latitude\|longitude]` in the app, else `https://m.uber.com/go/product-selection` | Names and addresses are sent so Uber doesn't snap to a nearby business. Product preselection needs a per-city `product_id`, so it isn't sent.                       |
+| Lyft     | `lyft://ridetype?id=…` in the app, else `https://lyft.com/ride?id=<ride type>&pickup[...]&destination[...]`                                                 | `pickup[address]` and `destination[address]` are sent along with coordinates. The ride type IDs `lyft`, `lyft_plus` and `lyft_lux` come from older docs.            |
+| Waymo    | `https://app.waymo.com/route/trip/create?pickup=my_location&dropoff_latitude=…&dropoff_longitude=…`                                                         | Undocumented App Link (seen in aQuigs/launcher-plusplus#242). Pickup is always the current location. In Austin and Atlanta, Waymo trips open the Uber link instead. |
 
 ## Trademarks and logos
 

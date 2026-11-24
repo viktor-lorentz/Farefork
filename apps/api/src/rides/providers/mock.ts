@@ -5,7 +5,7 @@ import {
   lyftBookingUrl,
   uberAppUrl,
   uberBookingUrl,
-  waymoBookingUrl,
+  waymoAppUrl,
 } from '../deepLinks';
 import { seededRandom } from '../random';
 import { areaServing, type ServiceArea, waymoServiceAreas } from '../serviceAreas';
@@ -27,18 +27,12 @@ export type ProductSpec = {
   deepLinkId?: string;
 };
 
-export type SurgeSpec = {
-  probability: number;
-  max: number;
-};
-
 type Availability = { bookVia: RideProviderId } | { reason: string };
 
 export type MockProviderSpec = {
   id: RideProviderId;
   autonomous: boolean;
   products: readonly ProductSpec[];
-  surge: SurgeSpec;
   availability: (trip: TripContext) => Availability;
   bookingUrl: (target: BookingTarget, product: ProductSpec, bookVia: RideProviderId) => string;
   appUrl: (target: BookingTarget, product: ProductSpec, bookVia: RideProviderId) => string | null;
@@ -60,16 +54,12 @@ export function tripSeed(providerId: RideProviderId, trip: TripContext): string 
   ].join('|');
 }
 
-export function priceProduct(
-  product: ProductSpec,
-  miles: number,
-  minutes: number,
-  surgeMultiplier: number,
-  variance: number,
-): number {
-  const metered =
-    product.baseCents + product.perMileCents * miles + product.perMinuteCents * minutes;
-  const total = metered * surgeMultiplier * variance + product.bookingFeeCents;
+export function priceProduct(product: ProductSpec, miles: number, minutes: number): number {
+  const total =
+    product.baseCents +
+    product.perMileCents * miles +
+    product.perMinuteCents * minutes +
+    product.bookingFeeCents;
   return Math.max(product.minimumCents, Math.round(total));
 }
 
@@ -82,10 +72,6 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
         return Promise.resolve({ status: 'unavailable', reason: availability.reason });
       }
       const random = seededRandom(tripSeed(spec.id, trip));
-      const surging = random.chance(spec.surge.probability);
-      const surgeMultiplier = surging
-        ? Math.round(random.between(1.1, spec.surge.max) * 10) / 10
-        : 1;
       const miles = metersToMiles(trip.route.distanceMeters);
       const minutes = trip.route.durationSeconds / 60;
       const target: BookingTarget = {
@@ -93,15 +79,11 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
         dropoff: trip.dropoff,
         pickupName: trip.pickupName,
         dropoffName: trip.dropoffName,
+        pickupAddress: trip.pickupAddress,
+        dropoffAddress: trip.dropoffAddress,
       };
       const quotes: RideQuote[] = spec.products.map((product) => {
-        const priceCents = priceProduct(
-          product,
-          miles,
-          minutes,
-          surgeMultiplier,
-          random.between(0.95, 1.06),
-        );
+        const priceCents = priceProduct(product, miles, minutes);
         return {
           id: `${spec.id}:${product.key}`,
           providerId: spec.id,
@@ -114,7 +96,7 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
           membership: null,
           creditBackCents: 0,
           membershipNote: null,
-          surgeMultiplier,
+          surgeMultiplier: 1,
           pickupEtaMinutes: random.int(product.pickupEta[0], product.pickupEta[1]),
           tripMinutes: Math.max(1, Math.ceil(minutes)),
           bookVia: availability.bookVia,
@@ -130,7 +112,6 @@ export function createMockProvider(spec: MockProviderSpec): RideProvider {
 export const uberSpec: MockProviderSpec = {
   id: 'uber',
   autonomous: false,
-  surge: { probability: 0.3, max: 1.9 },
   availability: () => ({ bookVia: 'uber' }),
   bookingUrl: (target) => uberBookingUrl(target),
   appUrl: (target) => uberAppUrl(target),
@@ -140,11 +121,11 @@ export const uberSpec: MockProviderSpec = {
       name: 'UberX',
       rideClass: 'economy',
       seats: 4,
-      baseCents: 280,
-      perMileCents: 145,
-      perMinuteCents: 38,
-      bookingFeeCents: 295,
-      minimumCents: 950,
+      baseCents: 165,
+      perMileCents: 135,
+      perMinuteCents: 26,
+      bookingFeeCents: 990,
+      minimumCents: 1050,
       pickupEta: [2, 7],
     },
     {
@@ -152,11 +133,11 @@ export const uberSpec: MockProviderSpec = {
       name: 'Comfort',
       rideClass: 'comfort',
       seats: 4,
-      baseCents: 350,
-      perMileCents: 190,
-      perMinuteCents: 48,
-      bookingFeeCents: 295,
-      minimumCents: 1200,
+      baseCents: 200,
+      perMileCents: 150,
+      perMinuteCents: 30,
+      bookingFeeCents: 990,
+      minimumCents: 1250,
       pickupEta: [3, 9],
     },
     {
@@ -164,11 +145,11 @@ export const uberSpec: MockProviderSpec = {
       name: 'UberXL',
       rideClass: 'xl',
       seats: 6,
-      baseCents: 400,
-      perMileCents: 245,
-      perMinuteCents: 55,
-      bookingFeeCents: 295,
-      minimumCents: 1300,
+      baseCents: 300,
+      perMileCents: 230,
+      perMinuteCents: 40,
+      bookingFeeCents: 850,
+      minimumCents: 1400,
       pickupEta: [4, 11],
     },
     {
@@ -176,11 +157,11 @@ export const uberSpec: MockProviderSpec = {
       name: 'Uber Black',
       rideClass: 'premium',
       seats: 4,
-      baseCents: 800,
-      perMileCents: 375,
-      perMinuteCents: 75,
+      baseCents: 900,
+      perMileCents: 170,
+      perMinuteCents: 33,
       bookingFeeCents: 0,
-      minimumCents: 2500,
+      minimumCents: 1500,
       pickupEta: [5, 14],
     },
   ],
@@ -189,7 +170,6 @@ export const uberSpec: MockProviderSpec = {
 export const lyftSpec: MockProviderSpec = {
   id: 'lyft',
   autonomous: false,
-  surge: { probability: 0.3, max: 1.8 },
   availability: () => ({ bookVia: 'lyft' }),
   bookingUrl: (target, product) => lyftBookingUrl(target, product.deepLinkId ?? 'lyft'),
   appUrl: (target, product) => lyftAppUrl(target, product.deepLinkId ?? 'lyft'),
@@ -199,11 +179,11 @@ export const lyftSpec: MockProviderSpec = {
       name: 'Lyft',
       rideClass: 'economy',
       seats: 4,
-      baseCents: 250,
-      perMileCents: 140,
-      perMinuteCents: 40,
-      bookingFeeCents: 310,
-      minimumCents: 925,
+      baseCents: 200,
+      perMileCents: 240,
+      perMinuteCents: 48,
+      bookingFeeCents: 430,
+      minimumCents: 1100,
       pickupEta: [2, 8],
       deepLinkId: 'lyft',
     },
@@ -212,11 +192,11 @@ export const lyftSpec: MockProviderSpec = {
       name: 'Extra Comfort',
       rideClass: 'comfort',
       seats: 4,
-      baseCents: 320,
-      perMileCents: 185,
-      perMinuteCents: 46,
-      bookingFeeCents: 310,
-      minimumCents: 1150,
+      baseCents: 250,
+      perMileCents: 255,
+      perMinuteCents: 50,
+      bookingFeeCents: 430,
+      minimumCents: 1300,
       pickupEta: [3, 10],
     },
     {
@@ -224,11 +204,11 @@ export const lyftSpec: MockProviderSpec = {
       name: 'Lyft XL',
       rideClass: 'xl',
       seats: 6,
-      baseCents: 380,
-      perMileCents: 235,
-      perMinuteCents: 55,
-      bookingFeeCents: 310,
-      minimumCents: 1275,
+      baseCents: 300,
+      perMileCents: 333,
+      perMinuteCents: 60,
+      bookingFeeCents: 430,
+      minimumCents: 1500,
       pickupEta: [4, 12],
       deepLinkId: 'lyft_plus',
     },
@@ -238,10 +218,10 @@ export const lyftSpec: MockProviderSpec = {
       rideClass: 'premium',
       seats: 4,
       baseCents: 750,
-      perMileCents: 360,
-      perMinuteCents: 72,
+      perMileCents: 380,
+      perMinuteCents: 70,
       bookingFeeCents: 0,
-      minimumCents: 2400,
+      minimumCents: 2000,
       pickupEta: [6, 15],
       deepLinkId: 'lyft_lux',
     },
@@ -252,7 +232,6 @@ export function waymoSpec(areas: readonly ServiceArea[] = waymoServiceAreas): Mo
   return {
     id: 'waymo',
     autonomous: true,
-    surge: { probability: 0.15, max: 1.4 },
     availability: (trip) => {
       const area = areaServing(areas, trip.pickup, trip.dropoff);
       return area
@@ -260,19 +239,20 @@ export function waymoSpec(areas: readonly ServiceArea[] = waymoServiceAreas): Mo
         : { reason: 'This trip is outside the simulated Waymo service areas.' };
     },
     bookingUrl: (target, _product, bookVia) =>
-      bookVia === 'uber' ? uberBookingUrl(target) : waymoBookingUrl(),
-    appUrl: (target, _product, bookVia) => (bookVia === 'uber' ? uberAppUrl(target) : null),
+      bookVia === 'uber' ? uberBookingUrl(target) : waymoAppUrl(target),
+    appUrl: (target, _product, bookVia) =>
+      bookVia === 'uber' ? uberAppUrl(target) : waymoAppUrl(target),
     products: [
       {
         key: 'waymo',
         name: 'Waymo',
         rideClass: 'comfort',
         seats: 4,
-        baseCents: 300,
-        perMileCents: 195,
-        perMinuteCents: 42,
+        baseCents: 400,
+        perMileCents: 220,
+        perMinuteCents: 45,
         bookingFeeCents: 0,
-        minimumCents: 1000,
+        minimumCents: 1200,
         pickupEta: [3, 12],
       },
     ],

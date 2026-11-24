@@ -42,18 +42,14 @@ async function quotesFor(provider: RideProvider, context: TripContext): Promise<
 
 describe('priceProduct', () => {
   const uberX = uberSpec.products[0]!;
+  const black = uberSpec.products[3]!;
 
   it('applies base, distance, time and booking fee', () => {
-    expect(priceProduct(uberX, 5, 20, 1, 1)).toBe(280 + 145 * 5 + 38 * 20 + 295);
-  });
-
-  it('applies surge to the metered fare but not the booking fee', () => {
-    const metered = 280 + 145 * 5 + 38 * 20;
-    expect(priceProduct(uberX, 5, 20, 1.5, 1)).toBe(Math.round(metered * 1.5 + 295));
+    expect(priceProduct(uberX, 5, 20)).toBe(165 + 135 * 5 + 26 * 20 + 990);
   });
 
   it('never goes below the minimum fare', () => {
-    expect(priceProduct(uberX, 0.2, 1, 1, 1)).toBe(uberX.minimumCents);
+    expect(priceProduct(black, 0.2, 1)).toBe(black.minimumCents);
   });
 });
 
@@ -65,15 +61,16 @@ describe('mock providers', () => {
     expect(second).toEqual(first);
   });
 
-  it('change between quote windows', async () => {
-    const lyft = createMockProvider(lyftSpec);
-    const windows = await Promise.all(
-      [0, 1, 2, 3, 4, 5].map((step) =>
-        quotesFor(lyft, trip({ now: new Date(fixedNow.getTime() + step * 120_000) })),
-      ),
-    );
-    const prices = new Set(windows.map((quotes) => quotes[0]?.priceCents));
-    expect(prices.size).toBeGreaterThan(1);
+  it('match observed Los Angeles fares for an 8.2 mile trip', async () => {
+    const la = trip({ route: { ...route, distanceMeters: 13223, durationSeconds: 990 } });
+    const uber = await quotesFor(createMockProvider(uberSpec), la);
+    const lyft = await quotesFor(createMockProvider(lyftSpec), la);
+    const uberX = uber.find((quote) => quote.rideClass === 'economy')!;
+    const lyftStandard = lyft.find((quote) => quote.rideClass === 'economy')!;
+    expect(uberX.priceCents).toBeGreaterThan(2650);
+    expect(uberX.priceCents).toBeLessThan(2750);
+    expect(lyftStandard.priceCents).toBeGreaterThan(uberX.priceCents);
+    expect([...uber, ...lyft].every((quote) => quote.surgeMultiplier === 1)).toBe(true);
   });
 
   it('price larger classes above economy for the same trip', async () => {
@@ -98,7 +95,10 @@ describe('mock providers', () => {
     expect(austin[0]).toMatchObject({ providerId: 'waymo', bookVia: 'uber' });
     expect(austin[0]?.bookingUrl.startsWith('https://m.uber.com/go/product-selection')).toBe(true);
     expect(austin[0]?.appUrl?.startsWith('uber://')).toBe(true);
-    expect(sf[0]?.appUrl).toBeNull();
+    expect(
+      sf[0]?.appUrl?.startsWith('https://app.waymo.com/route/trip/create?pickup=my_location'),
+    ).toBe(true);
+    expect(new URL(sf[0]!.appUrl!).searchParams.get('dropoff_latitude')).toBe('37.759600');
   });
 
   it('reports Waymo as unavailable when the trip leaves the service area', async () => {
@@ -168,6 +168,26 @@ describe('deep links', () => {
     expect(lyft.protocol).toBe('lyft:');
     expect(lyft.host).toBe('ridetype');
     expect(lyft.searchParams.get('pickup[longitude]')).toBe('-122.393700');
+  });
+
+  it('passes place names and addresses so the apps do not guess a nearby business', () => {
+    const named = {
+      ...target,
+      dropoffName: 'The Grove',
+      dropoffAddress: '189 The Grove Dr, Los Angeles, CA',
+    };
+    const uber = new URL(uberAppUrl(named));
+    expect(uber.searchParams.get('dropoff[nickname]')).toBe('The Grove');
+    expect(uber.searchParams.get('dropoff[formatted_address]')).toBe(named.dropoffAddress);
+    const web = new URL(uberBookingUrl(named));
+    expect(JSON.parse(web.searchParams.get('drop[0]') ?? '')).toMatchObject({
+      addressLine1: 'The Grove',
+      addressLine2: named.dropoffAddress,
+    });
+    const lyft = new URL(lyftBookingUrl(named, 'lyft'));
+    expect(lyft.searchParams.get('destination[address]')).toBe(
+      'The Grove, 189 The Grove Dr, Los Angeles, CA',
+    );
   });
 
   it('builds a Lyft link with the ride type', () => {

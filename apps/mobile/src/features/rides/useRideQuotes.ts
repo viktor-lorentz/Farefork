@@ -31,6 +31,8 @@ export function useRideQuotes(pickup: Place | null, dropoff: Place | null) {
           dropoff: { latitude: dropoff.latitude, longitude: dropoff.longitude },
           pickupName: isCurrentLocation(pickup) ? 'Current location' : pickup.name,
           dropoffName: dropoff.name,
+          pickupAddress: isCurrentLocation(pickup) ? undefined : pickup.address,
+          dropoffAddress: dropoff.address,
           membershipIds,
         },
         rideQuotesResponseSchema,

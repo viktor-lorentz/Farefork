@@ -55,6 +55,8 @@ export async function getRideQuotes(
     dropoff: request.dropoff,
     pickupName: request.pickupName,
     dropoffName: request.dropoffName,
+    pickupAddress: request.pickupAddress,
+    dropoffAddress: request.dropoffAddress,
     route,
     now,
   };

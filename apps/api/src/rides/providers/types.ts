@@ -5,6 +5,8 @@ export type TripContext = {
   dropoff: LatLng;
   pickupName?: string;
   dropoffName?: string;
+  pickupAddress?: string;
+  dropoffAddress?: string;
   route: Route;
   now: Date;
 };

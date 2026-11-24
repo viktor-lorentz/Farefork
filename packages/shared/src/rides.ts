@@ -60,6 +60,8 @@ export const rideQuotesRequestSchema = z.object({
   dropoff: latLngSchema,
   pickupName: z.string().max(200).optional(),
   dropoffName: z.string().max(200).optional(),
+  pickupAddress: z.string().max(300).optional(),
+  dropoffAddress: z.string().max(300).optional(),
   membershipIds: membershipIdsSchema,
 });
 
