@@ -6,5 +6,6 @@ export function useMembershipCatalog() {
   return useQuery({
     queryKey: ['memberships', 'catalog'],
     queryFn: ({ signal }) => apiGet('/v1/memberships', membershipCatalogSchema, signal),
+    staleTime: 60 * 60 * 1000,
   });
 }

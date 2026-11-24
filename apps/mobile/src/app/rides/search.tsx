@@ -1,13 +1,21 @@
 import type { Place } from '@repo/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, StyleSheet, View, type TextInput } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type TextInput,
+  KeyboardAvoidingView,
+} from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInUp, SlideOutUp } from 'react-native-reanimated';
 import {
   EmptyState,
   IconButton,
   ListRow,
   ListRowIcon,
-  Screen,
   ScreenHeader,
   SectionHeader,
   Text,
@@ -21,7 +29,8 @@ import {
   XIcon,
 } from '@/design/icons';
 import { useTheme } from '@/design/theme';
-import { controlHeight, space } from '@/design/tokens';
+import { controlHeight, layout, radius, space } from '@/design/tokens';
+import { duration, easing } from '@/design/tokens/motion';
 import { useFavorites } from '@/features/account/queries';
 import { defaultCenter } from '@/features/map/types';
 import { currentLocationPlace, locateDevice } from '@/features/rides/location';
@@ -64,7 +73,7 @@ function HighlightedTitle({ text, query }: { text: string; query: string }) {
 
 export default function RideSearchScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, elevation } = useTheme();
   const storedPickup = useTrip((state) => state.pickup);
   const storedDropoff = useTrip((state) => state.dropoff);
   const recents = useTrip((state) => state.recents);
@@ -178,143 +187,168 @@ export default function RideSearchScreen() {
   );
 
   return (
-    <View style={[styles.root, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Plan your ride" />
-      <Screen padTop={false} contentStyle={styles.content}>
-        <TripFieldsCard
-          pickupText={pickup.text}
-          dropoffText={dropoff.text}
-          focused={focused}
-          autoFocus={initialFocus}
-          pickupRef={pickupRef}
-          dropoffRef={dropoffRef}
-          onChange={editField}
-          onFocus={setFocused}
-          onClear={clearField}
-          onSwap={swap}
+    <KeyboardAvoidingView style={styles.root} behavior="padding">
+      <Animated.View
+        entering={FadeIn.duration(duration.base)}
+        exiting={FadeOut.duration(duration.fast)}
+        style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
+      >
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          accessibilityRole="button"
+          accessibilityLabel="Close ride planner"
+          onPress={() => {
+            router.back();
+          }}
         />
+      </Animated.View>
+      <Animated.View
+        entering={SlideInUp.duration(duration.slow).easing(easing.decelerate)}
+        exiting={SlideOutUp.duration(duration.base).easing(easing.accelerate)}
+        style={[styles.panel, { backgroundColor: colors.background, boxShadow: elevation.raised }]}
+      >
+        <ScreenHeader title="Plan your ride" />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="never"
+        >
+          <TripFieldsCard
+            pickupText={pickup.text}
+            dropoffText={dropoff.text}
+            focused={focused}
+            autoFocus={initialFocus}
+            pickupRef={pickupRef}
+            dropoffRef={dropoffRef}
+            onChange={editField}
+            onFocus={setFocused}
+            onClear={clearField}
+            onSwap={swap}
+          />
 
-        {showSuggestions ? (
-          <View>
-            {focused === 'pickup' || !pickup.place ? (
-              <ListRow
-                title="Current location"
-                subtitle={
-                  locate === 'denied'
-                    ? 'Location access is off for this app. Turn it on in Settings, or type an address.'
-                    : locate === 'unavailable'
-                      ? 'Couldn’t get a location fix. Check that Location Services is on, or type an address.'
-                      : isCurrentLocation(pickup.place)
-                        ? 'Selected as pickup'
-                        : 'Use where you are now as pickup'
-                }
-                leading={<ListRowIcon icon={NavigationArrowIcon} />}
-                trailing={
-                  locate === 'locating' ? <ActivityIndicator color={colors.textPrimary} /> : null
-                }
-                disabled={locate === 'locating'}
-                onPress={() => {
-                  void pickCurrentLocation('pickup');
-                }}
-              />
-            ) : null}
-            {savedRoutes.length > 0 ? (
-              <>
-                <SectionHeader title="Saved" style={styles.sectionHeader} />
-                {savedRoutes.map((row, index) => (
-                  <ListRow
-                    key={row.id}
-                    title={row.title}
-                    subtitle={row.subtitle ?? undefined}
-                    leading={<ListRowIcon icon={HeartIcon} />}
-                    divider={index < savedRoutes.length - 1}
-                    onPress={() => {
-                      const { pickup: savedPickup, dropoff: savedDropoff } = row.payload;
-                      if (savedPickup) {
-                        setPickup({ place: savedPickup, text: savedPickup.name });
-                        setDropoff({ place: savedDropoff, text: savedDropoff.name });
-                        haptics.selection();
-                        finish(savedPickup, savedDropoff);
-                        return;
+          {showSuggestions ? (
+            <View>
+              {focused === 'pickup' || !pickup.place ? (
+                <ListRow
+                  title="Current location"
+                  subtitle={
+                    locate === 'denied'
+                      ? 'Location access is off for this app. Turn it on in Settings, or type an address.'
+                      : locate === 'unavailable'
+                        ? 'Couldn’t get a location fix. Check that Location Services is on, or type an address.'
+                        : isCurrentLocation(pickup.place)
+                          ? 'Selected as pickup'
+                          : 'Use where you are now as pickup'
+                  }
+                  leading={<ListRowIcon icon={NavigationArrowIcon} />}
+                  trailing={
+                    locate === 'locating' ? <ActivityIndicator color={colors.textPrimary} /> : null
+                  }
+                  disabled={locate === 'locating'}
+                  onPress={() => {
+                    void pickCurrentLocation('pickup');
+                  }}
+                />
+              ) : null}
+              {savedRoutes.length > 0 ? (
+                <>
+                  <SectionHeader title="Saved" style={styles.sectionHeader} />
+                  {savedRoutes.map((row, index) => (
+                    <ListRow
+                      key={row.id}
+                      title={row.title}
+                      subtitle={row.subtitle ?? undefined}
+                      leading={<ListRowIcon icon={HeartIcon} />}
+                      divider={index < savedRoutes.length - 1}
+                      onPress={() => {
+                        const { pickup: savedPickup, dropoff: savedDropoff } = row.payload;
+                        if (savedPickup) {
+                          setPickup({ place: savedPickup, text: savedPickup.name });
+                          setDropoff({ place: savedDropoff, text: savedDropoff.name });
+                          haptics.selection();
+                          finish(savedPickup, savedDropoff);
+                          return;
+                        }
+                        choose('dropoff', savedDropoff);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : null}
+              {recentChoices.length > 0 ? (
+                <>
+                  <SectionHeader title="Recent" style={styles.sectionHeader} />
+                  {recentChoices.map((place, index) => (
+                    <ListRow
+                      key={place.id}
+                      title={place.name}
+                      subtitle={place.address || undefined}
+                      leading={<ListRowIcon icon={ClockCounterClockwiseIcon} />}
+                      trailing={
+                        <IconButton
+                          icon={XIcon}
+                          size={controlHeight.sm}
+                          accessibilityLabel={`Remove ${place.name} from recents`}
+                          onPress={() => {
+                            removeRecent(place.id);
+                          }}
+                        />
                       }
-                      choose('dropoff', savedDropoff);
-                    }}
-                  />
-                ))}
-              </>
-            ) : null}
-            {recentChoices.length > 0 ? (
-              <>
-                <SectionHeader title="Recent" style={styles.sectionHeader} />
-                {recentChoices.map((place, index) => (
-                  <ListRow
-                    key={place.id}
-                    title={place.name}
-                    subtitle={place.address || undefined}
-                    leading={<ListRowIcon icon={ClockCounterClockwiseIcon} />}
-                    trailing={
-                      <IconButton
-                        icon={XIcon}
-                        size={controlHeight.sm}
-                        accessibilityLabel={`Remove ${place.name} from recents`}
-                        onPress={() => {
-                          removeRecent(place.id);
-                        }}
-                      />
-                    }
-                    divider={index < recentChoices.length - 1}
-                    onPress={() => {
-                      choose(focused, place);
-                    }}
-                  />
-                ))}
-              </>
-            ) : null}
-          </View>
-        ) : search.isError ? (
-          <EmptyState
-            icon={WarningCircleIcon}
-            title="Address search is unavailable"
-            body="The search service didn’t respond. Check your connection and try again."
-            action={{
-              label: 'Try again',
-              onPress: () => {
-                void search.refetch();
-              },
-            }}
-          />
-        ) : search.places.length > 0 ? (
-          <View accessibilityLiveRegion="polite">
-            {search.places.map((place, index) => (
-              <ListRow
-                key={place.id}
-                title={place.name}
-                titleContent={<HighlightedTitle text={place.name} query={active.text} />}
-                subtitle={place.address || undefined}
-                leading={<ListRowIcon icon={MapPinIcon} />}
-                divider={index < search.places.length - 1}
-                onPress={() => {
-                  choose(focused, place);
-                }}
-              />
-            ))}
-          </View>
-        ) : search.isFetching || search.settling ? (
-          <View style={styles.searching}>
-            <ActivityIndicator color={colors.textPrimary} />
-            <Text variant="caption" tone="secondary">
-              Searching
-            </Text>
-          </View>
-        ) : (
-          <EmptyState
-            icon={MapPinIcon}
-            title="No matches"
-            body="Try a street address, a business name or a landmark."
-          />
-        )}
-      </Screen>
-    </View>
+                      divider={index < recentChoices.length - 1}
+                      onPress={() => {
+                        choose(focused, place);
+                      }}
+                    />
+                  ))}
+                </>
+              ) : null}
+            </View>
+          ) : search.isError ? (
+            <EmptyState
+              icon={WarningCircleIcon}
+              title="Address search is unavailable"
+              body="The search service didn’t respond. Check your connection and try again."
+              action={{
+                label: 'Try again',
+                onPress: () => {
+                  void search.refetch();
+                },
+              }}
+            />
+          ) : search.places.length > 0 ? (
+            <View accessibilityLiveRegion="polite">
+              {search.places.map((place, index) => (
+                <ListRow
+                  key={place.id}
+                  title={place.name}
+                  titleContent={<HighlightedTitle text={place.name} query={active.text} />}
+                  subtitle={place.address || undefined}
+                  leading={<ListRowIcon icon={MapPinIcon} />}
+                  divider={index < search.places.length - 1}
+                  onPress={() => {
+                    choose(focused, place);
+                  }}
+                />
+              ))}
+            </View>
+          ) : search.isFetching || search.settling ? (
+            <View style={styles.searching}>
+              <ActivityIndicator color={colors.textPrimary} />
+              <Text variant="caption" tone="secondary">
+                Searching
+              </Text>
+            </View>
+          ) : (
+            <EmptyState
+              icon={MapPinIcon}
+              title="No matches"
+              body="Try a street address, a business name or a landmark."
+            />
+          )}
+        </ScrollView>
+      </Animated.View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -322,8 +356,20 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
+  panel: {
+    flexShrink: 1,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  scroll: {
+    flexGrow: 0,
+  },
   content: {
     gap: space.lg,
+    paddingHorizontal: layout.gutter,
+    paddingTop: space.md,
+    paddingBottom: space.xl,
   },
   sectionHeader: {
     marginTop: space.sm,

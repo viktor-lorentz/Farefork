@@ -42,6 +42,7 @@ export type DeliverySpec = {
   etaOffset: readonly [min: number, max: number];
   maxDistanceMeters: number;
   orderUrl: (restaurantName: string) => string;
+  appUrl: (restaurantName: string) => string;
 };
 
 export function priceFeeCents(cents: number): number {
@@ -131,7 +132,7 @@ export function createMockDeliveryProvider(spec: DeliverySpec): DeliveryProvider
             travelMinutes +
             random.int(spec.etaOffset[0], spec.etaOffset[1]),
           orderUrl: spec.orderUrl(context.restaurant.name),
-          appUrl: null,
+          appUrl: spec.appUrl(context.restaurant.name),
         },
       });
     },
@@ -155,6 +156,7 @@ export const deliverySpecs: readonly DeliverySpec[] = [
     etaOffset: [4, 10],
     maxDistanceMeters: 9000,
     orderUrl: (name) => searchUrl('https://www.ubereats.com/search', 'q', name),
+    appUrl: (name) => searchUrl('ubereats://search', 'q', name),
   },
   {
     id: 'doordash',
@@ -166,6 +168,7 @@ export const deliverySpecs: readonly DeliverySpec[] = [
     etaOffset: [3, 9],
     maxDistanceMeters: 10000,
     orderUrl: (name) => `https://www.doordash.com/search/store/${encodeURIComponent(name)}/`,
+    appUrl: (name) => `doordash://search/store/${encodeURIComponent(name)}/`,
   },
   {
     id: 'grubhub',
@@ -177,6 +180,7 @@ export const deliverySpecs: readonly DeliverySpec[] = [
     etaOffset: [6, 14],
     maxDistanceMeters: 8000,
     orderUrl: (name) => searchUrl('https://www.grubhub.com/search', 'queryText', name),
+    appUrl: (name) => searchUrl('grubhub://search', 'queryText', name),
   },
   {
     id: 'postmates',
@@ -188,6 +192,7 @@ export const deliverySpecs: readonly DeliverySpec[] = [
     etaOffset: [5, 12],
     maxDistanceMeters: 9000,
     orderUrl: (name) => searchUrl('https://postmates.com/search', 'q', name),
+    appUrl: (name) => searchUrl('postmates://search', 'q', name),
   },
 ];
 

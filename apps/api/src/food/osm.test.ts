@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { places } from '../testDeps';
 import { sampleRestaurants } from './catalog';
 import {
@@ -158,7 +158,9 @@ describe('OpenStreetMap restaurants', () => {
     expect(results.find((entry) => entry.name === 'Real Taqueria')?.cuisine).toBe('mexican');
     expect(results.every((entry) => entry.source === 'openstreetmap' && entry.photo)).toBe(true);
     await restaurants.search({ near, cuisine: 'cafe' });
-    expect(calls.photon).toHaveLength(7);
+    await vi.waitFor(() => {
+      expect(calls.photon).toHaveLength(7);
+    });
     expect(calls.nominatim).toHaveLength(1);
     expect((await restaurants.find('osm_n101', near))?.name).toBe('Real Taqueria');
     expect(calls.nominatim).toHaveLength(1);

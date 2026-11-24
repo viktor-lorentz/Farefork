@@ -63,7 +63,7 @@ export default function HomeScreen() {
   const deliveryAddress = useDeliveryAddress();
   const foodMode = trip === null && vertical === 'food';
   const foodCenter = deliveryAddress ?? center;
-  const nearbyRestaurants = useRestaurants(foodMode ? foodCenter : null, '', null);
+  const nearbyRestaurants = useRestaurants(foodMode ? foodCenter : deliveryAddress, '', null);
   const places = useMemo(
     () =>
       foodMode

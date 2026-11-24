@@ -24,7 +24,7 @@ import { useDeliveryAddress } from '@/features/food/useDeliveryAddress';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import { ApiError } from '@/lib/api';
 import { haptics } from '@/lib/haptics';
-import { openInApp } from '@/lib/openInApp';
+import { openProviderApp } from '@/lib/openProviderApp';
 import { useFood } from '@/stores/food';
 
 export default function FoodCompareScreen() {
@@ -161,8 +161,8 @@ export default function FoodCompareScreen() {
               <InfoIcon size={iconSize.sm} color={colors.textPrimary} weight="bold" />
               <Text variant="caption" style={styles.flex}>
                 Totals include menu prices, fees and estimated tax, but not tip. Prices are
-                simulated. Delivery apps don’t accept a cart from outside, so add the same items
-                once checkout opens.
+                simulated. Delivery apps don’t accept a cart from another app, so add the same items
+                once the app opens.
               </Text>
             </View>
           </>
@@ -175,10 +175,10 @@ export default function FoodCompareScreen() {
             trailingIcon={CaretRightIcon}
             fullWidth
             haptic={false}
-            accessibilityHint={`Opens ${providerName(selected.providerId)} checkout for ${cart.restaurantName} inside Farefork. You sign in and pay on ${providerName(selected.providerId)}.`}
+            accessibilityHint={`Opens the ${providerName(selected.providerId)} app to ${cart.restaurantName}, or its site if the app isn't installed. Add your items there; you sign in and pay on ${providerName(selected.providerId)}.`}
             onPress={() => {
               haptics.medium();
-              void openInApp(selected.orderUrl, {
+              void openProviderApp(selected.providerId, selected.orderUrl, selected.appUrl, {
                 toolbar: colors.background,
                 controls: colors.textPrimary,
               }).then((opened) => {

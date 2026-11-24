@@ -604,19 +604,73 @@ export function createOsmRestaurantSource(
     });
   }
 
-  async function loadCell(center: LatLng, key?: string): Promise<StoredRestaurant[]> {
-    const probes = [
-      ...amenityKinds.map((kind) => () => nearby(center, kind)),
-      ...PROBE_OFFSETS.slice(1).map(
-        ([dLat, dLng]) =>
-          () =>
-            nearby({ latitude: center.latitude + dLat, longitude: center.longitude + dLng }, 'all'),
-      ),
-    ];
-    const settled = photonAvailable() ? await inPool(probes, PHOTON_CONCURRENCY) : [];
-    const lists = settled.flatMap((result) =>
-      result.status === 'fulfilled' ? [result.value] : [],
+  function byDistance(center: LatLng, places: Iterable<NearbyPlace>): NearbyPlace[] {
+    const unique = new Map<string, NearbyPlace>();
+    for (const place of places) {
+      unique.set(place.id, place);
+    }
+    return [...unique.values()].sort(
+      (a, b) => haversineMeters(center, a) - haversineMeters(center, b),
     );
+  }
+
+  function fulfilled<T>(settled: readonly PromiseSettledResult<T>[]): T[] {
+    return settled.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
+  }
+
+  function applyLateTags(key: string, places: readonly NearbyPlace[], late: Map<string, string>) {
+    const known = new Map(places.map((place) => [place.id, place]));
+    const current = cells.get(key) ?? [];
+    const updated = current.map((restaurant) => {
+      const place = known.get(restaurant.id);
+      const tag = late.get(restaurant.id);
+      const better = cuisineFromTag(tag);
+      if (place && tag !== undefined && better !== null && better !== restaurant.cuisine) {
+        const fixed = toRestaurant(place, tag);
+        byId.set(place.id, fixed);
+        return fixed;
+      }
+      return restaurant;
+    });
+    cells.set(key, updated);
+    persist(key, updated);
+  }
+
+  async function extendCell(key: string, center: LatLng): Promise<void> {
+    const probes = PROBE_OFFSETS.slice(1).map(
+      ([dLat, dLng]) =>
+        () =>
+          nearby({ latitude: center.latitude + dLat, longitude: center.longitude + dLng }, 'all'),
+    );
+    const extra = byDistance(
+      center,
+      fulfilled(await inPool(probes, PHOTON_CONCURRENCY)).flat(),
+    ).filter((place) => byId.get(place.id) === undefined);
+    if (extra.length === 0) {
+      return;
+    }
+    const tags = await cuisineTags(extra, (late) => {
+      applyLateTags(key, extra, late);
+    });
+    const added = remember(extra, tags);
+    const current = cells.get(key) ?? [];
+    const merged = new Map<string, StoredRestaurant>();
+    for (const restaurant of [...current, ...added]) {
+      merged.set(restaurant.id, restaurant);
+    }
+    const all = [...merged.values()].sort(
+      (a, b) => haversineMeters(center, a) - haversineMeters(center, b),
+    );
+    cells.set(key, all);
+    persist(key, all);
+  }
+
+  async function loadCell(
+    center: LatLng,
+    key?: string,
+  ): Promise<{ restaurants: StoredRestaurant[]; viaPhoton: boolean }> {
+    const probes = amenityKinds.map((kind) => () => nearby(center, kind));
+    const lists = photonAvailable() ? fulfilled(await inPool(probes, PHOTON_CONCURRENCY)) : [];
     if (lists.length === 0) {
       markPhotonDown();
       const found = await nominatimPlaces(
@@ -628,42 +682,30 @@ export function createOsmRestaurantSource(
         })),
         NOMINATIM_NEARBY_BOX,
       );
-      return remember(found.places, found.tags);
+      return { restaurants: remember(found.places, found.tags), viaPhoton: false };
     }
-    const unique = new Map<string, NearbyPlace>();
-    for (const place of lists.flat()) {
-      unique.set(place.id, place);
-    }
-    const places = [...unique.values()].sort(
-      (a, b) => haversineMeters(center, a) - haversineMeters(center, b),
-    );
+    const places = byDistance(center, lists.flat());
     if (places.length === 0) {
-      return [];
+      return { restaurants: [], viaPhoton: true };
     }
     const tags = await cuisineTags(places, (late) => {
-      const updated = places.map((place) => {
-        const current = byId.get(place.id);
-        const tag = late.get(place.id);
-        const better = cuisineFromTag(tag);
-        if (current && tag !== undefined && better !== null && better !== current.cuisine) {
-          const fixed = toRestaurant(place, tag);
-          byId.set(place.id, fixed);
-          return fixed;
-        }
-        return current ?? toRestaurant(place, tag);
-      });
       if (key !== undefined) {
-        cells.set(key, updated);
-        persist(key, updated);
+        applyLateTags(key, places, late);
       }
     });
-    return remember(places, tags);
+    return { restaurants: remember(places, tags), viaPhoton: true };
   }
 
   async function loadAndPersistCell(key: string, center: LatLng): Promise<StoredRestaurant[]> {
-    const restaurants = await loadCell(center, key);
+    const { restaurants, viaPhoton } = await loadCell(center, key);
     if (restaurants.length > 0) {
       persist(key, restaurants);
+    }
+    if (viaPhoton) {
+      const timer = setTimeout(() => {
+        void extendCell(key, center).catch(() => undefined);
+      }, 0);
+      timer.unref();
     }
     return restaurants;
   }

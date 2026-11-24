@@ -1,8 +1,8 @@
 import { providerName, type RideQuote } from '@repo/shared';
 import { Platform } from 'react-native';
 import { haptics } from '@/lib/haptics';
-import { openExternal } from '@/lib/openExternal';
-import { type InAppBrowserColors, openInApp } from '@/lib/openInApp';
+import type { InAppBrowserColors } from '@/lib/openInApp';
+import { openProviderApp } from '@/lib/openProviderApp';
 
 export function opensInApp(quote: RideQuote): boolean {
   return quote.bookVia === 'uber';
@@ -10,9 +10,7 @@ export function opensInApp(quote: RideQuote): boolean {
 
 export async function openBooking(quote: RideQuote, colors: InAppBrowserColors): Promise<boolean> {
   haptics.medium();
-  const opened = opensInApp(quote)
-    ? await openInApp(quote.bookingUrl, colors)
-    : await openExternal(quote.bookingUrl, quote.appUrl);
+  const opened = await openProviderApp(quote.bookVia, quote.bookingUrl, quote.appUrl, colors);
   if (!opened) {
     haptics.warning();
   }
@@ -20,15 +18,14 @@ export async function openBooking(quote: RideQuote, colors: InAppBrowserColors):
 }
 
 export function bookingLabel(quote: RideQuote): string {
-  const provider = providerName(quote.bookVia);
-  return opensInApp(quote) ? `Book with ${provider}` : `Open ${provider}`;
+  return `Open ${providerName(quote.bookVia)}`;
 }
 
 export function bookingHint(quote: RideQuote): string {
   const provider = providerName(quote.bookVia);
-  return opensInApp(quote)
-    ? `Opens ${provider} checkout inside Farefork with your pickup and destination filled in. You sign in and pay on ${provider}. Price before tip.`
-    : `Opens the ${provider} app with your pickup and destination filled in. Price before tip.`;
+  return quote.appUrl !== null
+    ? `Opens the ${provider} app with your pickup and destination filled in, or the ${provider} site if the app isn't installed. Price before tip.`
+    : `Opens the ${provider} app, or the ${provider} site if the app isn't installed. Price before tip.`;
 }
 
 export function canBookHere(quote: RideQuote): boolean {

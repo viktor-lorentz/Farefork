@@ -9,6 +9,7 @@ import { useTheme } from '@/design/theme';
 import { layout, radius, space } from '@/design/tokens';
 import { duration } from '@/design/tokens/motion';
 import { MembershipList } from '@/features/memberships/MembershipList';
+import { useMembershipCatalog } from '@/features/memberships/useMembershipCatalog';
 import { Wordmark } from '@/features/navigation/Wordmark';
 import { haptics } from '@/lib/haptics';
 import {
@@ -73,6 +74,7 @@ export function OnboardingFlow() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [index, setIndex] = useState(0);
+  useMembershipCatalog();
   const [busy, setBusy] = useState(false);
   const completeOnboarding = usePreferences((state) => state.completeOnboarding);
   const setLocationPermission = usePreferences((state) => state.setLocationPermission);
