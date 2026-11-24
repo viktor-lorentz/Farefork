@@ -1,3 +1,4 @@
+import { providerIds } from '@repo/shared';
 import { describe, expect, it } from 'vitest';
 import { createMockDealsSource, weekStart } from './mock';
 
@@ -42,5 +43,17 @@ describe('mock deals', () => {
     const a = await source.list({ membershipIds: [], now });
     const b = await source.list({ membershipIds: [], now: new Date(now.getTime() + 60_000) });
     expect(b.map((deal) => deal.id)).toEqual(a.map((deal) => deal.id));
+  });
+
+  it('keeps at least one live deal per provider on every day of the week', async () => {
+    const source = createMockDealsSource();
+    const monday = new Date('2026-11-23T00:30:00Z');
+    for (let day = 0; day < 7; day += 1) {
+      const at = new Date(monday.getTime() + day * 24 * 60 * 60 * 1000);
+      const deals = await source.list({ membershipIds: [], now: at });
+      const providers = new Set(deals.map((deal) => deal.providerId));
+      expect(providers.size).toBe(providerIds.length);
+      expect(new Set(deals.map((deal) => deal.id)).size).toBe(deals.length);
+    }
   });
 });

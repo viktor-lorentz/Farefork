@@ -207,36 +207,46 @@ export function createMockDealsSource(): DealsSource {
         if (kind !== undefined && group.kind !== kind) {
           continue;
         }
-        const random = seededRandom(`deals|${week}|${providerId}`);
-        const offers = group.offers.filter(
-          (offer, index) => index === week % group.offers.length || random.chance(0.5),
-        );
-        for (const offer of offers) {
-          const startsAt = new Date(start.getTime() + random.int(0, 2) * DAY_MS);
-          const expiresAt = new Date(startsAt.getTime() + offer.days * DAY_MS);
-          if (expiresAt.getTime() <= now.getTime() || startsAt.getTime() > now.getTime()) {
-            continue;
-          }
-          const program = catalog.programs.find((entry) => entry.id === offer.membershipProgramId);
-          deals.push({
-            id: `${providerId}.${offer.key}.${week}`,
-            providerId,
-            kind: group.kind,
-            title: offer.title,
-            detail: offer.detail,
-            code: null,
-            estimatedSavingsCents: offer.estimatedSavingsCents,
-            minSubtotalCents: offer.minSubtotalCents ?? null,
-            newCustomersOnly: offer.newCustomersOnly ?? false,
-            membershipProgramId: offer.membershipProgramId ?? null,
-            membershipName: program?.name ?? null,
-            eligible:
-              offer.membershipProgramId === undefined ||
-              memberPrograms.has(offer.membershipProgramId),
-            startsAt: startsAt.toISOString(),
-            expiresAt: expiresAt.toISOString(),
+        const live = new Map<string, Deal>();
+        for (const cycle of [week - 1, week]) {
+          const cycleStart = start.getTime() - (week - cycle) * WEEK_MS;
+          const random = seededRandom(`deals|${cycle}|${providerId}`);
+          const featured = cycle % group.offers.length;
+          group.offers.forEach((offer, index) => {
+            const isFeatured = index === featured;
+            if (!isFeatured && !random.chance(0.6)) {
+              return;
+            }
+            const startsAt = new Date(cycleStart + (isFeatured ? 0 : random.int(0, 3)) * DAY_MS);
+            const days = isFeatured ? Math.max(offer.days, 7) : offer.days;
+            const expiresAt = new Date(startsAt.getTime() + days * DAY_MS);
+            if (expiresAt.getTime() <= now.getTime() || startsAt.getTime() > now.getTime()) {
+              return;
+            }
+            const program = catalog.programs.find(
+              (entry) => entry.id === offer.membershipProgramId,
+            );
+            live.set(offer.key, {
+              id: `${providerId}.${offer.key}.${cycle}`,
+              providerId,
+              kind: group.kind,
+              title: offer.title,
+              detail: offer.detail,
+              code: null,
+              estimatedSavingsCents: offer.estimatedSavingsCents,
+              minSubtotalCents: offer.minSubtotalCents ?? null,
+              newCustomersOnly: offer.newCustomersOnly ?? false,
+              membershipProgramId: offer.membershipProgramId ?? null,
+              membershipName: program?.name ?? null,
+              eligible:
+                offer.membershipProgramId === undefined ||
+                memberPrograms.has(offer.membershipProgramId),
+              startsAt: startsAt.toISOString(),
+              expiresAt: expiresAt.toISOString(),
+            });
           });
         }
+        deals.push(...live.values());
       }
       deals.sort(
         (a, b) =>
