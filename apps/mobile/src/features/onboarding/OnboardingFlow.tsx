@@ -7,7 +7,7 @@ import { Button, Text } from '@/design/components';
 import { BellRingingIcon, NavigationArrowIcon, type Icon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { layout, radius, space } from '@/design/tokens';
-import { duration } from '@/design/tokens/motion';
+import { duration, easing } from '@/design/tokens/motion';
 import { MembershipList } from '@/features/memberships/MembershipList';
 import { useMembershipCatalog } from '@/features/memberships/useMembershipCatalog';
 import { Wordmark } from '@/features/navigation/Wordmark';
@@ -222,8 +222,8 @@ export function OnboardingFlow() {
       >
         <Animated.View
           key={step}
-          entering={FadeIn.duration(duration.slow)}
-          exiting={FadeOut.duration(duration.fast)}
+          entering={FadeIn.duration(duration.slow).easing(easing.out)}
+          exiting={FadeOut.duration(duration.fast).easing(easing.out)}
           style={styles.step}
         >
           {content}

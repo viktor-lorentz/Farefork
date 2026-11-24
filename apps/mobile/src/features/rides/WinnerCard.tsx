@@ -6,7 +6,7 @@ import { Badge, PressableScale, Text, type QuoteCardNote } from '@/design/compon
 import { LightningIcon, PiggyBankIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { iconSize, radius, space } from '@/design/tokens';
-import { springs } from '@/design/tokens/motion';
+import { easing } from '@/design/tokens/motion';
 import { haptics } from '@/lib/haptics';
 import { ProviderLogo } from '@/features/providers/ProviderLogo';
 import type { RivalSavings } from './quoteSorting';
@@ -22,10 +22,7 @@ export type WinnerCardProps = {
   onPress: () => void;
 };
 
-const entering = FadeInDown.springify()
-  .damping(springs.bouncy.damping)
-  .stiffness(springs.bouncy.stiffness)
-  .mass(springs.bouncy.mass);
+const entering = FadeInDown.duration(260).easing(easing.out);
 
 export function WinnerCard({
   quote,

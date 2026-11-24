@@ -2,6 +2,7 @@ import { formatUsd } from '@repo/shared';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
+import { duration, easing } from '@/design/tokens/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text } from '@/design/components';
 import { useTheme } from '@/design/theme';
@@ -51,8 +52,8 @@ export function BookingCheck() {
 
   return (
     <Animated.View
-      entering={FadeInUp}
-      exiting={FadeOutUp}
+      entering={FadeInUp.duration(duration.base).easing(easing.out)}
+      exiting={FadeOutUp.duration(duration.fast).easing(easing.out)}
       style={[styles.wrap, { top: insets.top + space.xs }]}
       pointerEvents="box-none"
     >

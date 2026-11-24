@@ -4,12 +4,12 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { haptics } from '@/lib/haptics';
 import type { Icon } from '../icons';
 import { useTheme } from '../theme';
-import { springs } from '../tokens/motion';
+import { easing } from '../tokens/motion';
 import { controlHeight, iconSize, radius, space } from '../tokens/spacing';
 import { Text } from './Text';
 
@@ -48,7 +48,9 @@ export function SegmentedControl<T extends string>({
 
   useEffect(() => {
     const target = selectedIndex * segmentWidth;
-    offset.set(reducedMotion ? target : withSpring(target, springs.snappy));
+    offset.set(
+      reducedMotion ? target : withTiming(target, { duration: 200, easing: easing.inOut }),
+    );
   }, [selectedIndex, segmentWidth, reducedMotion, offset]);
 
   const indicatorStyle = useAnimatedStyle(() => ({

@@ -10,11 +10,9 @@ import Animated, {
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { useTheme } from '../theme';
-import { duration, easing, pressScale, springs } from '../tokens/motion';
+import { duration, easing, pressScale } from '../tokens/motion';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -22,7 +20,6 @@ export type PressableScaleProps = Omit<PressableProps, 'style' | 'children'> & {
   style?: StyleProp<ViewStyle>;
   children?: ReactNode;
   scaleTo?: number;
-  ripple?: boolean;
 };
 
 export function PressableScale({
@@ -31,36 +28,31 @@ export function PressableScale({
   scaleTo = pressScale,
   onPressIn,
   onPressOut,
-  disabled,
-  ripple = true,
+  hitSlop = 8,
+  pressRetentionOffset = 16,
   ...rest
 }: PressableScaleProps) {
-  const { colors } = useTheme();
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
-  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
 
   const handlePressIn = (event: GestureResponderEvent) => {
     if (!reducedMotion) {
-      scale.set(withTiming(scaleTo, { duration: duration.instant, easing: easing.standard }));
+      scale.set(withTiming(scaleTo, { duration: duration.instant, easing: easing.out }));
     }
     onPressIn?.(event);
   };
 
   const handlePressOut = (event: GestureResponderEvent) => {
-    scale.set(reducedMotion ? 1 : withSpring(1, springs.snappy));
+    scale.set(reducedMotion ? 1 : withTiming(1, { duration: duration.fast, easing: easing.out }));
     onPressOut?.(event);
   };
 
   return (
     <AnimatedPressable
       {...rest}
-      disabled={disabled}
-      android_ripple={
-        ripple && process.env.EXPO_OS === 'android'
-          ? { color: colors.pressed, foreground: true }
-          : undefined
-      }
+      hitSlop={hitSlop}
+      pressRetentionOffset={pressRetentionOffset}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       style={[style, animatedStyle]}

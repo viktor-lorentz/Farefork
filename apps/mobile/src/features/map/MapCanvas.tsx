@@ -11,7 +11,7 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '@/design/theme';
 import { iconSize, radius, space } from '@/design/tokens';
-import { duration } from '@/design/tokens/motion';
+import { duration, easing } from '@/design/tokens/motion';
 import { CUISINE_ICON_VIEWBOX, cuisineIconPaths } from './cuisineIcons';
 import { mapPalettes } from './palette';
 import {
@@ -151,7 +151,9 @@ export function MapCanvas({
         <MapView
           ref={mapRef}
           onMapLoaded={() => {
-            tiles.set(reducedMotion ? 1 : withTiming(1, { duration: duration.slow }));
+            tiles.set(
+              reducedMotion ? 1 : withTiming(1, { duration: duration.slow, easing: easing.out }),
+            );
           }}
           style={StyleSheet.absoluteFill}
           initialRegion={{

@@ -15,7 +15,7 @@ import { AdaptiveGlass, IconButton, PressableScale, Text } from '@/design/compon
 import { ArrowLeftIcon, CaretRightIcon } from '@/design/icons';
 import { useTheme } from '@/design/theme';
 import { iconSize, layout, radius, space } from '@/design/tokens';
-import { springs } from '@/design/tokens/motion';
+import { easing } from '@/design/tokens/motion';
 import { estimatedMinutes, priceLevelLabel, restaurantMeta } from '@/features/food/format';
 import { useRestaurants } from '@/features/food/queries';
 import { RestaurantPhoto } from '@/features/food/RestaurantPhoto';
@@ -178,11 +178,8 @@ export default function FoodMapScreen() {
 
       {open ? (
         <Animated.View
-          entering={SlideInDown.springify()
-            .damping(springs.snappy.damping)
-            .stiffness(springs.snappy.stiffness)
-            .mass(springs.snappy.mass)}
-          exiting={SlideOutDown}
+          entering={SlideInDown.duration(280).easing(easing.sheet)}
+          exiting={SlideOutDown.duration(200).easing(easing.out)}
           style={[
             styles.panel,
             {
@@ -233,8 +230,8 @@ export default function FoodMapScreen() {
         </Animated.View>
       ) : restaurants.length > 0 ? (
         <Animated.View
-          entering={FadeIn}
-          exiting={FadeOut}
+          entering={FadeIn.duration(220).easing(easing.out)}
+          exiting={FadeOut.duration(160).easing(easing.out)}
           style={[styles.hintWrap, { bottom: Math.max(insets.bottom, space.md) + space.xl }]}
           pointerEvents="none"
         >

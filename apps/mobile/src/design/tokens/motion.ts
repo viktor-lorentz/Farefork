@@ -1,23 +1,17 @@
 import { Easing } from 'react-native-reanimated';
 
-export const duration = {
-  instant: 90,
-  fast: 150,
-  base: 250,
-  slow: 350,
-  scene: 900,
-} as const;
+export const duration = { instant: 120, fast: 160, base: 220, slow: 280, scene: 900 } as const;
 
 export const easing = {
-  standard: Easing.bezier(0.2, 0, 0, 1),
-  decelerate: Easing.bezier(0, 0, 0, 1),
-  accelerate: Easing.bezier(0.3, 0, 1, 1),
+  out: Easing.bezier(0.23, 1, 0.32, 1),
+  inOut: Easing.bezier(0.77, 0, 0.175, 1),
+  sheet: Easing.bezier(0.32, 0.72, 0, 1),
 } as const;
 
 export const springs = {
-  snappy: { damping: 24, stiffness: 340, mass: 0.9 },
-  gentle: { damping: 22, stiffness: 190, mass: 1 },
-  bouncy: { damping: 14, stiffness: 260, mass: 0.9 },
+  settle: { duration: 400, dampingRatio: 1 },
+  snap: { duration: 400, dampingRatio: 0.8 },
+  sheet: { duration: 300, dampingRatio: 0.8 },
 } as const;
 
 export const pressScale = 0.97;

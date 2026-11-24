@@ -8,13 +8,14 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { AdaptiveGlass, Text } from '@/design/components';
 import { floatingTabBarOffset, useIsDesktopLayout } from '@/design/layout';
 import { useTheme } from '@/design/theme';
 import { iconSize, layout, radius, space } from '@/design/tokens';
-import { springs } from '@/design/tokens/motion';
+import { easing, springs } from '@/design/tokens/motion';
 import { haptics } from '@/lib/haptics';
 import { tabConfig, type TabConfig } from './tabs';
 import { Wordmark } from './Wordmark';
@@ -105,7 +106,9 @@ export function AppTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
   useEffect(() => {
     const target = focusedPosition * step;
     hover.set(focusedPosition);
-    offset.set(reducedMotion ? target : withSpring(target, springs.snappy));
+    offset.set(
+      reducedMotion ? target : withTiming(target, { duration: 200, easing: easing.inOut }),
+    );
   }, [focusedPosition, step, reducedMotion, offset, hover]);
 
   const selectPosition = (position: number) => {
@@ -141,7 +144,7 @@ export function AppTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
     activeOffsetX: [-6, 6],
     onActivate: (event) => {
       'worklet';
-      lens.set(reducedMotion ? 1 : withSpring(1, springs.snappy));
+      lens.set(reducedMotion ? 1 : withSpring(1, springs.snap));
       const { itemWidth: width, step: gap, count: total } = geometry.get();
       const max = gap * (total - 1);
       offset.set(Math.min(Math.max(event.x - ROW_PADDING - width / 2, 0), max));
@@ -166,9 +169,9 @@ export function AppTabBar({ state, emitter, navigateToTab, insets }: BottomTabBa
       'worklet';
       const { step: gap } = geometry.get();
       const position = hover.get();
-      offset.set(reducedMotion ? position * gap : withSpring(position * gap, springs.bouncy));
-      lens.set(reducedMotion ? 0 : withSpring(0, springs.gentle));
-      stretch.set(withSpring(0, springs.gentle));
+      offset.set(reducedMotion ? position * gap : withSpring(position * gap, springs.snap));
+      lens.set(reducedMotion ? 0 : withSpring(0, springs.settle));
+      stretch.set(reducedMotion ? 0 : withSpring(0, springs.settle));
       scheduleOnRN(finishDrag, position);
     },
   });

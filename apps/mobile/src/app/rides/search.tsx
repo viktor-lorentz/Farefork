@@ -189,8 +189,8 @@ export default function RideSearchScreen() {
   return (
     <KeyboardAvoidingView style={styles.root} behavior="padding">
       <Animated.View
-        entering={FadeIn.duration(duration.base)}
-        exiting={FadeOut.duration(duration.fast)}
+        entering={FadeIn.duration(duration.base).easing(easing.out)}
+        exiting={FadeOut.duration(duration.fast).easing(easing.out)}
         style={[StyleSheet.absoluteFill, { backgroundColor: colors.scrim }]}
       >
         <Pressable
@@ -203,8 +203,8 @@ export default function RideSearchScreen() {
         />
       </Animated.View>
       <Animated.View
-        entering={SlideInUp.duration(duration.slow).easing(easing.decelerate)}
-        exiting={SlideOutUp.duration(duration.base).easing(easing.accelerate)}
+        entering={SlideInUp.duration(duration.base).easing(easing.out)}
+        exiting={SlideOutUp.duration(duration.fast).easing(easing.out)}
         style={[styles.panel, { backgroundColor: colors.background, boxShadow: elevation.raised }]}
       >
         <ScreenHeader title="Plan your ride" />

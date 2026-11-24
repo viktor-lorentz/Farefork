@@ -40,9 +40,7 @@ export function Toggle({
   useEffect(() => {
     const target = value ? 1 : 0;
     progress.set(
-      reducedMotion
-        ? target
-        : withTiming(target, { duration: duration.fast, easing: easing.standard }),
+      reducedMotion ? target : withTiming(target, { duration: duration.fast, easing: easing.out }),
     );
   }, [value, reducedMotion, progress]);
 
